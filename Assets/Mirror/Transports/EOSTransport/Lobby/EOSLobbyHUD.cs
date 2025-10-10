@@ -130,7 +130,7 @@ public class EOSLobbyHUD : MonoBehaviour {
 
         //create lobby button
         if (GUILayout.Button("Create Lobby")) {
-            _eosLobby.CreateLobby(4, LobbyPermissionLevel.Publicadvertised, false,
+            _eosLobby.CreateLobby(2, LobbyPermissionLevel.Publicadvertised, false,
                 new AttributeData[]
                 {
                     new AttributeData

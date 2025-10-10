@@ -226,6 +226,7 @@ public class EOSLobby : MonoBehaviour {
             //if the search was unsuccessful, invoke an error event and return
             if (callback.ResultCode != Result.Success) {
                 FindLobbiesFailed?.Invoke("There was an error while finding lobbies. Error: " + callback.ResultCode);
+                // TODO: Impl. retrying logic in case of Failed search.
                 return;
             }
 
