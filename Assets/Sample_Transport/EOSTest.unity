@@ -351,9 +351,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1205644381}
   - component: {fileID: 1205644380}
-  - component: {fileID: 1205644379}
   - component: {fileID: 1205644383}
   - component: {fileID: 1205644382}
+  - component: {fileID: 1205644385}
+  - component: {fileID: 1205644384}
   m_Layer: 0
   m_Name: _NetworkManager
   m_TagString: Untagged
@@ -361,20 +362,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1205644379
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1205644378}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6442dc8070ceb41f094e44de0bf87274, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  offsetX: 50
-  offsetY: 50
 --- !u!114 &1205644380
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -478,6 +465,32 @@ MonoBehaviour:
   delayedInitialization: 0
   platformTickIntervalInSeconds: 0
   tickBudgetInMilliseconds: 0
+--- !u!114 &1205644384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1205644378}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a7af265212451446a8130bf08677fb8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  manager: {fileID: 1205644380}
+  lobbyName: Test0
+--- !u!114 &1205644385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1205644378}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe875c761de36584ebe057dfddc7f360, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
