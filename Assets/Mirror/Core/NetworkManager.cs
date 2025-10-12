@@ -584,11 +584,13 @@ namespace Mirror
             // to avoid collision and let a fresh Network Manager be created.
             // IMPORTANT: .gameObject can be null if StopClient is called from
             //            OnApplicationQuit or from tests!
-            if (gameObject != null
-                && gameObject.scene.name == "DontDestroyOnLoad"
-                && !string.IsNullOrWhiteSpace(offlineScene)
-                && SceneManager.GetActiveScene().path != offlineScene)
-                SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
+            
+            // TODO: CAN WE UNCOMMENT THIS OR NOT
+            // if (gameObject != null
+            //     && gameObject.scene.name == "DontDestroyOnLoad"
+            //     && !string.IsNullOrWhiteSpace(offlineScene)
+            //     && SceneManager.GetActiveScene().path != offlineScene)
+            //     SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
 
             OnStopServer();
 

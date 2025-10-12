@@ -139,8 +139,10 @@ namespace EpicTransport {
         protected static EOSSDKComponent instance;
         public static EOSSDKComponent Instance {
             get {
-                if (instance == null) {
-                    return new GameObject("EOSSDKComponent").AddComponent<EOSSDKComponent>();
+                if (instance == null)
+                {
+                    return null;
+                    // return new GameObject("EOSSDKComponent").AddComponent<EOSSDKComponent>();
                 } else {
                     return instance;
                 }
@@ -220,6 +222,7 @@ namespace EpicTransport {
 #endif
 
         private void Awake() {
+            Debug.LogError("EOSSDKComponent.Awake() called");
             // Initialize Java version of the SDK with a reference to the VM with JNI
             // See https://eoshelp.epicgames.com/s/question/0D54z00006ufJBNCA2/cant-get-createdeviceid-to-work-in-unity-android-c-sdk?language=en_US
             if (Application.platform == RuntimePlatform.Android) {
@@ -237,12 +240,13 @@ namespace EpicTransport {
 
             // Prevent multiple instances
             if (instance != null) {
+                Debug.Log("EOSSDKComponent.Awake, destroying the duplicate instance");
                 Destroy(gameObject);
                 return;
             }
 
             instance = this;
-            DontDestroyOnLoad(instance);
+            DontDestroyOnLoad(instance.gameObject);
 
 #if UNITY_EDITOR
             var libraryPath = "Assets/Mirror/Transports/EOSTransport/EOSSDK/" + Epic.OnlineServices.Common.LIBRARY_NAME;
@@ -258,6 +262,11 @@ namespace EpicTransport {
             if (!delayedInitialization) {
                 Initialize();
             }
+        }
+
+        private void OnDisable()
+        {
+            Debug.Log("WTF");
         }
 
         protected void InitializeImplementation() {
