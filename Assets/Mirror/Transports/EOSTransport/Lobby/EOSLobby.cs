@@ -248,7 +248,18 @@ public class EOSLobby : MonoBehaviour {
                 var options = new LobbySearchCopySearchResultByIndexOptions();
                 options.LobbyIndex = (uint) i;
                 search.CopySearchResultByIndex(ref options, out lobbyInformation);
-                foundLobbies.Add(lobbyInformation);
+
+                var getOptions = new LobbyDetailsGetMemberCountOptions();
+                uint memCount = lobbyInformation.GetMemberCount(ref getOptions);
+                Debug.Log("Member cnt in this lobby: " + memCount);
+                if (memCount > 0)
+                {
+                    foundLobbies.Add(lobbyInformation);
+                }
+                else
+                {
+                    Debug.LogError("Search query filter is NOT working. We are supposed to get only lobbies with min. 1 Player");
+                }
             }
 
             //invoke event
