@@ -16,6 +16,8 @@ namespace EpicTransport {
         private int maxConnections;
         private int nextConnectionID;
 
+        public static event Action<ProductUserId> OnClientDisconnectedFromServer;
+
         public static Server CreateServer(EosTransport transport, int maxConnections) {
             Server s = new Server(transport, maxConnections);
 
@@ -89,6 +91,8 @@ namespace EpicTransport {
                         epicToMirrorIds.Remove(clientUserId);
                         epicToSocketIds.Remove(clientUserId);
                         Debug.Log($"Client with Product User ID {clientUserId} disconnected.");
+                        OnClientDisconnectedFromServer?.Invoke(clientUserId);
+                        
                     } else {
                         OnReceivedError.Invoke(-1, new Exception("ERROR Unknown Product User ID"));
                     }

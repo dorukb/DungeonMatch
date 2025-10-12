@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
 using Mirror;
 using UnityEngine;
@@ -29,7 +30,13 @@ public class LobbyController : MonoBehaviour
         _eosLobby.FindLobbiesSucceeded += OnFindLobbiesSuccess;
         _eosLobby.LeaveLobbySucceeded += OnLeaveLobbySuccess;
         _eosLobby.LeaveLobbyFailed += OnLeaveLobbyFailed;
+        
+        // TODO: We had to change the Server code to include this extra event, which feels wrong.
+        // maybe using NetworkManager.singleton.OnServerDisconnect() is a better integration way.
+        // then, we need our own CustomNetworkManager and override that func.
+        EpicTransport.Server.OnClientDisconnectedFromServer += HandleClientDisconnect;
     }
+
 
     private void OnDisable() {
         //unsubscribe from events
@@ -38,6 +45,8 @@ public class LobbyController : MonoBehaviour
         _eosLobby.FindLobbiesSucceeded -= OnFindLobbiesSuccess;
         _eosLobby.LeaveLobbySucceeded -= OnLeaveLobbySuccess;
         _eosLobby.LeaveLobbyFailed -= OnLeaveLobbyFailed;
+        
+        EpicTransport.Server.OnClientDisconnectedFromServer -= HandleClientDisconnect;
     }
 
     private void Start()
@@ -53,12 +62,19 @@ public class LobbyController : MonoBehaviour
         joinButton.interactable = false;
     }
 
-    public void LeaveLobbyRequest()
+    public void RequestLeaveLobby()
     {
         _eosLobby.LeaveLobby();
         leaveLobbyButton.interactable = false;
     }
     
+    private void HandleClientDisconnect(ProductUserId leavingClientID)
+    {
+        // Note: We might wait for reconnect in the future. For now, directly close down the Lobby if client is DC'ed.
+        Debug.Log($"Client {leavingClientID} disconnected, Close the Lobby.");
+        RequestLeaveLobby();
+    }
+
     //when the lobby is successfully created, start the host
     private void OnCreateLobbySuccess(List<Attribute> attributes) {
         _lobbyData = attributes;
