@@ -27,6 +27,7 @@ namespace EpicTransport {
         private TaskCompletionSource<Task> connectedComplete;
         private CancellationTokenSource cancelToken;
 
+        public static event Action OnHostShutdownAbruptly;
         private Client(EosTransport transport) : base(transport) {
             ConnectionTimeout = TimeSpan.FromSeconds(Math.Max(1, transport.timeout));
         }
@@ -152,6 +153,11 @@ namespace EpicTransport {
                     Debug.Log("Disconnected.");
 
                     OnDisconnected.Invoke();
+                    
+                    // TODO: Is this really the only place we need?
+                    // have to make sure this is tied to Lobby Destroy from the Host, leading all Clients to get removed.
+                    // Confirmed this is only called if the Host Kills the App. Normal "Leave Lobby" call doesnt lead to this, it calls OnLeft for clients automatically.
+                    OnHostShutdownAbruptly?.Invoke();
                     break;
                 default:
                     Debug.Log("Received unknown message type");

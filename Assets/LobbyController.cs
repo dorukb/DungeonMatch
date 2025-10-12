@@ -35,6 +35,7 @@ public class LobbyController : MonoBehaviour
         // maybe using NetworkManager.singleton.OnServerDisconnect() is a better integration way.
         // then, we need our own CustomNetworkManager and override that func.
         EpicTransport.Server.OnClientDisconnectedFromServer += HandleClientDisconnect;
+        EpicTransport.Client.OnHostShutdownAbruptly += HandleHostShutdownAbruptly;
     }
 
 
@@ -47,6 +48,7 @@ public class LobbyController : MonoBehaviour
         _eosLobby.LeaveLobbyFailed -= OnLeaveLobbyFailed;
         
         EpicTransport.Server.OnClientDisconnectedFromServer -= HandleClientDisconnect;
+        EpicTransport.Client.OnHostShutdownAbruptly -= HandleHostShutdownAbruptly;
     }
 
     private void Start()
@@ -73,6 +75,15 @@ public class LobbyController : MonoBehaviour
         // Note: We might wait for reconnect in the future. For now, directly close down the Lobby if client is DC'ed.
         Debug.Log($"Client {leavingClientID} disconnected, Close the Lobby.");
         RequestLeaveLobby();
+    }
+
+    private void HandleHostShutdownAbruptly()
+    {
+        Debug.Log($"EOS sent DC signal, interpreted as Lobby Shutdown. Make sure the User knows about this.");
+        statusText.text = "Connected Lobby was Destroyed, Look for a new game.";
+        joinButton.gameObject.SetActive(true);
+        joinButton.interactable = true;
+        leaveLobbyButton.gameObject.SetActive(false);
     }
 
     //when the lobby is successfully created, start the host
