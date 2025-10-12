@@ -204,6 +204,8 @@ namespace Mirror
             // (when pressing Stop in the Editor, Unity keeps threads alive
             //  until we press Start again. so if Transports use threads, we
             //  really want them to end now and not after next start)
+            Debug.Log("Transport Application Quit");
+
             Shutdown();
         }
     }

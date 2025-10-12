@@ -462,6 +462,7 @@ namespace EpicTransport {
             // TODO: We may include LeaveLobby() Call in here, not nice but could work.
             // Due to Execution order, this object is killed first, so other more specialized scripts trying to access it 
             // from within their OnApplicationQuit() function fail.
+            Debug.Log("EOS SDK Application Quit");
             if (EOS != null) {
                 EOS.Release();
                 EOS = null;

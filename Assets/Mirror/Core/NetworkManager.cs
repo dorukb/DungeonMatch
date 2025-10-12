@@ -640,6 +640,8 @@ namespace Mirror
         // (this can't be in OnDestroy: https://github.com/MirrorNetworking/Mirror/issues/3952)
         public virtual void OnApplicationQuit()
         {
+            Debug.Log("NETWORK MAN Application Quit");
+
             // stop client first
             // (we want to send the quit packet to the server instead of waiting
             //  for a timeout)
