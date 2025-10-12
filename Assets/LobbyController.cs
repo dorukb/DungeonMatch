@@ -117,7 +117,7 @@ public class LobbyController : MonoBehaviour
     
     //when the lobby was left successfully, stop the host/client
     private void OnLeaveLobbySuccess() {
-        Debug.LogError($"Succesfully Left the lobby. Closing P2P connection.");
+        Debug.Log($"Succesfully Left the lobby. Closing P2P connection.");
         manager.StopHost();
         manager.StopClient();
         leaveLobbyButton.gameObject.SetActive(false);

@@ -198,7 +198,7 @@ public class EOSLobby : MonoBehaviour {
     /// </summary>
     /// <param name="maxResults">The maximum amount of results to return.</param>
     /// <param name="lobbySearchSetParameterOptions">The parameters to search by. If left empty, then the search will use the default attribute attached to all the lobbies.</param>
-    public virtual void FindLobbies(uint maxResults = 100, LobbySearchSetParameterOptions[] lobbySearchSetParameterOptions = null) {
+    public virtual void FindLobbies(uint maxResults = 100) {
         //create search handle and list of lobby details
         LobbySearch search = new LobbySearch();
 
@@ -206,19 +206,28 @@ public class EOSLobby : MonoBehaviour {
         var createLobbySearchOptions = new CreateLobbySearchOptions { MaxResults = maxResults };
         EOSSDKComponent.GetLobbyInterface().CreateLobbySearch(ref createLobbySearchOptions, out search);
 
-        //set search parameters
-        if (lobbySearchSetParameterOptions != null) {
-            foreach (LobbySearchSetParameterOptions searchOption in lobbySearchSetParameterOptions) {
-                var option = searchOption;
-                search.SetParameter(ref option);
-            }
-        } else {
-            var options = new LobbySearchSetParameterOptions();
-            options.ComparisonOp = ComparisonOp.Equal;
-            options.Parameter = new AttributeData { Key = DefaultAttributeKey, Value = DefaultAttributeKey };
-            search.SetParameter(ref options);
-        }
+        
+        var minMembersParam = new AttributeData();
+        // Built-in EOS key for min. members check
+        minMembersParam.Key = LobbyInterface.SEARCH_MINCURRENTMEMBERS;
+        minMembersParam.Value = new AttributeDataValue { AsInt64 = 1 };
 
+        var minMembersParamOptions = new LobbySearchSetParameterOptions();
+        minMembersParamOptions.Parameter = minMembersParam;
+        minMembersParamOptions.ComparisonOp = ComparisonOp.Equal; // We want exactly 1 current member.
+        
+        search.SetParameter(ref minMembersParamOptions);
+        
+        var minAvailableSlotsParam = new AttributeData();
+        minAvailableSlotsParam.Key = LobbyInterface.SEARCH_MINSLOTSAVAILABLE;
+        minAvailableSlotsParam.Value = new AttributeDataValue { AsInt64 = 1 };
+
+        var minSlotsParamOptions = new LobbySearchSetParameterOptions();
+        minSlotsParamOptions.Parameter = minAvailableSlotsParam;
+        minSlotsParamOptions.ComparisonOp = ComparisonOp.Equal; // We want exactly 1 available slot
+        
+        search.SetParameter(ref minSlotsParamOptions);
+        
         //find lobbies
         var findOptions = new LobbySearchFindOptions();
         findOptions.LocalUserId = EOSSDKComponent.LocalUserProductId;
