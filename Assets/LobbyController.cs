@@ -5,52 +5,68 @@ using Mirror;
 using UnityEngine;
 using Attribute = Epic.OnlineServices.Lobby.Attribute;
 using TMPro;
+using UnityEngine.UI;
 
 public class LobbyController : MonoBehaviour
 {
     [SerializeField] private EOSLobby _eosLobby;
     
     [SerializeField] private NetworkManager manager;
-    [SerializeField] private GameObject joinButton;
+    [SerializeField] private Button joinButton;
+    [SerializeField] private Button leaveLobbyButton;
 
     [SerializeField] private TextMeshProUGUI statusText;
     
     private List<LobbyDetails> _foundLobbies = new List<LobbyDetails>();
     private List<Attribute> _lobbyData = new List<Attribute>();
     
-    // Create a single, reusable Random instance.
     private static System.Random random = new System.Random();
     
-    //register events
     private void OnEnable() {
         //subscribe to events
         _eosLobby.CreateLobbySucceeded += OnCreateLobbySuccess;
         _eosLobby.JoinLobbySucceeded += OnJoinLobbySuccess;
         _eosLobby.FindLobbiesSucceeded += OnFindLobbiesSuccess;
         _eosLobby.LeaveLobbySucceeded += OnLeaveLobbySuccess;
+        _eosLobby.LeaveLobbyFailed += OnLeaveLobbyFailed;
     }
 
-    //deregister events
     private void OnDisable() {
         //unsubscribe from events
         _eosLobby.CreateLobbySucceeded -= OnCreateLobbySuccess;
         _eosLobby.JoinLobbySucceeded -= OnJoinLobbySuccess;
         _eosLobby.FindLobbiesSucceeded -= OnFindLobbiesSuccess;
         _eosLobby.LeaveLobbySucceeded -= OnLeaveLobbySuccess;
+        _eosLobby.LeaveLobbyFailed -= OnLeaveLobbyFailed;
+    }
+
+    private void Start()
+    {
+        leaveLobbyButton.gameObject.SetActive(false);
     }
 
     public void JoinMatch()
     {
         _eosLobby.FindLobbies();
         
+        // Prevent multiple clicks while Search continues.
+        joinButton.interactable = false;
     }
+
+    public void LeaveLobbyRequest()
+    {
+        _eosLobby.LeaveLobby();
+        leaveLobbyButton.interactable = false;
+    }
+    
     //when the lobby is successfully created, start the host
     private void OnCreateLobbySuccess(List<Attribute> attributes) {
         _lobbyData = attributes;
         manager.StartHost();
         
         statusText.text = "Created Lobby. waiting for other player.";
-        joinButton.SetActive(false);
+        joinButton.gameObject.SetActive(false);
+        leaveLobbyButton.gameObject.SetActive(true);
     }
 
     //when the user joined the lobby successfully, set network address and connect
@@ -68,7 +84,8 @@ public class LobbyController : MonoBehaviour
         manager.StartClient();
         
         statusText.text = "Game Started.";
-        joinButton.SetActive(false);
+        joinButton.gameObject.SetActive(false);
+        leaveLobbyButton.gameObject.SetActive(true);
     }
 
     private void OnFindLobbiesSuccess(List<LobbyDetails> lobbiesFound) {
@@ -78,6 +95,7 @@ public class LobbyController : MonoBehaviour
         {
             Debug.Log("trying to join the first found lobby");
             LobbyDetails lobbyDetails = lobbiesFound[0];
+            // lobbyDetails.
             _eosLobby.JoinLobby(lobbyDetails);
         }
         else
@@ -99,8 +117,22 @@ public class LobbyController : MonoBehaviour
     
     //when the lobby was left successfully, stop the host/client
     private void OnLeaveLobbySuccess() {
+        Debug.LogError($"Succesfully Left the lobby. Closing P2P connection.");
         manager.StopHost();
         manager.StopClient();
+        leaveLobbyButton.gameObject.SetActive(false);
+        leaveLobbyButton.interactable = true;
+        
+        statusText.text = "Left the Lobby, Main Menu.";
+        joinButton.gameObject.SetActive(true);
+        joinButton.interactable = true;
     }
+    
+    private void OnLeaveLobbyFailed(string errormessage)
+    {
+        Debug.LogError($"LeaveLobby failed: {errormessage}, maybe try again? or cry.");
+        leaveLobbyButton.interactable = true;
+    }
+
 
 }

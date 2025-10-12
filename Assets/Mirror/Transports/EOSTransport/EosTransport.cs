@@ -284,6 +284,21 @@ namespace EpicTransport {
             client = null;
             activeNode = null;
             Debug.Log("Transport shut down.");
+            
+            
+            // Note: Leaving the Lobby here fails, due to EOSSDK having execution order priority.
+            // We trigger this function from OnApplicationQuit and at this point,
+            // EOSSDK has already processed its OnApplicationQuit and has been deallocated.
+            // See more in EOSSDKComponent.cs OnApplicationQuit function.
+            // var eosLobby = FindObjectOfType<EOSLobby>();
+            // if (eosLobby != null)
+            // {
+            //     eosLobby.LeaveLobby();
+            // }
+            // else
+            // {
+            //     Debug.LogWarning("No EOS Lobby found. Cant request explicit Leave.");
+            // }
         }
 
         public int GetMaxSinglePacketSize(int channelId) => P2PInterface.MAX_PACKET_SIZE - 10; // 1159 bytes, we need to remove 10 bytes for the packet header (id (4 bytes) + fragment (4 bytes) + more fragments (1 byte)) 
