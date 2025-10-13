@@ -9,7 +9,6 @@ using UnityEngine.UI;
 public class EntrySceneController : MonoBehaviour
 {
     [SerializeField] private Button joinButton;
-    [SerializeField] private GameObject corePrefab;
     
     private EOSLobby _eosLobby;
     private NetworkRoomManager manager;
@@ -41,23 +40,14 @@ public class EntrySceneController : MonoBehaviour
         _eosLobby = FindObjectOfType<EOSLobby>();
         manager = FindObjectOfType<NetworkRoomManager>();
 
-        if (_eosLobby == null || manager == null)
+        if (_eosLobby == null)
         {
-            Debug.Log("First time, Create Core Prefab!");
-            var coreGO = Instantiate(corePrefab);
-            manager = coreGO.GetComponent<NetworkRoomManager>();
-            _eosLobby = coreGO.GetComponent<EOSLobby>();
+            Debug.LogError("EOS Lobby not found!");
         }
-        //
-        // _eosLobby = FindObjectOfType<EOSLobby>();
-        // if (_eosLobby == null)
-        // {
-        //     Debug.LogError("EOS Lobby not found!");
-        // }
-        // if (manager == null)
-        // {
-        //     Debug.LogError("Network Manager not found!");
-        // }
+        if (manager == null)
+        {
+            Debug.LogError("Network Manager not found!");
+        }
         
         // Connect the Button click programmatically.
         joinButton.onClick.AddListener(JoinMatch);

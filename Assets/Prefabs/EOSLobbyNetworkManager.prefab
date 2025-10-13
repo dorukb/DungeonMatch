@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5396432417895064223}
   - component: {fileID: 8337431071554574030}
-  - component: {fileID: 1924105659296026484}
   - component: {fileID: 5458540948720827202}
   - component: {fileID: 289836055523117184}
   m_Layer: 0
@@ -87,32 +86,6 @@ MonoBehaviour:
   GameplayScene: Assets/Scenes/Game.unity
   _allPlayersReady: 0
   clientIndex: 0
---- !u!114 &1924105659296026484
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6430075060573477275}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 09c2b9adb023e6547aa45a0e8bf5fcfc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  apiKeys: {fileID: 11400000, guid: 00d6a6e9a8a603546b4dca52ee0d5dff, type: 2}
-  authInterfaceLogin: 0
-  authInterfaceCredentialType: 6
-  devAuthToolPort: 7878
-  devAuthToolCredentialName: 
-  connectInterfaceCredentialType: 10
-  deviceModel: PC Windows 64bit
-  displayName: User
-  epicLoggerLevel: 200
-  collectPlayerMetrics: 1
-  checkForEpicLauncherAndRestart: 0
-  delayedInitialization: 0
-  platformTickIntervalInSeconds: 0
-  tickBudgetInMilliseconds: 0
 --- !u!114 &5458540948720827202
 MonoBehaviour:
   m_ObjectHideFlags: 0

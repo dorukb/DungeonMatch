@@ -585,12 +585,11 @@ namespace Mirror
             // IMPORTANT: .gameObject can be null if StopClient is called from
             //            OnApplicationQuit or from tests!
             
-            // TODO: CAN WE UNCOMMENT THIS OR NOT
-            // if (gameObject != null
-            //     && gameObject.scene.name == "DontDestroyOnLoad"
-            //     && !string.IsNullOrWhiteSpace(offlineScene)
-            //     && SceneManager.GetActiveScene().path != offlineScene)
-            //     SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
+            if (gameObject != null
+                && gameObject.scene.name == "DontDestroyOnLoad"
+                && !string.IsNullOrWhiteSpace(offlineScene)
+                && SceneManager.GetActiveScene().path != offlineScene)
+                SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
 
             OnStopServer();
 
@@ -662,6 +661,7 @@ namespace Mirror
 
             // Call ResetStatics to reset statics and singleton
             ResetStatics();
+            
         }
 
         /// <summary>Set the frame rate for a headless builds. Override to disable or modify.</summary>

@@ -222,7 +222,7 @@ namespace EpicTransport {
 #endif
 
         private void Awake() {
-            Debug.LogError("EOSSDKComponent.Awake() called");
+            Debug.Log("EOSSDKComponent.Awake() called");
             // Initialize Java version of the SDK with a reference to the VM with JNI
             // See https://eoshelp.epicgames.com/s/question/0D54z00006ufJBNCA2/cant-get-createdeviceid-to-work-in-unity-android-c-sdk?language=en_US
             if (Application.platform == RuntimePlatform.Android) {
@@ -240,7 +240,7 @@ namespace EpicTransport {
 
             // Prevent multiple instances
             if (instance != null) {
-                Debug.Log("EOSSDKComponent.Awake, destroying the duplicate instance");
+                Debug.LogError("EOSSDKComponent.Awake, destroying the duplicate instance, there should NOT be a duplicate! Destroying does not work with this SDK.");
                 Destroy(gameObject);
                 return;
             }
@@ -266,7 +266,7 @@ namespace EpicTransport {
 
         private void OnDisable()
         {
-            Debug.Log("WTF");
+            Debug.Log("EOSSDK OnDisable, nothing to see here.");
         }
 
         protected void InitializeImplementation() {
@@ -467,11 +467,11 @@ namespace EpicTransport {
             }
         }
 
-        private void OnApplicationQuit() {
+        public void OnDestroy() {
             // TODO: We may include LeaveLobby() Call in here, not nice but could work.
             // Due to Execution order, this object is killed first, so other more specialized scripts trying to access it 
             // from within their OnApplicationQuit() function fail.
-            Debug.Log("EOS SDK Application Quit");
+            Debug.Log("EOS SDK OnDestroy, Release the SDK.");
             if (EOS != null) {
                 EOS.Release();
                 EOS = null;

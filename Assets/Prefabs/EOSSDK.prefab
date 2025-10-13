@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8059968022579377752
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4580131503695664481}
+  - component: {fileID: 4551359040764765797}
+  m_Layer: 0
+  m_Name: EOSSDK
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4580131503695664481
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8059968022579377752}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4551359040764765797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8059968022579377752}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09c2b9adb023e6547aa45a0e8bf5fcfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  apiKeys: {fileID: 11400000, guid: 00d6a6e9a8a603546b4dca52ee0d5dff, type: 2}
+  authInterfaceLogin: 0
+  authInterfaceCredentialType: 6
+  devAuthToolPort: 7878
+  devAuthToolCredentialName: 
+  connectInterfaceCredentialType: 10
+  deviceModel: PC Windows 64bit
+  displayName: User
+  epicLoggerLevel: 200
+  collectPlayerMetrics: 0
+  checkForEpicLauncherAndRestart: 0
+  delayedInitialization: 0
+  platformTickIntervalInSeconds: 0
+  tickBudgetInMilliseconds: 0
