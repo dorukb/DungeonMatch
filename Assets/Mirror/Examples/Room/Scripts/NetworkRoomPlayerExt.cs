@@ -12,6 +12,7 @@ namespace Mirror.Examples.NetworkRoom
 
         public override void OnClientEnterRoom()
         {
+            CmdChangeReadyState(true);
             //Debug.Log($"OnClientEnterRoom {SceneManager.GetActiveScene().path}");
         }
 
