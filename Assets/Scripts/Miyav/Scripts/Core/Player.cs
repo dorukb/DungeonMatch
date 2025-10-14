@@ -7,7 +7,7 @@ namespace DorkyProductions.Core
 {
     public abstract class Player
     {
-        public string DisplayName { get; protected set; }
+        public string DisplayName { get; set; }
         public int id { get; protected set; }
         public bool isMyTurn { get; protected set; }
         

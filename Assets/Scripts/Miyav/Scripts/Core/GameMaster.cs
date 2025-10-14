@@ -10,16 +10,15 @@ public class GameMaster : MonoBehaviour
 {
     public static GameMaster Instance { get; private set; }
     
-    private CardRegistry _cardRegistry; // Not really needed. might remove.
-
     private Context _context;
 
-    private List<Player> _players = new List<Player>();
     public IGameState CurrentState { get; private set; }
 
-    private int CurrentPlayerIdx = -1;
-    public int TotalPlayers => _players.Count;
+    private Player currentPlayer = null;
     public Context context { get; private set; }
+    
+    private Player localPlayer;
+    private Player opponent;
     
     void Awake()
     {
@@ -37,29 +36,32 @@ public class GameMaster : MonoBehaviour
         // TODO: Remove.
         Application.targetFrameRate = 144;
         QualitySettings.vSyncCount = 0;
+
+        RegisterLocalPlayer("Player0");
     }
     void Start()
     {
-        _cardRegistry = CardRegistry.Instance;
-        if (_cardRegistry == null)
-        {
-            Debug.LogError("No card registry found.");
-        }
         // Players need to be "connected" and 'set-up' BEFORE starting the game.
-        _players.Add(new HumanPlayer(0, "Master Dork"));    
-        _players.Add(new PlayerAI(1, "Dumb AI"));
+        // _players.Add(new HumanPlayer(0, "Master Dork"));    
+        // _players.Add(new PlayerAI(1, "Dumb AI"));
 
         // TODO: Remove this, should start when user presses 'Play' :))
-        Invoke(nameof(StartNewGame), 1.5f);
+        // Invoke(nameof(StartNewGame), 1.5f);
     }   
     private void Update()
     {
         CurrentState?.Update(this.context);
     }
-    private void StartNewGame()
+
+    public void RegisterLocalPlayer(string playerName)
     {
-        this.context = new Context(this);
-        TransitionToState(new GameStartState());
+        localPlayer = new HumanPlayer(0, playerName);
+    }
+
+    public void ChangeLocalPlayerName(string playerName)
+    {
+       localPlayer.DisplayName = playerName;
+       Debug.Log($"Local player is now called: {playerName}");
     }
     public void TransitionToState(IGameState newState)
     {
@@ -67,10 +69,14 @@ public class GameMaster : MonoBehaviour
         CurrentState = newState;
         CurrentState.Enter(this.context);
     }
-
-    public Player GetPlayer(int playerId)
+    public void StartNewGame()
     {
-        return _players.FirstOrDefault(t => t.id == playerId);
+        this.context = new Context(this);
+        TransitionToState(new GameStartState());
+    }
+    public Player GetLocalPlayer()
+    {
+        return localPlayer;
     }
 
     public int GetCurrentPlayerID()
@@ -79,17 +85,15 @@ public class GameMaster : MonoBehaviour
     }
     public void NextPlayer()
     {
-        CurrentPlayerIdx = (CurrentPlayerIdx + 1) % TotalPlayers;
-        this.context.currentPlayer = _players[CurrentPlayerIdx];
+        currentPlayer = (currentPlayer == localPlayer) ? opponent : localPlayer;
+        this.context.currentPlayer = currentPlayer;
     }
     public void DealCardsToAllPlayers(int amount)
     {
         for (int i = 0; i < amount; i++)
         {
-            foreach (var player in _players)
-            {
-                player.ReceiveCatCard(context.DrawPile.Draw());
-            }
+            localPlayer.ReceiveCatCard(context.DrawPile.Draw());
+            opponent.ReceiveCatCard(context.DrawPile.Draw());
         }
     }
 

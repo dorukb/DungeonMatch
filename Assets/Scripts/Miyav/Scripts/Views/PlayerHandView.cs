@@ -37,8 +37,8 @@ public class PlayerHandView : MonoBehaviour, IHandView
 
     private void Init()
     {
-        this.myPlayer = GameMaster.Instance.GetPlayer(ownerPlayer);
-        this.myPlayer.OnPlayerReceivedCatCard += CreateNewBasicCard;
+        // this.myPlayer = GameMaster.Instance.GetPlayer(ownerPlayer);
+        // this.myPlayer.OnPlayerReceivedCatCard += CreateNewBasicCard;
     }
 
     public bool IsMyPlayer(int playerID)
