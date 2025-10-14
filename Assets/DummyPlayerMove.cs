@@ -39,6 +39,6 @@ public class DummyPlayerMove : MonoBehaviour
     {
         // Apply the movement to the Rigidbody2D's velocity.
         // We multiply the normalized input vector by our desired speed.
-        rb.velocity = movement * moveSpeed;
+        rb.linearVelocity = movement * moveSpeed;
     }
 }
