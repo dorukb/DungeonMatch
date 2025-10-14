@@ -75,3 +75,5 @@ Packages/com.ptc.vuforia.engine-*.tgz
 
 /[Aa]ssets/StreamingAssets/Whisper/*.bin*
 /simulator_build
+
+/.utmp

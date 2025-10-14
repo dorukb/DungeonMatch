@@ -37,7 +37,7 @@ public class GameMaster : MonoBehaviour
         Application.targetFrameRate = 144;
         QualitySettings.vSyncCount = 0;
 
-        RegisterLocalPlayer("Player0");
+        RegisterLocalPlayer("");
     }
     void Start()
     {
@@ -56,6 +56,11 @@ public class GameMaster : MonoBehaviour
     public void RegisterLocalPlayer(string playerName)
     {
         localPlayer = new HumanPlayer(0, playerName);
+    }
+
+    public void RegisterOpponent(string playerName)
+    {
+        opponent = new HumanPlayer(1, playerName);
     }
 
     public void ChangeLocalPlayerName(string playerName)
@@ -77,6 +82,10 @@ public class GameMaster : MonoBehaviour
     public Player GetLocalPlayer()
     {
         return localPlayer;
+    }
+    public Player GetOpponent()
+    {
+        return opponent;
     }
 
     public int GetCurrentPlayerID()

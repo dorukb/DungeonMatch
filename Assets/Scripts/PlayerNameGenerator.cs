@@ -44,20 +44,34 @@ public class PlayerNameGenerator : MonoBehaviour
 
     void Start()
     {
-        GenerateRandomName();
+        string playerName = GameMaster.Instance.GetLocalPlayer().DisplayName;
+        if (playerName.Length < 1)
+        {
+            SetRandomName();
+        }
+        else
+        {
+            nameDisplayText.text = playerName;
+        }
     }
 
     /// <summary>
-    /// Generates a new random name and updates the display text.
+    /// Generates a new random name and updates the display text & player name in GameMaster's cache..
     /// This public method should be linked to the "Reroll" button's OnClick event.
     /// </summary>
-    public void GenerateRandomName()
+    public void SetRandomName()
+    {
+        string generatedName = GenerateRandomName();
+        nameDisplayText.text = generatedName;
+        GameMaster.Instance.ChangeLocalPlayerName(generatedName);
+    }
+    private string GenerateRandomName()
     {
         // Check if the text display has been assigned to avoid errors.
         if (nameDisplayText == null)
         {
             Debug.LogError("Name Display Text is not assigned in the Inspector!");
-            return;
+            return "";
         }
 
         string generatedName;
@@ -77,9 +91,7 @@ public class PlayerNameGenerator : MonoBehaviour
             generatedName = randomPrefix + " " + randomSuffix;
         }
         
-        nameDisplayText.text = generatedName;
-        
-        GameMaster.Instance.ChangeLocalPlayerName(generatedName);
+        return generatedName;
     }
 }
 
