@@ -77,3 +77,4 @@ Packages/com.ptc.vuforia.engine-*.tgz
 /simulator_build
 
 /.utmp
+/build_ios
