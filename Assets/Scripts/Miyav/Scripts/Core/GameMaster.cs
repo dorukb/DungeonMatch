@@ -5,7 +5,7 @@ using UnityEngine;
 namespace DorkyProductions.Core
 {
     
-public class GameMaster : NetworkBehaviour
+public class GameMaster : MonoBehaviour
 {
     public static GameMaster Instance { get; private set; }
     
