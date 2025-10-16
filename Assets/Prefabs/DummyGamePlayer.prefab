@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 4642393616084459950}
   - component: {fileID: -7991876294720650933}
   - component: {fileID: 3208562759283064472}
+  - component: {fileID: 4168386829098521489}
   m_Layer: 0
   m_Name: DummyGamePlayer
   m_TagString: Player
@@ -270,6 +271,21 @@ MonoBehaviour:
   syncInterval: 0
   playerNameText: {fileID: 2393833816803821831}
   networkDisplayName: ??
+--- !u!114 &4168386829098521489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1480027675339556}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3e71d447a543a84e854895330fcd078, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInput
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
 --- !u!1 &5697290444387718150
 GameObject:
   m_ObjectHideFlags: 0
@@ -314,7 +330,7 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5697290444387718150}
-  m_CullTransparentMesh: 1
+  m_CullTransparentMesh: 0
 --- !u!114 &2393833816803821831
 MonoBehaviour:
   m_ObjectHideFlags: 0
