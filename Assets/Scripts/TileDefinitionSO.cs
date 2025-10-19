@@ -12,4 +12,22 @@ public class TileDefinitionSO : ScriptableObject
     // You can add more static data here later, like:
     // public GameObject popEffectPrefab;
     // public AudioClip popSound;
+    public static string ToString(int tileTypeID)
+    {
+        switch (tileTypeID)
+        {
+            case 0:
+                return "Attack";
+            case 1:
+                return "Shield";
+            case 2:
+                return "Cross";
+            case 3:
+                return "Potion";
+            case 4:
+                return "Chest";
+            default:
+                return "Unknown";
+        }
+    }
 }

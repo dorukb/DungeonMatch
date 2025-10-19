@@ -5,9 +5,34 @@ using UnityEngine;
 // It tells clients "A tile of this type with this unique ID exists."
 public struct TileState
 {
+    public static ushort INVALID_TILE_ID = 9999;
     public ushort uniqueID;
-    public int tileType;    // 0=Attack, 1=Attackx2, 2=Shield, etc.
+    public int tileType;     // 0=Attack, 1=Attackx2, 2=Shield, etc.
+
+    // A static "empty" tile for logic
+    public static TileState Empty => new TileState 
+    { 
+        uniqueID = INVALID_TILE_ID, // An invalid, recognizable ID
+        tileType = -1           // An invalid type
+    };
+
+    public bool IsEmpty() => tileType == -1;
 }
+
+// This struct holds the data for ONE match (e.g., a 4-in-a-row)
+public class MatchData
+{
+    public int tileTypeID;
+    public int matchCount;
+    // We store the actual positions for clearing them
+    public List<Vector2Int> positions;
+
+    public string ToString()
+    {
+        return TileDefinitionSO.ToString(tileTypeID);
+    }
+}
+
 public class GameBoard : NetworkBehaviour
 {
     [Header("Board Dimensions")]
@@ -60,7 +85,7 @@ public class GameBoard : NetworkBehaviour
         // Add handlers for SyncList Actions
         boardState.OnAdd += OnItemAdded;
         boardState.OnInsert += OnItemInserted;
-        boardState.OnSet += OnItemChanged;
+        boardState.OnSet += OnItemSet;
         boardState.OnRemove += OnItemRemoved;
         boardState.OnClear += OnListCleared;
 
@@ -75,14 +100,14 @@ public class GameBoard : NetworkBehaviour
         // Remove handlers when client stops
         boardState.OnAdd -= OnItemAdded;
         boardState.OnInsert -= OnItemInserted;
-        boardState.OnSet -= OnItemChanged;
+        boardState.OnSet -= OnItemSet;
         boardState.OnRemove -= OnItemRemoved;
         boardState.OnClear -= OnListCleared;
         // namesList.OnChange -= OnListChanged;
     }
 
     private void OnItemAdded(int idx) => _visualizer.OnTileAdded(idx, boardState[idx]);
-    private void OnItemChanged(int idx, TileState oldState) => _visualizer.OnTileChanged(idx, boardState[idx]);
+    private void OnItemSet(int idx, TileState oldState) => _visualizer.OnTileSet(idx, oldState, boardState[idx]);
     private void OnItemRemoved(int idx, TileState removedTile) => _visualizer.OnTileRemoved(idx, removedTile);
     private void OnItemInserted(int idx) => _visualizer.OnTileInserted(idx, boardState[idx]);
     private void OnListCleared() => _visualizer.OnBoardCleared();
@@ -95,93 +120,50 @@ public class GameBoard : NetworkBehaviour
             tileType = UnityEngine.Random.Range(0, tileDatabase.allTileDefinitions.Count)
         };
     }
-
-    // This is the main server logic loop
-    public void ProcessTurn(Vector2Int posA, Vector2Int posB)
-    {
-        // 1. Tell all clients to animate the *successful* swap.
-        RpcAnimateSwap(posA, posB);
-
-        // 2. Update server's internal state (the SyncList)
-        int indexA = posA.y * 5 + posA.x;
-        int indexB = posB.y * 5 + posB.x;
-        var tileA = boardState[indexA];
-        boardState[indexA] = boardState[indexB];
-        boardState[indexB] = tileA;
-
-        // 3. Run all match logic
-        //    (This is your complex logic: find matches,
-        //     clear tiles, calculate falls, add new tiles)
-        
-        // 3a. Find matches
-        var matches = FindAllMatches();
-        
-        // 3b. Tell clients WHAT to "pop"
-        // We send the *unique IDs* so clients know which GameObjects to pop.
-        List<ushort> matchedIDs = GetIDsFromMatches(matches);
-        RpcAnimateMatch(matchedIDs);
-
-        // 3c. Update the SyncList with the FINAL board state
-        // (after clearing matched tiles, falling, and spawning new ones)
-        UpdateBoardStateAfterMatches(matches); 
-    }
-
-    private void UpdateBoardStateAfterMatches(List<ushort> matches)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    private List<ushort> GetIDsFromMatches(List<ushort> matches)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    private List<ushort> FindAllMatches()
-    {
-        return null;}
+    //
+    // [ClientRpc]
+    // private void RpcAnimateSwap(Vector2Int posA, Vector2Int posB)
+    // {
+    //     // Called on ALL clients.
+    //     // (The client who initiated the move can just ignore this)
+    //     if (isLocalPlayer) return; // Example of ignoring if you're the one
+    //     
+    //     // _visualizer.AnimateSwap(posA, posB);
+    // }
+    //
+    // [ClientRpc]
+    // private void RpcAnimateMatch(List<ushort> matchedTileIDs)
+    // {
+    //     // Called on ALL clients.
+    //     // _visualizer.AnimateMatch(matchedTileIDs);
+    // }
+    //
     
-
-    [ClientRpc]
-    private void RpcAnimateSwap(Vector2Int posA, Vector2Int posB)
-    {
-        // Called on ALL clients.
-        // (The client who initiated the move can just ignore this)
-        if (isLocalPlayer) return; // Example of ignoring if you're the one
-        
-        // _visualizer.AnimateSwap(posA, posB);
-    }
-
-    [ClientRpc]
-    private void RpcAnimateMatch(List<ushort> matchedTileIDs)
-    {
-        // Called on ALL clients.
-        // _visualizer.AnimateMatch(matchedTileIDs);
-    }
     [Server]
-public bool ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA, Vector2Int posB)
-{
-    // --- 1. Validation ---
-    if (!IsValidSwap(posA, posB))
+    public bool ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA, Vector2Int posB)
     {
-        Debug.LogWarning($"[Server] Invalid swap: {posA} <-> {posB}. Not adjacent or out of bounds.");
-        return false;
+        // --- 1. Validation ---
+        if (!IsValidSwap(posA, posB))
+        {
+            Debug.LogWarning($"[Server] Invalid swap: {posA} <-> {posB}. Not adjacent.");
+            return false;
+        }
+
+        // --- 2. State Change ---
+        // This function does all the work AND checks for matches
+        bool didMatchOccur = AttemptSwapAndProcessBoard(posA, posB);
+        if (didMatchOccur)
+        {
+            Debug.Log($"[Server] Swap {posA} <-> {posB} successful. Board processed.");
+        }
+        else
+        {
+            Debug.Log($"[Server] Swap {posA} <-> {posB} resulted in no match. This is totally fine.");
+        }
+
+        return true;
     }
-
-    // --- 2. State Change (Stubbed for now) ---
-    // This is where we will actually modify the boardState SyncList
-    // and trigger match-checking logic.
-    ExecuteSwap(posA, posB);
     
-    // --- 3. Broadcast (Stubbed for now) ---
-    // After executing, we'd check for matches and send RPCs
-    // e.g., RpcAnimateSwap(posA, posB);
-    // e.g., RpcAnimateMatch(foundMatches);
-    
-    Debug.Log($"[Server] Executing swap: {posA} <-> {posB}");
-
-    return true;
-}
-
     public bool IsValidSwap(Vector2Int posA, Vector2Int posB)
     {
         // Check bounds
@@ -191,36 +173,257 @@ public bool ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA,
             return false;
         }
 
+        // Tiles must be different type, otherwise no effect.
+        // Prevents accidental no-effect swaps. 
+        if (GetTileAt(posA).tileType == GetTileAt(posB).tileType)
+        {
+            Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. Tiles are same type.");
+            return false;
+        }
+
+        if (GetTileAt(posA).tileType == -1 || GetTileAt(posB).tileType == -1)
+        {
+            Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. at least one of the tiles is Empty.");
+            // dont allow swapping with Empty tiles.
+            return false;
+        }
+        
         // Check for adjacency (Manhattan distance == 1)
         int dist = Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
         return dist == 1;
     }
+/// <summary>
+    /// This is the main server-side game loop for a turn.
+    /// returns bool: didMatchHappen
+    /// </summary>
+    [Server]
+    private bool AttemptSwapAndProcessBoard(Vector2Int posA, Vector2Int posB)
+    {
+        // --- 1. Perform the initial swap ---
+        int indexA = GetIndex(posA);
+        int indexB = GetIndex(posB);
+        TileState stateA = boardState[indexA];
+        TileState stateB = boardState[indexB];
 
-[Server]
-private void ExecuteSwap(Vector2Int posA, Vector2Int posB)
-{
-    // This is the core logic. We swap the items
-    // in the SyncList. This change will automatically
-    // propagate to all clients.
-    int indexA = (posA.y * BoardWidth) + posA.x;
-    int indexB = (posB.y * BoardWidth) + posB.x;
+        boardState[indexA] = stateB;
+        boardState[indexB] = stateA;
 
-    TileState stateA = boardState[indexA];
-    TileState stateB = boardState[indexB];
+        
+        // Check if this swap caused a match
+        // We only need to check the rows/cols of the two tiles we moved
+        var matchResults = FindMatchesAt(posA, posB);
+        if (matchResults.Count == 0)
+        {
+            // TODO: Move didnt yield a Match, maybe do not allow and rollback the move.
+            return false;
+        }
 
-    // This 'set' operation is what clients will receive
-    // in their SyncList.Callback
-    boardState[indexA] = stateB;
-    boardState[indexB] = stateA;
-    Debug.LogWarning($"[Server] Invalid swap: {posA} <-> {posB}. Not adjacent or out of bounds.");
+        bool hasMoreMatches = true;
+        while (hasMoreMatches)
+        {
+            ApplyMatchEffects(matchResults);
 
-    // TODO: After this, we must:
-    // 1. Check for matches starting from posA and posB.
-    // 2. If NO matches, swap them back! (An invalid move)
-    //    - boardState[indexA] = stateA;
-    //    - boardState[indexB] = stateB;
-    //    - And return false from ProcessPlayerSwap so it sends the TargetRpcRevert.
-    // 3. If there ARE matches, proceed to clear tiles, etc.
-}
+            // --- C. MATCH PHASE (Remove matched cards) ---
+            // Set all matched positions to "Empty"
+            foreach (var match in matchResults)
+            {
+                foreach (var pos in match.positions)
+                {
+                    boardState[GetIndex(pos)] = TileState.Empty;
+                }
+            }
+
+            // --- D. ARRANGE PHASE (Let tiles fall) ---
+            // SimulateTileFall();
+
+            // --- E. REFILL PHASE (Refill the board) ---
+            // RefillBoard();
+
+            hasMoreMatches = false;
+            // TODO: Check for new matches ---
+            // allMatchedPositions = FindAllMatchesOnBoard();
+            // if (allMatchedPositions.Count == 0)
+            // {
+            //     hasMoreMatches = false;
+            // }
+        }
+
+        return true; // A match occurred
+    }
+
+// --- MATCH-FINDING HELPERS ---
+
+    [Server]
+    private List<MatchData> FindMatchesAt(params Vector2Int[] positions)
+    {
+        List<MatchData> foundMatches = new List<MatchData>();
+        foreach (var pos in positions)
+        {        
+            MatchData horzMatch = FindMatchesInLine(pos, Vector2Int.right);
+            MatchData vertMatch = FindMatchesInLine(pos, Vector2Int.down);
+
+            if (horzMatch != null && vertMatch != null)
+            {
+                foundMatches.Add(horzMatch.matchCount > vertMatch.matchCount ? horzMatch : vertMatch);
+            }
+            if (horzMatch == null && vertMatch != null)
+            {
+                foundMatches.Add(vertMatch);
+            }
+            if (vertMatch == null && horzMatch != null)
+            {
+                foundMatches.Add(horzMatch);
+            }
+            // else both are null.
+        }
+        return foundMatches;
+    }
+
+    // [Server]
+    // private HashSet<Vector2Int> FindAllMatchesOnBoard()
+    // {
+    //     // HashSet<Vector2Int> allMatches = new HashSet<Vector2Int>();
+    //     // for (int y = 0; y < BoardHeight; y++)
+    //     // {
+    //     //     for (int x = 0; x < BoardWidth; x++)
+    //     //     {
+    //     //         FindMatchesInLine(new Vector2Int(x, y), new Vector2Int(1, 0), allMatches);
+    //     //         FindMatchesInLine(new Vector2Int(x, y), new Vector2Int(0, 1), allMatches);
+    //     //     }
+    //     // }
+    //     // return allMatches;
+    // }
+
+    
+    [Server]
+    private MatchData FindMatchesInLine(Vector2Int startPos, Vector2Int direction)
+    {
+        List<Vector2Int> candidateTiles = new List<Vector2Int>();
+        int currentType = GetTileAt(startPos).tileType;
+        
+        candidateTiles.Add(startPos);
+        // 2 units to the pos dir, 2 units to the neg.
+        // no need to check 3 units away, as that would lead to a match BEFORE This.
+        for (int i = 1; i <= 2; i++)
+        {
+            Vector2Int pos = startPos + direction * i;
+            if (!IsPosInBounds(pos) || GetTileAt(pos).tileType != currentType)
+            {
+                break; // End of line or type mismatch
+            }
+            candidateTiles.Add(pos);
+        }
+        // check the negative direction (left or down)
+        for (int i = 1; i <= 2; i++)
+        {
+            Vector2Int pos = startPos - direction * i;
+            if (!IsPosInBounds(pos) || GetTileAt(pos).tileType != currentType)
+            {
+                break; // End of line or type mismatch
+            }
+            candidateTiles.Add(pos);
+        }
+
+        if (candidateTiles.Count >= 3)
+        {
+            MatchData result = new MatchData
+            {
+                tileTypeID = currentType,
+                positions = candidateTiles,
+                matchCount = candidateTiles.Count
+            };
+            return result;
+        }
+        else return null;
+    }
+    
+    // --- BOARD PROCESSING HELPERS ---
+
+    [Server]
+    private void ApplyMatchEffects(List<MatchData> matchResults)
+    {
+        // This is where Card specific match effect will take place.
+        foreach (var match in matchResults)
+        {
+            if (match.tileTypeID == 4) // e.g., '5' is your CHEST_TILE_ID
+            {
+                // TODO: OpenChest();
+                // This could trigger another skill, which might
+                // modify the board again. Be careful of recursive loops!
+                // For now, let's keep it simple.
+            }
+            RpcApplyMatchEffect(match);
+        }
+    }
+
+    [ClientRpc]
+    private void RpcApplyMatchEffect(MatchData matchData)
+    {
+        Debug.Log($"Matched: {matchData.matchCount} of {matchData.ToString()}");
+        
+        // TODO: Notify visualizer of the match.
+        // _visualizer.
+    }
+
+    [Server]
+    private void SimulateTileFall()
+    {
+        for (int x = 0; x < BoardWidth; x++)
+        {
+            for (int y = 0; y < BoardHeight; y++)
+            {
+                if (GetTileAt(new Vector2Int(x, y)).IsEmpty())
+                {
+                    // ...look for the first non-empty tile *above* it
+                    for (int yAbove = y + 1; yAbove < BoardHeight; yAbove++)
+                    {
+                        if (!GetTileAt(new Vector2Int(x, yAbove)).IsEmpty())
+                        {
+                            // We found one! Move it down.
+                            Debug.Log($"Move tile ({x},{y}) to ({x},{yAbove})");
+                            boardState[GetIndex(x, y)] = GetTileAt(new Vector2Int(x, yAbove));
+                            boardState[GetIndex(x, yAbove)] = TileState.Empty;
+                            
+                            // Break the inner 'yAbove' loop to continue
+                            // checking the *current* 'y' position again.
+                            break; 
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    [Server]
+    private void RefillBoard()
+    {
+        Debug.Log("Refilling board");
+        // Per your rules: "bottom to top, then left to right"
+        for (int x = 0; x < BoardWidth; x++)
+        {
+            for (int y = 0; y < BoardHeight; y++)
+            {
+                if (GetTileAt(new Vector2Int(x, y)).IsEmpty())
+                {
+                    // This slot is empty, so fill it with a new tile
+                    Debug.Log($"Draw new tile to pos: ({x},{y})");
+                    boardState[GetIndex(x, y)] = GenerateNewTile();
+                }
+            }
+        }
+    }
+
+
+    // --- COORDINATE & STATE HELPERS ---
+
+    private int GetIndex(Vector2Int pos) => (pos.y * BoardWidth) + pos.x;
+    private int GetIndex(int x, int y) => (y * BoardWidth) + x;
+    private TileState GetTileAt(Vector2Int pos) => boardState[GetIndex(pos)];
+    
+    private bool IsPosInBounds(Vector2Int pos)
+    {
+        return pos.x >= 0 && pos.x < BoardWidth &&
+               pos.y >= 0 && pos.y < BoardHeight;
+    }
     // ... Server logic for checking matches, etc., goes here ...
 }

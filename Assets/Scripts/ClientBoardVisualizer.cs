@@ -1,5 +1,4 @@
 using UnityEngine;
-using Mirror;
 using System.Collections.Generic;
 
 public class ClientBoardVisualizer : MonoBehaviour
@@ -58,71 +57,6 @@ public class ClientBoardVisualizer : MonoBehaviour
         // 5. Add to our dictionary for tracking
         _visualTiles[state.uniqueID] = tileView;
     }
-
-    private void HandleTileMove(TileState newState, int newIndex)
-    {
-        if (_visualTiles.TryGetValue(newState.uniqueID, out TileView tileView))
-        {
-            Vector2Int newGridPos = GetGridPosFromIndex(newIndex);
-            
-            // Update the tile's internal logical position
-            tileView.GridPosition = newGridPos; 
-            Vector2 newAnchoredPos = GetAnchoredPosition(newGridPos);
-            tileView.MoveToPosition(newAnchoredPos);
-        }
-        else
-        {
-            Debug.LogError("Moved tile not found in visuals.");
-        }
-    }
-
-    // --- Public methods for Prediction / Reverting ---
-    
-    public void AnimatePredictedSwap(Vector2Int posA, Vector2Int posB)
-    {
-        // Find the TileViews at these grid positions
-        TileView tileA = GetTileViewAt(posA);
-        TileView tileB = GetTileViewAt(posB);
-
-        if (tileA != null && tileB != null)
-        {
-            // Get their target UI positions
-            Vector2 posA_UI = GetAnchoredPosition(posA);
-            Vector2 posB_UI = GetAnchoredPosition(posB);
-
-            // Tell them to swap
-            tileA.MoveToPosition(posB_UI);
-            tileB.MoveToPosition(posA_UI);
-            
-            // Update their internal grid positions
-            tileA.GridPosition = posB;
-            tileB.GridPosition = posA;
-        }
-    }
-
-    public void AnimateSwapBack(Vector2Int posA, Vector2Int posB)
-    {
-        // The tiles are *visually* at posB and posA now.
-        // We need to tell them to move *back* to posA and posB.
-        TileView tileA = GetTileViewAt(posB); // Tile A is now at B
-        TileView tileB = GetTileViewAt(posA); // Tile B is now at A
-
-        if (tileA != null && tileB != null)
-        {
-            Vector2 posA_UI = GetAnchoredPosition(posA);
-            Vector2 posB_UI = GetAnchoredPosition(posB);
-
-            // Use the "swap back" animation
-            tileA.AnimateSwapBack(posA_UI);
-            tileB.AnimateSwapBack(posB_UI);
-            
-            // Reset their internal grid positions
-            tileA.GridPosition = posA;
-            tileB.GridPosition = posB;
-        }
-    }
-
-
     // --- Helper Methods ---
 
     // Converts a 1D list index to a 2D grid position
@@ -162,10 +96,44 @@ public class ClientBoardVisualizer : MonoBehaviour
         _visualTiles.Clear();
     }
 
-    public void OnTileChanged(int idx, TileState newTile)
+    public void OnTileSet(int idx, TileState oldState, TileState newState)
     {
-        Debug.Log($"[VIZ] {idx} now has {newTile.uniqueID} type: {newTile.tileType} at idx: {idx}");
-        HandleTileMove(newTile, idx);
+        Debug.Log($"[VIZ] {idx} now has {newState.uniqueID} type: {newState.tileType} at idx: {idx}");
+        // HandleTileMove(newState, idx);
+        
+        // Case 1: A tile is matched (cleared)
+        if (newState.IsEmpty())
+        {
+            if (_visualTiles.TryGetValue(oldState.uniqueID, out TileView tileToPop))
+            {
+                // Play a pop animation and destroy it
+                tileToPop.AnimatePop(); 
+                _visualTiles.Remove(oldState.uniqueID);
+            }
+        }
+        // Case 2: A tile moves (falls) or is spawned
+        else
+        {
+            TileView tileView;
+            if (_visualTiles.TryGetValue(newState.uniqueID, out tileView))
+            {
+                // --- This is a FALL ---
+                // The tile already exists, tell it to move
+                Vector2Int newGridPos = GetGridPosFromIndex(idx);
+                Vector2 newAnchoredPos = GetAnchoredPosition(newGridPos);
+                    
+                tileView.GridPosition = newGridPos;
+                tileView.MoveToPosition(newAnchoredPos, 0.2f); // Faster fall
+            }
+            else
+            {
+                // --- This is a NEW SPAWN ---
+                // This tile doesn't exist, spawn it
+                // We'll spawn it *above* the board and tell it to fall
+                SpawnVisualTile(newState, idx); 
+                // (You can modify SpawnVisualTile to animate it falling in)
+            }
+        }
     }
 
     public void OnTileRemoved(int idx, TileState removedTile)
