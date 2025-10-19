@@ -39,15 +39,21 @@ public class NetworkPlayer : NetworkBehaviour
     public void RequestSwap(Vector2Int posA, Vector2Int posB)
     {
         if (!isLocalPlayer) return; // Should never happen, but good check
-
-        // --- LOCAL PREDICTION ---
-        // This is where you would tell your ClientBoardVisualizer
-        // to *immediately* start animating the swap.
-        // e.g., FindObjectOfType<ClientBoardVisualizer>().AnimatePredictedSwap(posA, posB);
-        Debug.Log($"[Local Client] Requesting swap: {posA} <-> {posB}");
-
-        // Now, send the actual request to the server for validation.
-        CmdAttemptSwap(posA, posB);
+        
+        // Let Client validate first to avoid useless requests.
+        if (_gameBoard.IsValidSwap(posA, posB))
+        {
+            // Not needed for now. But if considerable delay:
+            // implement: LOCAL PREDICTION 
+            // This is where you would tell your ClientBoardVisualizer
+            // to *immediately* start animating the swap.
+            // e.g., FindObjectOfType<ClientBoardVisualizer>().AnimatePredictedSwap(posA, posB);
+            // If not valid, Server will send back a Revert RPC that will undo the animation.
+            
+            Debug.Log($"[Local Client] Requesting swap: {posA} <-> {posB}");
+            // Now, send the actual request to the server for final validation.
+            CmdAttemptSwap(posA, posB);
+        }
     }
 
     [Command]

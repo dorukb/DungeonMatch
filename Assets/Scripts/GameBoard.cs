@@ -41,21 +41,51 @@ public class GameBoard : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        // This script should only run on the server
         if (!isServer)
         {
-            Debug.LogError("This shouldnt be called on Clients!");
+            Debug.LogError("This shouldn't be called on Clients!");
             return;
         }
         
         // When the server starts, populate the initial board.
         // (Don't just add 25 items, you need to call .Add()
         // for each one to sync properly)
-        for (int i = 0; i < 25; i++)
+        for (int i = 0; i < BoardHeight * BoardWidth; i++)
         {
             boardState.Add(GenerateNewTile());
         }
     }
+    public override void OnStartClient()
+    {
+        // Add handlers for SyncList Actions
+        boardState.OnAdd += OnItemAdded;
+        boardState.OnInsert += OnItemInserted;
+        boardState.OnSet += OnItemChanged;
+        boardState.OnRemove += OnItemRemoved;
+        boardState.OnClear += OnListCleared;
+
+        // For Clients, List is populated before handlers are wired up so we
+        // need to manually invoke OnAdd for each element.
+        for (int i = 0; i < boardState.Count; i++)
+            boardState.OnAdd.Invoke(i);
+    }
+
+    public override void OnStopClient()
+    {
+        // Remove handlers when client stops
+        boardState.OnAdd -= OnItemAdded;
+        boardState.OnInsert -= OnItemInserted;
+        boardState.OnSet -= OnItemChanged;
+        boardState.OnRemove -= OnItemRemoved;
+        boardState.OnClear -= OnListCleared;
+        // namesList.OnChange -= OnListChanged;
+    }
+
+    private void OnItemAdded(int idx) => _visualizer.OnTileAdded(idx, boardState[idx]);
+    private void OnItemChanged(int idx, TileState oldState) => _visualizer.OnTileChanged(idx, boardState[idx]);
+    private void OnItemRemoved(int idx, TileState removedTile) => _visualizer.OnTileRemoved(idx, removedTile);
+    private void OnItemInserted(int idx) => _visualizer.OnTileInserted(idx, boardState[idx]);
+    private void OnListCleared() => _visualizer.OnBoardCleared();
 
     private TileState GenerateNewTile()
     {
@@ -152,20 +182,19 @@ public bool ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA,
     return true;
 }
 
-[Server]
-private bool IsValidSwap(Vector2Int posA, Vector2Int posB)
-{
-    // Check bounds
-    if (posA.x < 0 || posA.x >= BoardWidth || posA.y < 0 || posA.y >= BoardHeight ||
-        posB.x < 0 || posB.x >= BoardWidth || posB.y < 0 || posB.y >= BoardHeight)
+    public bool IsValidSwap(Vector2Int posA, Vector2Int posB)
     {
-        return false;
-    }
+        // Check bounds
+        if (posA.x < 0 || posA.x >= BoardWidth || posA.y < 0 || posA.y >= BoardHeight ||
+            posB.x < 0 || posB.x >= BoardWidth || posB.y < 0 || posB.y >= BoardHeight)
+        {
+            return false;
+        }
 
-    // Check for adjacency (Manhattan distance == 1)
-    int dist = Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
-    return dist == 1;
-}
+        // Check for adjacency (Manhattan distance == 1)
+        int dist = Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
+        return dist == 1;
+    }
 
 [Server]
 private void ExecuteSwap(Vector2Int posA, Vector2Int posB)

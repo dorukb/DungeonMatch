@@ -26,79 +26,32 @@ public class ClientBoardVisualizer : MonoBehaviour
     void Start()
     {
         tileDatabase.Initialize();
-        gameBoard.boardState.Callback += OnBoardStateChanged;
-        PopulateInitialBoardVisuals();
-    }
-
-    private void OnDestroy()
-    {
-        // Always unsubscribe
-        if (gameBoard != null)
-        {
-            gameBoard.boardState.Callback -= OnBoardStateChanged;
-        }
-    }
-
-    // Spawn visuals for tiles that are *already* in the SyncList when we join
-    private void PopulateInitialBoardVisuals()
-    {
-        for (int i = 0; i < gameBoard.boardState.Count; i++)
-        {
-            SpawnVisualTile(gameBoard.boardState[i], i);
-        }
-    }
-
-    // This is the "magic" that reacts to server state changes
-    private void OnBoardStateChanged(SyncList<TileState>.Operation op, int index, TileState oldState, TileState newState)
-    {
-        switch (op)
-        {
-            // OP_ADD is called for the initial population
-            // and for any *new* tiles added later (e.g., from falling)
-            case SyncList<TileState>.Operation.OP_ADD:
-                // We might have already spawned this from PopulateInitialBoardVisuals
-                if (_visualTiles.ContainsKey(newState.uniqueID)) break;
-                
-                SpawnVisualTile(newState, index);
-                break;
-
-            // We'll handle these in the next steps
-            case SyncList<TileState>.Operation.OP_SET:
-                // A tile's data changed at this index
-                // This is how we handle tile *movement* (falling, swapping)
-                HandleTileMove(newState, index);
-                break;
-                
-            case SyncList<TileState>.Operation.OP_REMOVEAT:
-                // A tile was removed (e.g., matched)
-                Debug.LogError("Remove tile not implemented yet.");
-                // HandleTileRemove(oldState);
-                break;
-        }
     }
 // REBUILT: Spawns the UI prefab
     private void SpawnVisualTile(TileState state, int index)
     {
         Vector2Int gridPos = GetGridPosFromIndex(index);
         TileDefinitionSO def = tileDatabase.GetTileByType(state.tileType);
-        if (def == null) return;
+        if (def == null)
+        {
+            Debug.LogError($"[VIZ] Tile definition not found for type: {state.tileType}");
+            return;
+        }
 
-        // 1. Instantiate as a child of the board container
+        // 1. Locally instantiate as a child of the board container
         GameObject tileGO = Instantiate(tileViewPrefab, gameBoard.boardContainer);
         tileGO.name = $"Tile (ID: {state.uniqueID}, Type: {state.tileType})";
 
-        // 2. Setup its RectTransform
+        // 2. Setup the RectTransform Spawn Position
         RectTransform rt = tileGO.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0.5f, 0.5f);
         rt.anchorMax = new Vector2(0.5f, 0.5f);
         rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = gameBoard.tileViewSize;
         
-        // 3. Set its initial position
         Vector2 anchoredPos = GetAnchoredPosition(gridPos);
         rt.anchoredPosition = anchoredPos;
         
-        // 4. Initialize the TileView
         TileView tileView = tileGO.GetComponent<TileView>();
         tileView.Initialize(def, gridPos, playerInput);
         
@@ -106,7 +59,6 @@ public class ClientBoardVisualizer : MonoBehaviour
         _visualTiles[state.uniqueID] = tileView;
     }
 
-    // REBUILT: This now handles tile *movement*
     private void HandleTileMove(TileState newState, int newIndex)
     {
         if (_visualTiles.TryGetValue(newState.uniqueID, out TileView tileView))
@@ -115,19 +67,12 @@ public class ClientBoardVisualizer : MonoBehaviour
             
             // Update the tile's internal logical position
             tileView.GridPosition = newGridPos; 
-            
-            // Get the new UI position
             Vector2 newAnchoredPos = GetAnchoredPosition(newGridPos);
-            
-            // Tell the tile to animate to its new spot
             tileView.MoveToPosition(newAnchoredPos);
         }
         else
         {
-            _visualTiles[newState.uniqueID] = tileView;
-            // This is a new tile falling in.
-            // For now, just spawn it. We can animate it "falling" later.
-            SpawnVisualTile(newState, newIndex);
+            Debug.LogError("Moved tile not found in visuals.");
         }
     }
 
@@ -210,5 +155,57 @@ public class ClientBoardVisualizer : MonoBehaviour
             }
         }
         return null;
+    }
+
+    public void OnBoardCleared()
+    {
+        _visualTiles.Clear();
+    }
+
+    public void OnTileChanged(int idx, TileState newTile)
+    {
+        Debug.Log($"[VIZ] {idx} now has {newTile.uniqueID} type: {newTile.tileType} at idx: {idx}");
+        HandleTileMove(newTile, idx);
+    }
+
+    public void OnTileRemoved(int idx, TileState removedTile)
+    {
+        Debug.Log($"[VIZ] Removed (due to match or special effects) tile: {removedTile.uniqueID}");
+        Debug.LogError("[VIZ] Remove tile not implemented yet.");
+    }
+
+    public void OnTileInserted(int idx, TileState insertedTile)
+    {
+        // We might have already spawned this from PopulateInitialBoardVisuals
+        if (_visualTiles.ContainsKey(insertedTile.uniqueID))
+        {
+            Debug.Log($"[VIZ] The tile {insertedTile.uniqueID} already exists, due to init? ignoring INSERT request");
+            return;
+        }
+        
+        // This is a new tile falling in.
+        // For now, just spawn it. We can animate it "falling" later.
+        Debug.Log($"[VIZ]Inserted tile {insertedTile.uniqueID} type: {insertedTile.tileType} at idx: {idx}");
+        SpawnVisualTile(insertedTile, idx);
+    }
+
+    public void OnTileAdded(int idx, TileState addedTile)
+    {    
+        // TODO: Decide whether we consider Insertion & Add different events.
+        // so far, they lead to exactly the same code path.
+        // but insertion seems tobe related to "Refill board"
+        // whereas Add is about "Fill the board with initial tiles"
+        
+        // We might have already spawned this from PopulateInitialBoardVisuals
+        if (_visualTiles.ContainsKey(addedTile.uniqueID))
+        {
+            Debug.Log($"[VIZ] The tile {addedTile.uniqueID} already exists, due to init? ignoring ADD request");
+            return;
+        }
+        
+        // This is a new tile falling in.
+        // For now, just spawn it. We can animate it "falling" later.
+        Debug.Log($"[VIZ] Added tile {addedTile.uniqueID} type: {addedTile.tileType} at idx: {idx}");
+        SpawnVisualTile(addedTile, idx);
     }
 }
