@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 4822224316094678}
   - component: {fileID: 114402732107420660}
   - component: {fileID: 3208562759283064472}
-  - component: {fileID: 3927758348152444764}
   - component: {fileID: 1494397412789066891}
   m_Layer: 0
   m_Name: DummyGamePlayer
@@ -70,18 +69,6 @@ MonoBehaviour:
   syncInterval: 0
   playerNameText: {fileID: 2393833816803821831}
   networkDisplayName: ??
---- !u!114 &3927758348152444764
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1480027675339556}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3e71d447a543a84e854895330fcd078, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerInput
 --- !u!114 &1494397412789066891
 MonoBehaviour:
   m_ObjectHideFlags: 0

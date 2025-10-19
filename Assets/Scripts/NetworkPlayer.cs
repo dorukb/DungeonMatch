@@ -6,7 +6,6 @@ public class NetworkPlayer : NetworkBehaviour
     // We need a reference to the one-and-only GameBoard.
     // We can find it when we start.
     private GameBoard _gameBoard;
-
     public override void OnStartClient()
     {
         // Find the board on the client
@@ -20,10 +19,10 @@ public class NetworkPlayer : NetworkBehaviour
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
-        var pInput = gameObject.GetComponent<PlayerInput>();
+        var pInput = FindAnyObjectByType<PlayerInput>();
         if (pInput == null)
         {
-            Debug.LogError("Could not find PlayerInput next to NetworkPlayer script, check the Player Prefab.");
+            Debug.LogError("Could not find PlayerInput in the scene, check the Player Prefab.");
             return;
         }
         

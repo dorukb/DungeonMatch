@@ -13,11 +13,25 @@ public class GameBoard : NetworkBehaviour
     [Header("Board Dimensions")]
     public const int BoardWidth = 5;
     public const int BoardHeight = 5;
+    
+    [Header("UI Layout (Read by Client)")]
+    [Tooltip("The RectTransform that holds the 5x5 grid UI.")]
+    public RectTransform boardContainer;
 
+    [Tooltip("The size (width/height) of a single tile's RectTransform.")]
+    public Vector2 tileViewSize = new Vector2(100, 100);
+
+    [Tooltip("The space between adjacent tiles.")]
+    public Vector2 tileSpacing = new Vector2(10, 10);
+    
     [Header("Game Data")]
     [SerializeField]
     private TileDatabase tileDatabase; // Assign your TileDatabase SO here
 
+    [SerializeField]
+    private ClientBoardVisualizer _visualizer;
+
+    
     // The "Single Source of Truth" for all clients.
     // This list represents a 5x5 grid, flattened to 1D.
     // Index = (y * BoardWidth) + x
@@ -25,8 +39,6 @@ public class GameBoard : NetworkBehaviour
 
     private ushort _nextTileID = 0;
 
-    [SerializeField]
-    private ClientBoardVisualizer _visualizer;
     public override void OnStartServer()
     {
         // This script should only run on the server
