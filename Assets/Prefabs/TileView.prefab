@@ -9,11 +9,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2306482801169406195}
-  - component: {fileID: 8311547325699354956}
   - component: {fileID: 3974970986783416188}
   - component: {fileID: 4334881345100901946}
+  - component: {fileID: 6749643055029133165}
   m_Layer: 0
-  m_Name: Tile
+  m_Name: TileView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29,27 +29,11 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.08, y: 0.08, z: 0.08}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8311547325699354956
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6552938585266915852}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 08ba0b8c219341840a64270497755714, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  type: 0
-  x: 0
-  y: 0
-  renderer: {fileID: 4334881345100901946}
 --- !u!61 &3974970986783416188
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -154,3 +138,16 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &6749643055029133165
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6552938585266915852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4c374d32ad64f146a6d86e612530028, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TileView
+  _spriteRenderer: {fileID: 4334881345100901946}

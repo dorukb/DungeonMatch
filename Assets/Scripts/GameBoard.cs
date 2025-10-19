@@ -1,249 +1,185 @@
-using UnityEngine;
+using System.Collections.Generic;
 using Mirror;
+using UnityEngine;
 
-// Enum to represent the different types of tiles.
-// Add as many as you need. Start with at least 3.
-public enum TileType
+// It tells clients "A tile of this type with this unique ID exists."
+public struct TileState
 {
-    Empty,
-    Red,
-    Green,
-    Blue,
-    Yellow,
-    Purple
+    public ushort uniqueID;
+    public int tileType;    // 0=Attack, 1=Attackx2, 2=Shield, etc.
 }
-
 public class GameBoard : NetworkBehaviour
 {
     [Header("Board Dimensions")]
-    public int width = 5;
-    public int height = 5;
+    public const int BoardWidth = 5;
+    public const int BoardHeight = 5;
 
-    [Header("Prefabs")]
-    [Tooltip("Assign the prefab for the visual representation of a tile")]
-    public GameObject tilePrefab;
+    [Header("Game Data")]
+    [SerializeField]
+    private TileDatabase tileDatabase; // Assign your TileDatabase SO here
 
-    // The SyncList is the core of the networking.
-    // It's a list that automatically synchronizes its contents from the server to all clients.
-    // We will store the state of the entire board in this single list.
-    private readonly SyncList<TileType> boardTiles = new SyncList<TileType>();
+    // The "Single Source of Truth" for all clients.
+    // This list represents a 5x5 grid, flattened to 1D.
+    // Index = (y * BoardWidth) + x
+    public readonly SyncList<TileState> boardState = new SyncList<TileState>();
 
-    // This will hold the visual GameObjects for the tiles on each client.
-    // It is not networked, as each client manages its own visual objects.
-    private GameObject[,] tileObjects;
+    private ushort _nextTileID = 0;
 
-    #region Server-Only Logic
-
-    // This runs on the server when the object is created.
+    [SerializeField]
+    private ClientBoardVisualizer _visualizer;
     public override void OnStartServer()
     {
-        base.OnStartServer();
-        tileObjects = new GameObject[width, height];
-        InitializeBoard();
-    }
-
-    /// <summary>
-    /// [Server] Fills the board with initial random tiles.
-    /// </summary>
-    [Server]
-    private void InitializeBoard()
-    {
-        boardTiles.Clear();
-        for (int i = 0; i < width * height; i++)
+        // This script should only run on the server
+        if (!isServer)
         {
-            // Add a random tile type to the SyncList.
-            // Exclude 'Empty' (starting from 1).
-            boardTiles.Add((TileType)Random.Range(1, System.Enum.GetValues(typeof(TileType)).Length));
-        }
-    }
-
-    /// <summary>
-    /// [Server] The main logic for handling a player's move request.
-    /// </summary>
-    [Server]
-    private void HandleSwap(Vector2Int pos1, Vector2Int pos2)
-    {
-        // 1. Validate the swap (e.g., are they adjacent?)
-        if (!IsSwapValid(pos1, pos2))
-        {
-            // Invalid move, do nothing.
-            // You might want to send an error message back to the specific client.
+            Debug.LogError("This shouldnt be called on Clients!");
             return;
         }
-
-        // 2. Perform the swap in the SyncList
-        int index1 = To1D(pos1.x, pos1.y);
-        int index2 = To1D(pos2.x, pos2.y);
-
-        TileType temp = boardTiles[index1];
-        boardTiles[index1] = boardTiles[index2];
-        boardTiles[index2] = temp;
-
-        // 3. Check for matches
-        // Note: You need to implement the match-finding logic.
-        // This is a complex part of a match-3 game.
-        if (CheckForMatches())
-        {
-            // If matches are found:
-            // - Clear matched tiles (set to Empty)
-            // - Add score
-            // - Shift tiles down
-            // - Refill the board
-            // The SyncList changes will automatically propagate to clients.
-        }
-        else
-        {
-            // No match found, swap back immediately.
-            temp = boardTiles[index1];
-            boardTiles[index1] = boardTiles[index2];
-            boardTiles[index2] = temp;
-        }
-    }
-
-    [Server]
-    private bool IsSwapValid(Vector2Int pos1, Vector2Int pos2)
-    {
-        // Basic adjacency check
-        return (Mathf.Abs(pos1.x - pos2.x) == 1 && pos1.y == pos2.y) ||
-               (Mathf.Abs(pos1.y - pos2.y) == 1 && pos1.x == pos2.x);
-    }
-
-    [Server]
-    private bool CheckForMatches()
-    {
-        // Placeholder for your match-finding logic.
-        // This should iterate through the `boardTiles` list and find chains of 3 or more.
-        Debug.Log("Server is checking for matches...");
-        return true; // Assume a match is found for demonstration
-    }
-
-    #endregion
-
-    #region Client-Side Logic
-
-    // This is called on clients when the object is created.
-    public override void OnStartClient()
-    {
-        base.OnStartClient();
-
-        tileObjects = new GameObject[width, height];
-
-        // The callback is crucial. It tells the client what to do whenever the SyncList changes.
-        boardTiles.Callback += OnBoardUpdated;
-
-        // When a client joins, the board might already exist.
-        // This initial loop renders the board in its current state.
-        for (int i = 0; i < boardTiles.Count; i++)
-        {
-            Vector2Int pos = To2D(i);
-            CreateTileObject(boardTiles[i], pos.x, pos.y);
-        }
-    }
-
-    /// <summary>
-    /// This is the heart of the client-side visuals. It fires on every client
-    /// whenever the 'boardTiles' SyncList is modified on the SERVER.
-    /// </summary>
-    private void OnBoardUpdated(SyncList<TileType>.Operation op, int index, TileType oldItem, TileType newItem)
-    {
-        Vector2Int pos = To2D(index);
-
-        switch (op)
-        {
-            case SyncList<TileType>.Operation.OP_ADD:
-                // A new item was added (used during initial setup)
-                CreateTileObject(newItem, pos.x, pos.y);
-                break;
-            case SyncList<TileType>.Operation.OP_SET:
-                // An item was changed (most common operation: swaps, clearing, refilling)
-                UpdateTileObject(newItem, pos.x, pos.y);
-                break;
-            case SyncList<TileType>.Operation.OP_REMOVEAT:
-                // An item was removed (not typically used in this board setup)
-                Destroy(tileObjects[pos.x, pos.y]);
-                break;
-            case SyncList<TileType>.Operation.OP_CLEAR:
-                // The whole list was cleared
-                for (int y = 0; y < height; y++)
-                {
-                    for (int x = 0; x < width; x++)
-                    {
-                        if (tileObjects[x, y] != null)
-                        {
-                           Destroy(tileObjects[x, y]);
-                        }
-                    }
-                }
-                break;
-        }
-    }
-
-    /// <summary>
-    /// [Client] Instantiates a new tile prefab.
-    /// </summary>
-    private void CreateTileObject(TileType type, int x, int y)
-    {
-        if (tileObjects[x, y] != null) return; // Already exists
-
-        GameObject newTile = Instantiate(tilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
-        newTile.name = $"Tile ({x}, {y})";
-        tileObjects[x, y] = newTile;
         
-        // Get the Tile component to set its visual properties
-        Tile tileComponent = newTile.GetComponent<Tile>();
-        if (tileComponent != null)
+        // When the server starts, populate the initial board.
+        // (Don't just add 25 items, you need to call .Add()
+        // for each one to sync properly)
+        for (int i = 0; i < 25; i++)
         {
-            tileComponent.SetTile(type, x, y);
+            boardState.Add(GenerateNewTile());
         }
     }
 
-    /// <summary>
-    /// [Client] Updates an existing tile's visuals.
-    /// </summary>
-    private void UpdateTileObject(TileType type, int x, int y)
+    private TileState GenerateNewTile()
     {
-        if (tileObjects[x, y] == null)
+        return new TileState
         {
-             CreateTileObject(type, x, y);
-             return;
-        }
+            uniqueID = _nextTileID++,
+            tileType = UnityEngine.Random.Range(0, tileDatabase.allTileDefinitions.Count)
+        };
+    }
+
+    // This is the main server logic loop
+    public void ProcessTurn(Vector2Int posA, Vector2Int posB)
+    {
+        // 1. Tell all clients to animate the *successful* swap.
+        RpcAnimateSwap(posA, posB);
+
+        // 2. Update server's internal state (the SyncList)
+        int indexA = posA.y * 5 + posA.x;
+        int indexB = posB.y * 5 + posB.x;
+        var tileA = boardState[indexA];
+        boardState[indexA] = boardState[indexB];
+        boardState[indexB] = tileA;
+
+        // 3. Run all match logic
+        //    (This is your complex logic: find matches,
+        //     clear tiles, calculate falls, add new tiles)
         
-        Tile tileComponent = tileObjects[x, y].GetComponent<Tile>();
-        if (tileComponent != null)
-        {
-            tileComponent.SetTile(type, x, y);
-        }
+        // 3a. Find matches
+        var matches = FindAllMatches();
+        
+        // 3b. Tell clients WHAT to "pop"
+        // We send the *unique IDs* so clients know which GameObjects to pop.
+        List<ushort> matchedIDs = GetIDsFromMatches(matches);
+        RpcAnimateMatch(matchedIDs);
+
+        // 3c. Update the SyncList with the FINAL board state
+        // (after clearing matched tiles, falling, and spawning new ones)
+        UpdateBoardStateAfterMatches(matches); 
     }
 
-
-    #endregion
-
-    #region Player Commands
-
-    // A Command is a message sent from a Client to the Server.
-    [Command(requiresAuthority = false)] // `requiresAuthority=false` lets any player call this
-    public void CmdSwapTiles(Vector2Int pos1, Vector2Int pos2)
+    private void UpdateBoardStateAfterMatches(List<ushort> matches)
     {
-        // This code runs ONLY on the server.
-        HandleSwap(pos1, pos2);
+        throw new System.NotImplementedException();
     }
 
-    #endregion
-
-    #region Helper Functions
-
-    // Converts a 2D board position to a 1D list index.
-    private int To1D(int x, int y)
+    private List<ushort> GetIDsFromMatches(List<ushort> matches)
     {
-        return y * width + x;
+        throw new System.NotImplementedException();
     }
 
-    // Converts a 1D list index back to a 2D board position.
-    private Vector2Int To2D(int index)
+    private List<ushort> FindAllMatches()
     {
-        return new Vector2Int(index % width, index / width);
+        return null;}
+    
+
+    [ClientRpc]
+    private void RpcAnimateSwap(Vector2Int posA, Vector2Int posB)
+    {
+        // Called on ALL clients.
+        // (The client who initiated the move can just ignore this)
+        if (isLocalPlayer) return; // Example of ignoring if you're the one
+        
+        // _visualizer.AnimateSwap(posA, posB);
     }
 
-    #endregion
+    [ClientRpc]
+    private void RpcAnimateMatch(List<ushort> matchedTileIDs)
+    {
+        // Called on ALL clients.
+        // _visualizer.AnimateMatch(matchedTileIDs);
+    }
+    [Server]
+public bool ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA, Vector2Int posB)
+{
+    // --- 1. Validation ---
+    if (!IsValidSwap(posA, posB))
+    {
+        Debug.LogWarning($"[Server] Invalid swap: {posA} <-> {posB}. Not adjacent or out of bounds.");
+        return false;
+    }
+
+    // --- 2. State Change (Stubbed for now) ---
+    // This is where we will actually modify the boardState SyncList
+    // and trigger match-checking logic.
+    ExecuteSwap(posA, posB);
+    
+    // --- 3. Broadcast (Stubbed for now) ---
+    // After executing, we'd check for matches and send RPCs
+    // e.g., RpcAnimateSwap(posA, posB);
+    // e.g., RpcAnimateMatch(foundMatches);
+    
+    Debug.Log($"[Server] Executing swap: {posA} <-> {posB}");
+
+    return true;
 }
 
+[Server]
+private bool IsValidSwap(Vector2Int posA, Vector2Int posB)
+{
+    // Check bounds
+    if (posA.x < 0 || posA.x >= BoardWidth || posA.y < 0 || posA.y >= BoardHeight ||
+        posB.x < 0 || posB.x >= BoardWidth || posB.y < 0 || posB.y >= BoardHeight)
+    {
+        return false;
+    }
+
+    // Check for adjacency (Manhattan distance == 1)
+    int dist = Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
+    return dist == 1;
+}
+
+[Server]
+private void ExecuteSwap(Vector2Int posA, Vector2Int posB)
+{
+    // This is the core logic. We swap the items
+    // in the SyncList. This change will automatically
+    // propagate to all clients.
+    int indexA = (posA.y * BoardWidth) + posA.x;
+    int indexB = (posB.y * BoardWidth) + posB.x;
+
+    TileState stateA = boardState[indexA];
+    TileState stateB = boardState[indexB];
+
+    // This 'set' operation is what clients will receive
+    // in their SyncList.Callback
+    boardState[indexA] = stateB;
+    boardState[indexB] = stateA;
+    Debug.LogWarning($"[Server] Invalid swap: {posA} <-> {posB}. Not adjacent or out of bounds.");
+
+    // TODO: After this, we must:
+    // 1. Check for matches starting from posA and posB.
+    // 2. If NO matches, swap them back! (An invalid move)
+    //    - boardState[indexA] = stateA;
+    //    - boardState[indexB] = stateB;
+    //    - And return false from ProcessPlayerSwap so it sends the TargetRpcRevert.
+    // 3. If there ARE matches, proceed to clear tiles, etc.
+}
+    // ... Server logic for checking matches, etc., goes here ...
+}

@@ -1,70 +1,99 @@
-using Mirror;
 using UnityEngine;
+using Mirror;
 
-public class PlayerInput : NetworkBehaviour
+// This is NOT a NetworkBehaviour. It's a simple, local input handler.
+public class PlayerInput : MonoBehaviour
 {
-    // We need a reference to the one and only GameBoard in the scene.
-    private GameBoard gameBoard;
-    private Camera mainCamera;
+    private Camera _mainCamera;
+    private Vector2Int _dragStartPos;
+    private bool _isDragging = false;
 
-    private Vector2Int? firstSelectedTile = null;
+    private NetworkPlayer _localPlayerController;
 
     void Start()
     {
-        // Find the board and camera on start.
-        gameBoard = FindObjectOfType<GameBoard>();
-        mainCamera = Camera.main;
+        _mainCamera = Camera.main;
     }
 
     void Update()
     {
-        // Only the local player should be able to control the board.
-        if (!isLocalPlayer) return;
-
-        if (Input.GetMouseButtonDown(0))
+        if (_localPlayerController != null)
         {
-            HandleSelection();
+            HandleInput();
         }
     }
 
-    void HandleSelection()
+    public void SetPlayer(NetworkPlayer localPlayer)
     {
-        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit))
+        _localPlayerController = localPlayer;
+    }
+    private void HandleInput()
+    {
+        if (Input.GetMouseButtonDown(0))
         {
-            Tile tile = hit.collider.GetComponent<Tile>();
-            if (tile != null)
+            Vector2Int gridPos = GetGridPosFromWorld(Input.mousePosition);
+            if (IsValidGridPos(gridPos))
             {
-                Vector2Int selectedPos = new Vector2Int(tile.x, tile.y);
-
-                if (firstSelectedTile == null)
-                {
-                    // This is the first tile selected.
-                    firstSelectedTile = selectedPos;
-                    // Optional: Add a visual indicator (like highlighting)
-                    Debug.Log($"Selected first tile at: {selectedPos}");
-                }
-                else
-                {
-                    // This is the second tile. Send the command to the server.
-                    Debug.Log($"Selected second tile at: {selectedPos}. Sending swap command.");
-                    
-                    // We have both tiles, so we call the Command on the GameBoard.
-                    // The server will then validate and process this move.
-                    if (gameBoard != null)
-                    {
-                        gameBoard.CmdSwapTiles(firstSelectedTile.Value, selectedPos);
-                    }
-
-                    // Reset selection
-                    firstSelectedTile = null;
-                }
+                _dragStartPos = gridPos;
+                _isDragging = true;
             }
+        }
+        else if (Input.GetMouseButtonUp(0) && _isDragging)
+        {
+            _isDragging = false;
+            Vector2Int gridPos = GetGridPosFromWorld(Input.mousePosition);
+            if (!IsValidGridPos(gridPos) || gridPos == _dragStartPos)
+            {
+                // Invalid drag or just a click
+                return; 
+            }
+
+            // We have a start and end position.
+            // Figure out the direction.
+            Vector2Int dragEndPos = GetAdjacentPosFromDrag(_dragStartPos, gridPos);
+
+            if (IsValidGridPos(dragEndPos))
+            {
+                // We have a valid swap request!
+                // Tell our networked Player script to send the command.
+                _localPlayerController.RequestSwap(_dragStartPos, dragEndPos);
+            }
+        }
+    }
+
+    // --- Helper Methods ---
+
+    // This converts screen space to your grid coordinates.
+    // This is HIGHLY dependent on your camera and board setup.
+    private Vector2Int GetGridPosFromWorld(Vector2 screenPos)
+    {
+        Vector3 worldPos = _mainCamera.ScreenToWorldPoint(screenPos);
+        // Assuming your board is at (0,0) and each tile is 1 unit
+        // You MUST adjust this logic.
+        int x = Mathf.RoundToInt(worldPos.x); 
+        int y = Mathf.RoundToInt(worldPos.y);
+        return new Vector2Int(x, y);
+    }
+
+    private bool IsValidGridPos(Vector2Int pos)
+    {
+        return pos.x >= 0 && pos.x < GameBoard.BoardWidth &&
+               pos.y >= 0 && pos.y < GameBoard.BoardHeight;
+    }
+
+    // A simple way to get the intended swap direction
+    private Vector2Int GetAdjacentPosFromDrag(Vector2Int start, Vector2Int end)
+    {
+        Vector2Int diff = end - start;
+        if (Mathf.Abs(diff.x) > Mathf.Abs(diff.y))
+        {
+            // Horizontal swipe
+            return start + new Vector2Int(diff.x > 0 ? 1 : -1, 0);
         }
         else
         {
-             // Clicked on empty space, reset selection
-             firstSelectedTile = null;
+            // Vertical swipe
+            return start + new Vector2Int(0, diff.y > 0 ? 1 : -1);
         }
     }
 }

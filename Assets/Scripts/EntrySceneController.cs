@@ -37,8 +37,8 @@ public class EntrySceneController : MonoBehaviour
     private void Awake()
     {
         
-        _eosLobby = FindObjectOfType<EOSLobby>();
-        manager = FindObjectOfType<NetworkRoomManager>();
+        _eosLobby = FindAnyObjectByType<EOSLobby>();
+        manager = FindAnyObjectByType<NetworkRoomManager>();
 
         if (_eosLobby == null)
         {

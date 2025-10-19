@@ -80,7 +80,7 @@ MonoBehaviour:
   evaluationInterval: 3
   timeInterpolationGui: 0
   showRoomGUI: 0
-  minPlayers: 2
+  minPlayers: 1
   roomPlayerPrefab: {fileID: 114033720796874720, guid: deae2134a1d77704b9c595efe69767dd, type: 3}
   RoomScene: Assets/Scenes/OnlineLobby.unity
   GameplayScene: Assets/Scenes/Game.unity
