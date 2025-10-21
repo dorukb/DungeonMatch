@@ -19,7 +19,7 @@ public class GameMaster : MonoBehaviour
     private Player localPlayer;
     private Player opponent;
     
-    
+    // TODO: GameMaster match specific state must be reset manually, when the match ends.
     void Awake()
     {
         if (Instance == null)
@@ -73,12 +73,6 @@ public class GameMaster : MonoBehaviour
     {
        localPlayer.DisplayName = playerName;
        Debug.Log($"Local player is now called: {playerName}");
-    }
-    
-    public void ChangeOpponentName(string playerName)
-    {
-        opponent.DisplayName = playerName;
-        Debug.Log($"Opponent is now called: {playerName}");
     }
     public void TransitionToState(IGameState newState)
     {

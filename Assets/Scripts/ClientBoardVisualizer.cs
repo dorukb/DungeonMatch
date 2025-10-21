@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
-
+using DG.Tweening;
 namespace DorkyProductions
 {
     
@@ -42,6 +42,11 @@ public class ClientBoardVisualizer : MonoBehaviour
         // 1. Locally instantiate as a child of the board container
         GameObject tileGO = Instantiate(tileViewPrefab, gameBoard.boardContainer);
 
+        // 2. Set its starting scale to 0 (so it's invisible)
+        tileGO.transform.localScale = Vector3.zero;
+        float spawnDuration = 1.0f;
+        tileGO.transform.DOScale(1f, spawnDuration).SetEase(Ease.InQuint);
+         
         // 2. Setup the RectTransform Spawn Position
         RectTransform rt = tileGO.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0.5f, 0.5f);
@@ -99,11 +104,12 @@ public class ClientBoardVisualizer : MonoBehaviour
         MoveTile(secondTileView, firstGridPos);
     }
 
+    private const float MoveDuration = 0.3f;
     private void MoveTile(TileView tileToMove, Vector2Int newGridPos)
     {
         Vector2 newAnchoredPos = GetAnchoredPosition(newGridPos);
         tileToMove.GridPosition = newGridPos;
-        tileToMove.MoveToPosition(newAnchoredPos, 0.2f);
+        tileToMove.MoveToPosition(newAnchoredPos, MoveDuration);
     }
 
     public void AnimateFall(TileState movedTile, Vector2Int toPos)
@@ -112,7 +118,7 @@ public class ClientBoardVisualizer : MonoBehaviour
         {
             Vector2 newAnchoredPos = GetAnchoredPosition(toPos);
             tileView.GridPosition = toPos;
-            tileView.MoveToPosition(newAnchoredPos, 0.2f); // Faster fall
+            tileView.MoveToPosition(newAnchoredPos, MoveDuration); // Faster fall
         }
     }
 }
