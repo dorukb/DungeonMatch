@@ -241,11 +241,11 @@ public class GameBoard : NetworkBehaviour
             SimulateTileFall();
 
             // --- E. REFILL PHASE (Refill the board) ---
-            // RefillBoard();
+            RefillBoard();
 
             hasMoreMatches = false;
             // TODO: Check for new matches ---
-            // allMatchedPositions = FindAllMatchesOnBoard();
+            //allMatchedPositions = FindAllMatchesOnBoard();
             // if (allMatchedPositions.Count == 0)
             // {
             //     hasMoreMatches = false;
@@ -282,21 +282,45 @@ public class GameBoard : NetworkBehaviour
         }
         return foundMatches;
     }
+    
 
-    // [Server]
-    // private HashSet<Vector2Int> FindAllMatchesOnBoard()
-    // {
-    //     // HashSet<Vector2Int> allMatches = new HashSet<Vector2Int>();
-    //     // for (int y = 0; y < BoardHeight; y++)
-    //     // {
-    //     //     for (int x = 0; x < BoardWidth; x++)
-    //     //     {
-    //     //         FindMatchesInLine(new Vector2Int(x, y), new Vector2Int(1, 0), allMatches);
-    //     //         FindMatchesInLine(new Vector2Int(x, y), new Vector2Int(0, 1), allMatches);
-    //     //     }
-    //     // }
-    //     // return allMatches;
-    // }
+    [Server]
+    private List<MatchData> FindAllMatchesOnBoard()
+    {
+        List<MatchData> allMatches = new List<MatchData>();
+        
+        HashSet<Vector2Int> matchedPositions = new HashSet<Vector2Int>();
+     
+        int width = BoardWidth;
+        int height = BoardHeight;
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                Vector2Int currentPos = new Vector2Int(x, y);
+
+                // OPTIMIZATION: Only check for a match if this tile hasn't already been 
+                // claimed by a previous match.
+                if (matchedPositions.Contains(currentPos))
+                {
+                    continue; // Skip this tile
+                }
+                List<MatchData> matches = FindMatchesAt(currentPos);
+
+                foreach (MatchData match in matches)
+                {
+                    allMatches.Add(match);
+                    foreach (var pos in match.positions)
+                    {
+                        matchedPositions.Add(pos);
+                    }
+                }
+            }
+        }
+
+        return allMatches;
+    }
 
     
     [Server]
@@ -367,7 +391,7 @@ public class GameBoard : NetworkBehaviour
             RpcApplyMatchEffect(ids);
         }
     }
-
+    
     [ClientRpc]
     private void RpcApplyMatchEffect(List<ushort>ids)
     {
@@ -439,14 +463,23 @@ public class GameBoard : NetworkBehaviour
                 if (GetTileAt(new Vector2Int(x, y)).IsEmpty())
                 {
                     // This slot is empty, so fill it with a new tile
+                    TileState fillingTile = GenerateNewTile();
+                    boardState[GetIndex(x, y)] = fillingTile;
+
+                    RpcRefillBoard(new Vector2Int(x, y),fillingTile);
                     Debug.Log($"Draw new tile to pos: ({x},{y})");
-                    boardState[GetIndex(x, y)] = GenerateNewTile();
+
                 }
             }
         }
     }
 
-
+    [ClientRpc]
+    private void RpcRefillBoard(Vector2Int pos, TileState fillingTile)
+    {
+        _visualizer.SpawnVisualTile(fillingTile, pos);
+        Debug.Log($"CLIENT: Refilling ({pos}) with tile{fillingTile.uniqueID}");
+    }
     // --- COORDINATE & STATE HELPERS ---
 
     public Vector2Int GetGridPos(int idx)
