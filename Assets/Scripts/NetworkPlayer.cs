@@ -1,6 +1,9 @@
 using UnityEngine;
 using Mirror;
 
+namespace  DorkyProductions
+{
+    
 public class NetworkPlayer : NetworkBehaviour
 {
     // We need a reference to the one-and-only GameBoard.
@@ -95,4 +98,5 @@ public class NetworkPlayer : NetworkBehaviour
         // original positions.
         // e.g., FindObjectOfType<ClientBoardVisualizer>().AnimateSwapBack(posA, posB);
     }
+}
 }

@@ -3,6 +3,9 @@ using Mirror;
 using TMPro;
 using UnityEngine;
 
+namespace DorkyProductions
+{
+    
 public class PlayerNameDisplayer : NetworkBehaviour
 {
     [SerializeField] private TextMeshProUGUI playerNameText;
@@ -56,4 +59,6 @@ public class PlayerNameDisplayer : NetworkBehaviour
         // to all clients, which will trigger the 'OnNameUpdated' hook on each client.
         networkDisplayName = name;
     }
+}
+
 }

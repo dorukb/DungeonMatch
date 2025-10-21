@@ -1,6 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+namespace DorkyProductions
+{
+    
 public class ClientBoardVisualizer : MonoBehaviour
 {
     [Header("References")]
@@ -112,4 +115,5 @@ public class ClientBoardVisualizer : MonoBehaviour
             tileView.MoveToPosition(newAnchoredPos, 0.2f); // Faster fall
         }
     }
+}
 }

@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+namespace DorkyProductions
+{
 [CreateAssetMenu(fileName = "TileDatabase", menuName = "DungeonMatch/Tile Database")]
 public class TileDatabase : ScriptableObject
 {
@@ -31,4 +33,5 @@ public class TileDatabase : ScriptableObject
         int index = Random.Range(0, allTileDefinitions.Count);
         return allTileDefinitions[index].tileTypeID;
     }
+}
 }

@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using Mirror;
 using UnityEngine;
 
+namespace DorkyProductions
+{
+    
 // It tells clients "A tile of this type with this unique ID exists."
 public struct TileState
 {
@@ -35,9 +38,8 @@ public class MatchData
 
 public class GameBoard : NetworkBehaviour
 {
-    [Header("Board Dimensions")]
-    public const int BoardWidth = 5;
-    public const int BoardHeight = 5;
+    public static readonly int BoardWidth = 5;
+    public static readonly int BoardHeight = 5;
     
     [Header("UI Layout (Read by Client)")]
     [Tooltip("The RectTransform that holds the 5x5 grid UI.")]
@@ -72,7 +74,6 @@ public class GameBoard : NetworkBehaviour
             return;
         }
         
-        // When the server starts, populate the initial board.
         // (Don't just add 25 items, you need to call .Add()
         // for each one to sync properly)
         for (int i = 0; i < BoardHeight * BoardWidth; i++)
@@ -83,29 +84,13 @@ public class GameBoard : NetworkBehaviour
     
     public override void OnStartClient()
     {
-        // TODO: replace with an RPC that sends all 25 tile information as "Setup board"
-
-        if (!NetworkServer.active)
-        {
-            // Not the Host client.
-            // Cmd
-        }
-
         // For Clients, List is populated before handlers are wired up so we
         // need to manually invoke OnAdd for each element.
         // for (int i = 0; i < boardState.Count; i++)
         //     boardState.OnAdd.Invoke(i);
        SetupBoard();
-        
     }
-    // This is the setup event. It is ONLY called on this one client.
-    [TargetRpc]
-    public void TargetSetupGame(string message)
-    {
-        // --- YOUR SETUP LOGIC GOES HERE ---
-        Debug.Log($"Received setup message from server: {message}");
-        // e.g., StartMatchCountdown();
-    }
+
     private void SetupBoard()
     {
         for (int i = 0; i < boardState.Count; i++)
@@ -114,17 +99,6 @@ public class GameBoard : NetworkBehaviour
             _visualizer.SpawnVisualTile(tile, GetGridPos(i));
         }
     }
-    public override void OnStopClient()
-    {
-        // Remove handlers when client stops
-        // boardState.OnClear -= OnListCleared;
-    }
-
-    // private void OnItemSet(int idx, TileState oldState) => _visualizer.OnTileSet(idx, oldState, boardState[idx]);
-    // private void OnItemRemoved(int idx, TileState removedTile) => _visualizer.OnTileRemoved(idx, removedTile);
-    // private void OnItemInserted(int idx) => _visualizer.OnTileInserted(idx, boardState[idx]);
-    private void OnListCleared() => _visualizer.OnBoardCleared();
-
     private TileState GenerateNewTile()
     {
         return new TileState
@@ -216,7 +190,7 @@ public class GameBoard : NetworkBehaviour
         
         // Check if this swap caused a match
         // We only need to check the rows/cols of the two tiles we moved
-        var matchResults = FindMatchesAt(posA, posB);
+        var matchResults = MatchAlgorithm.FindMatchesAfterSwap(this, posA, posB);
         if (matchResults.Count == 0)
         {
             // TODO: Move didnt yield a Match, maybe do not allow and rollback the move.
@@ -229,7 +203,6 @@ public class GameBoard : NetworkBehaviour
             ApplyMatchEffects(matchResults);
 
             // --- C. MATCH PHASE (Remove matched cards) ---
-            // Set all matched positions to "Empty"
             foreach (var match in matchResults)
             {
                 foreach (var pos in match.positions)
@@ -239,8 +212,6 @@ public class GameBoard : NetworkBehaviour
             }
 
             SimulateTileFall();
-
-            // --- E. REFILL PHASE (Refill the board) ---
             RefillBoard();
 
             hasMoreMatches = false;
@@ -255,48 +226,17 @@ public class GameBoard : NetworkBehaviour
         return true; // A match occurred
     }
 
-// --- MATCH-FINDING HELPERS ---
+
 
     [Server]
-    private List<MatchData> FindMatchesAt(params Vector2Int[] positions)
-    {
-        List<MatchData> foundMatches = new List<MatchData>();
-        foreach (var pos in positions)
-        {        
-            MatchData horzMatch = FindMatchesInLine(pos, Vector2Int.right);
-            MatchData vertMatch = FindMatchesInLine(pos, Vector2Int.down);
-
-            if (horzMatch != null && vertMatch != null)
-            {
-                foundMatches.Add(horzMatch.matchCount > vertMatch.matchCount ? horzMatch : vertMatch);
-            }
-            if (horzMatch == null && vertMatch != null)
-            {
-                foundMatches.Add(vertMatch);
-            }
-            if (vertMatch == null && horzMatch != null)
-            {
-                foundMatches.Add(horzMatch);
-            }
-            // else both are null.
-        }
-        return foundMatches;
-    }
-    
-
-    [Server]
-    private List<MatchData> FindAllMatchesOnBoard()
+    private List<MatchData> FindAllMatchesOnBoard(GameBoard board)
     {
         List<MatchData> allMatches = new List<MatchData>();
-        
         HashSet<Vector2Int> matchedPositions = new HashSet<Vector2Int>();
      
-        int width = BoardWidth;
-        int height = BoardHeight;
-
-        for (int y = 0; y < height; y++)
+        for (int y = 0; y < GameBoard.BoardHeight; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < GameBoard.BoardWidth; x++)
             {
                 Vector2Int currentPos = new Vector2Int(x, y);
 
@@ -306,7 +246,7 @@ public class GameBoard : NetworkBehaviour
                 {
                     continue; // Skip this tile
                 }
-                List<MatchData> matches = FindMatchesAt(currentPos);
+                List<MatchData> matches = MatchAlgorithm.FindMatchesAt(board, currentPos);
 
                 foreach (MatchData match in matches)
                 {
@@ -321,49 +261,7 @@ public class GameBoard : NetworkBehaviour
 
         return allMatches;
     }
-
     
-    [Server]
-    private MatchData FindMatchesInLine(Vector2Int startPos, Vector2Int direction)
-    {
-        List<Vector2Int> candidateTiles = new List<Vector2Int>();
-        int currentType = GetTileAt(startPos).tileType;
-        
-        candidateTiles.Add(startPos);
-        // 2 units to the pos dir, 2 units to the neg.
-        // no need to check 3 units away, as that would lead to a match BEFORE This.
-        for (int i = 1; i <= 2; i++)
-        {
-            Vector2Int pos = startPos + direction * i;
-            if (!IsPosInBounds(pos) || GetTileAt(pos).tileType != currentType)
-            {
-                break; // End of line or type mismatch
-            }
-            candidateTiles.Add(pos);
-        }
-        // check the negative direction (left or down)
-        for (int i = 1; i <= 2; i++)
-        {
-            Vector2Int pos = startPos - direction * i;
-            if (!IsPosInBounds(pos) || GetTileAt(pos).tileType != currentType)
-            {
-                break; // End of line or type mismatch
-            }
-            candidateTiles.Add(pos);
-        }
-
-        if (candidateTiles.Count >= 3)
-        {
-            MatchData result = new MatchData
-            {
-                tileTypeID = currentType,
-                positions = candidateTiles,
-                matchCount = candidateTiles.Count
-            };
-            return result;
-        }
-        else return null;
-    }
     
     // --- BOARD PROCESSING HELPERS ---
 
@@ -428,34 +326,19 @@ public class GameBoard : NetworkBehaviour
             }
         }
     }
-    /// <summary>
-    /// This runs on ALL clients (including the host-client)
-    /// to tell them about a tile move.
-    /// </summary>
+    
     [ClientRpc]
     private void RpcMoveTile(Vector2Int toPos, TileState movedTile)
     {
-        // 1. Update the LOCAL board state for PURE clients.
-        // The host-client (isServer == true) already updated its state
-        // in the [Server] method, so it must skip this step.
-        // if (!isServer)
-        // {
-        //     boardState[GetIndex(toPos.x, toPos.y)] = movedTile;
-        //     boardState[GetIndex(fromPos.x, fromPos.y)] = TileState.Empty;
-        // }
-
-        // 2. Trigger visuals/animations for EVERYONE.
-        // Both pure-clients and the host-client need to see the tile move.
-        Debug.Log($"CLIENT: Animating tile to {toPos}");
+        Debug.Log($"[CLIENT]: Animating tile to {toPos}");
         _visualizer.AnimateFall(movedTile, toPos);
-        // e.g., StartCoroutine(AnimateTileFall(fromPos, toPos));
     }
     
     [Server]
     private void RefillBoard()
     {
-        Debug.Log("Refilling board");
-        // Per your rules: "bottom to top, then left to right"
+        Debug.Log("[SERVER] Refilling board");
+        // rules: "bottom to top, then left to right"
         for (int x = 0; x < BoardWidth; x++)
         {
             for (int y = 0; y < BoardHeight; y++)
@@ -490,7 +373,7 @@ public class GameBoard : NetworkBehaviour
     }
     public int GetIndex(Vector2Int pos) => (pos.y * BoardWidth) + pos.x;
     private int GetIndex(int x, int y) => (y * BoardWidth) + x;
-    private TileState GetTileAt(Vector2Int pos) => boardState[GetIndex(pos)];
+    public TileState GetTileAt(Vector2Int pos) => boardState[GetIndex(pos)];
 
     public TileState GetTile(ushort id)
     {
@@ -505,10 +388,6 @@ public class GameBoard : NetworkBehaviour
         }
         return boardState[index];
     }
-    private bool IsPosInBounds(Vector2Int pos)
-    {
-        return pos.x >= 0 && pos.x < BoardWidth &&
-               pos.y >= 0 && pos.y < BoardHeight;
-    }
     // ... Server logic for checking matches, etc., goes here ...
+}
 }

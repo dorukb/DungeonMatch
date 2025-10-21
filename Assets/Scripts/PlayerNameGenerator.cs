@@ -3,6 +3,9 @@ using TMPro;
 using System.Collections.Generic;
 using DorkyProductions.Core;
 
+namespace DorkyProductions
+{
+    
 /// <summary>
 /// Generates a random dungeon-themed player name from a list of prefixes and suffixes.
 /// Displays the name in a TextMeshProUGUI field and can be re-rolled via a button.
@@ -94,4 +97,4 @@ public class PlayerNameGenerator : MonoBehaviour
         return generatedName;
     }
 }
-
+}

@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace DorkyProductions
+{
 [CreateAssetMenu(fileName = "Tile_", menuName = "DungeonMatch/Tile")]
 public class TileDefinitionSO : ScriptableObject
 {
@@ -30,4 +32,6 @@ public class TileDefinitionSO : ScriptableObject
                 return "Unknown";
         }
     }
+}
+
 }

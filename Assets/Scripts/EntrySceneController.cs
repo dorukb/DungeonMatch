@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Epic.OnlineServices.Lobby;
 using Mirror;
@@ -6,6 +5,8 @@ using UnityEngine;
 using Attribute = Epic.OnlineServices.Lobby.Attribute;
 using UnityEngine.UI;
 
+namespace  DorkyProductions
+{
 public class EntrySceneController : MonoBehaviour
 {
     [SerializeField] private Button joinButton;
@@ -114,4 +115,6 @@ public class EntrySceneController : MonoBehaviour
                 });
         }
     }
+}
+    
 }

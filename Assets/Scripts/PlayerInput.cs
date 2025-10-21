@@ -1,5 +1,8 @@
 using UnityEngine;
 
+namespace DorkyProductions
+{
+    
 // This is NOT a NetworkBehaviour. It's a simple, local input handler.
 public class PlayerInput : MonoBehaviour
 {
@@ -66,18 +69,5 @@ public class PlayerInput : MonoBehaviour
         
         _startTile = null;
     }
-
-    // Optional: If you want to detect swaps by dragging *over*
-    // a tile instead of releasing on it.
-    // public void OnTilePointerEnter(TileView tile)
-    // {
-    //     if (!_isDragging || _startTile == null || tile == _startTile)
-    //     {
-    //         // Not dragging, or no start tile, or it's the same tile
-    //         return;
-    //     }
-    //
-    //     // This is a drag-swap
-    //     OnTilePointerUp(tile); 
-    // }
+}
 }

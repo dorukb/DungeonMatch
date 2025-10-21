@@ -3,6 +3,10 @@ using UnityEngine.UI;
 using DG.Tweening;
 using UnityEngine.EventSystems;
 
+
+namespace DorkyProductions
+{
+    
 [RequireComponent(typeof(Image), typeof(RectTransform))]
 public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
@@ -89,4 +93,5 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         _rectTransform.DOPunchScale(Vector3.one * 0.2f, duration, 10, 1)
             .OnComplete(() => Destroy(gameObject)); // Simple pop and destroy
     }
+}
 }

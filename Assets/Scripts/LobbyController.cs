@@ -6,6 +6,8 @@ using UnityEngine;
 using Attribute = Epic.OnlineServices.Lobby.Attribute;
 using UnityEngine.UI;
 
+namespace DorkyProductions
+{
 public class LobbyController : MonoBehaviour
 {
     [SerializeField] private Button leaveLobbyButton;
@@ -93,4 +95,6 @@ public class LobbyController : MonoBehaviour
         Debug.LogError($"LeaveLobby failed: {errormessage}, maybe try again? or cry.");
         leaveLobbyButton.interactable = true;
     }
+}
+
 }
