@@ -58,7 +58,7 @@ public class ClientBoardVisualizer : MonoBehaviour
         // 5. Add to our dictionary for tracking
         _visualTiles[state.uniqueID] = tileView;
         
-        Debug.Log($"[VIZ] Added tile {state.uniqueID} type: {state.ToString()} at ");
+//         Debug.Log($"[VIZ] Added tile {state.uniqueID} type: {state.ToString()} at ");
     }
     
     public Vector2 GetAnchoredPosition(Vector2Int gridPos)

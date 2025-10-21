@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DorkyProductions.Algorithms;
 using Mirror;
 using UnityEngine;
 
@@ -28,11 +29,29 @@ public class MatchData
     public int tileTypeID;
     public int matchCount;
     // We store the actual positions for clearing them
+    // TODO: maybe make positions HashSet, to prevent duplicate memory usage during find all matches.
     public List<Vector2Int> positions;
 
     public string ToString()
     {
         return TileDefinitionSO.ToString(tileTypeID);
+    }
+    public string Debug()
+    {
+        string positionsStr;
+        if (positions == null)
+        {
+            positionsStr = "[null list]";
+        }
+        else
+        {
+            // string.Join automatically calls .ToString() on each Vector2Int,
+            // formatting them as (x, y).
+            positionsStr = $"[{string.Join(", ", positions)}]";
+        }
+
+        // Uses this.ToString() to get the friendly type name and adds the count/positions
+        return $"MatchData(Type: {this.ToString()}, Count: {matchCount}, Positions: {positionsStr})";
     }
 }
 
@@ -76,12 +95,94 @@ public class GameBoard : NetworkBehaviour
         
         // (Don't just add 25 items, you need to call .Add()
         // for each one to sync properly)
-        for (int i = 0; i < BoardHeight * BoardWidth; i++)
-        {
-            boardState.Add(GenerateNewTile());
-        }
+        // for (int i = 0; i < BoardHeight * BoardWidth; i++)
+        // {
+        //     boardState.Add(GenerateNewTile());
+        // }
+        FillBoardWithNoMatches();
     }
     
+    [Server]
+    private void FillBoardWithNoMatches()
+    {
+        // (Don't just add 25 items, you need to call .Add()
+        // for each one to sync properly)
+        for (int i = 0; i < BoardHeight * BoardWidth; i++)
+        {
+            int x = i % BoardWidth;
+            int y = i / BoardWidth;
+
+            // 1. Get a list of all possible tile types
+            List<int> availableTypes = new List<int> { 0, 1, 2, 3, 4};
+            
+            // 2. Check for potential horizontal matches (check 2 tiles to the left)
+            if (x > 1)
+            {
+                int left1ID = GetTileAt(x-1,y).tileType;
+                int left2ID = GetTileAt(x-2,y).tileType;
+                if (left1ID == left2ID)
+                {
+                    // Both tiles to the left match, so we cannot use their type.
+                    availableTypes.Remove(left1ID);
+                }
+            }
+
+            // 3. Check for potential vertical matches (check 2 tiles below)
+            if (y > 1)
+            {
+                int down1ID = GetTileAt(x,y-1).tileType;
+                int down2ID = GetTileAt(x,y-2).tileType;
+                if (down1ID == down2ID)
+                {
+                    // Both tiles below match, so we cannot use their type.
+                    availableTypes.Remove(down1ID);
+                }
+            }
+            boardState.Add(GenerateNewTile(availableTypes));
+        }
+    }
+    // Overload: Generates a random tile from a specific list of allowed types.
+    private TileState GenerateNewTile(List<int> availableTypes)
+    {
+        if (availableTypes.Count == 0)
+        {
+            // This is a safety net. It's very rare but could happen
+            // if both horizontal and vertical checks removed the same, last-available type.
+            // In this case, just pick any random one.
+            Debug.LogError("Ran out of available types. Picking a random one.");
+            return GenerateNewTile();
+        }
+    
+        // Pick a random ID from the *allowed* list
+        int randomIndex = Random.Range(0, availableTypes.Count);
+        int randomType = availableTypes[randomIndex];
+
+        return new TileState
+        {
+            uniqueID = _nextTileID++,
+            tileType = randomType
+        };
+    }
+    
+    private TileState GetTileAt(int x, int y)
+    {
+        // Check bounds
+        if (x < 0 || x >= BoardWidth || y < 0 || y >= BoardHeight)
+        {
+            // Return an "empty" or "invalid" state, not a real tile
+            return TileState.Empty; 
+        }
+    
+        int index = (y * BoardWidth) + x;
+    
+        // Check if the tile has been added yet
+        if (index >= boardState.Count)
+        {
+            return TileState.Empty;
+        }
+    
+        return boardState[index];
+    }
     public override void OnStartClient()
     {
         // For Clients, List is populated before handlers are wired up so we
@@ -124,7 +225,7 @@ public class GameBoard : NetworkBehaviour
         // --- 1. Validation ---
         if (!IsValidSwap(posA, posB))
         {
-            Debug.LogWarning($"[Server] Invalid swap: {posA} <-> {posB}. Not adjacent.");
+            // Debug.LogWarning($"[Server] Invalid swap: {posA} <-> {posB}. Not adjacent.");
             return false;
         }
 
@@ -133,11 +234,11 @@ public class GameBoard : NetworkBehaviour
         bool didMatchOccur = AttemptSwapAndProcessBoard(posA, posB);
         if (didMatchOccur)
         {
-            Debug.Log($"[Server] Swap {posA} <-> {posB} successful. Board processed.");
+            // Debug.Log($"[Server] Swap {posA} <-> {posB} successful. Board processed.");
         }
         else
         {
-            Debug.Log($"[Server] Swap {posA} <-> {posB} resulted in no match. This is totally fine.");
+            // Debug.Log($"[Server] Swap {posA} <-> {posB} resulted in no match. This is totally fine.");
         }
 
         return true;
@@ -171,10 +272,7 @@ public class GameBoard : NetworkBehaviour
         int dist = Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
         return dist == 1;
     }
-/// <summary>
-    /// This is the main server-side game loop for a turn.
-    /// returns bool: didMatchHappen
-    /// </summary>
+    
     [Server]
     private bool AttemptSwapAndProcessBoard(Vector2Int posA, Vector2Int posB)
     {
@@ -201,32 +299,35 @@ public class GameBoard : NetworkBehaviour
         while (hasMoreMatches)
         {
             ApplyMatchEffects(matchResults);
-
-            // --- C. MATCH PHASE (Remove matched cards) ---
-            foreach (var match in matchResults)
-            {
-                foreach (var pos in match.positions)
-                {
-                    boardState[GetIndex(pos)] = TileState.Empty;
-                }
-            }
-
+            RemoveMatchedTiles(matchResults);
             SimulateTileFall();
             RefillBoard();
 
             hasMoreMatches = false;
-            // TODO: Check for new matches ---
-            //allMatchedPositions = FindAllMatchesOnBoard();
-            // if (allMatchedPositions.Count == 0)
-            // {
-            //     hasMoreMatches = false;
-            // }
+            matchResults = FindAllMatchesOnBoard(this);
+            if (matchResults.Count > 0)
+            {
+                Debug.Log("[Server] Matches on board:");
+                foreach (var res in matchResults)
+                {
+                    Debug.Log(res.Debug());
+                }
+                hasMoreMatches = true;
+            }
         }
-
         return true; // A match occurred
     }
 
-
+    private void RemoveMatchedTiles(List<MatchData> matchResults)
+    {
+        foreach (var match in matchResults)
+        {
+            foreach (var pos in match.positions)
+            {
+                boardState[GetIndex(pos)] = TileState.Empty;
+            }
+        }
+    }
 
     [Server]
     private List<MatchData> FindAllMatchesOnBoard(GameBoard board)
@@ -248,9 +349,9 @@ public class GameBoard : NetworkBehaviour
                 }
                 List<MatchData> matches = MatchAlgorithm.FindMatchesAt(board, currentPos);
 
+                allMatches.AddRange(matches);
                 foreach (MatchData match in matches)
                 {
-                    allMatches.Add(match);
                     foreach (var pos in match.positions)
                     {
                         matchedPositions.Add(pos);
@@ -312,7 +413,7 @@ public class GameBoard : NetworkBehaviour
                         if (!tileToMove.IsEmpty())
                         {
                             // We found one! Move it down.
-                            Debug.Log($"Move tile ({x},{yAbove}) to ({x},{y})");
+                            // Debug.Log($"Move tile ({x},{yAbove}) to ({x},{y})");
                             boardState[GetIndex(x, y)] = tileToMove;
                             boardState[GetIndex(x, yAbove)] = TileState.Empty;
 
@@ -330,7 +431,7 @@ public class GameBoard : NetworkBehaviour
     [ClientRpc]
     private void RpcMoveTile(Vector2Int toPos, TileState movedTile)
     {
-        Debug.Log($"[CLIENT]: Animating tile to {toPos}");
+        // Debug.Log($"[CLIENT]: Animating tile to {toPos}");
         _visualizer.AnimateFall(movedTile, toPos);
     }
     
@@ -350,7 +451,7 @@ public class GameBoard : NetworkBehaviour
                     boardState[GetIndex(x, y)] = fillingTile;
 
                     RpcRefillBoard(new Vector2Int(x, y),fillingTile);
-                    Debug.Log($"Draw new tile to pos: ({x},{y})");
+                    // Debug.Log($"Draw new tile to pos: ({x},{y})");
 
                 }
             }
@@ -361,18 +462,21 @@ public class GameBoard : NetworkBehaviour
     private void RpcRefillBoard(Vector2Int pos, TileState fillingTile)
     {
         _visualizer.SpawnVisualTile(fillingTile, pos);
-        Debug.Log($"CLIENT: Refilling ({pos}) with tile{fillingTile.uniqueID}");
+        // Debug.Log($"CLIENT: Refilling ({pos}) with tile{fillingTile.uniqueID}");
     }
     // --- COORDINATE & STATE HELPERS ---
 
     public Vector2Int GetGridPos(int idx)
     {
-        int x = idx % BoardHeight;
-        int y = idx / BoardHeight;
+        // idx = 8 , 9th tile
+        // (x,y)
+        // (1,3)
+        int y = idx % BoardWidth;
+        int x = idx / BoardHeight;
         return new Vector2Int(x, y);
     }
-    public int GetIndex(Vector2Int pos) => (pos.y * BoardWidth) + pos.x;
-    private int GetIndex(int x, int y) => (y * BoardWidth) + x;
+    public int GetIndex(Vector2Int pos) =>  GetIndex(pos.x, pos.y);
+    private int GetIndex(int x, int y) => (x * BoardHeight) + y;
     public TileState GetTileAt(Vector2Int pos) => boardState[GetIndex(pos)];
 
     public TileState GetTile(ushort id)

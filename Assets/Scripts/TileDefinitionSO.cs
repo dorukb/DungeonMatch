@@ -2,6 +2,15 @@ using UnityEngine;
 
 namespace DorkyProductions
 {
+
+public enum TileType
+{
+    Attack,
+    Shield,
+    Cross,
+    Potion,
+    Chest,
+}
 [CreateAssetMenu(fileName = "Tile_", menuName = "DungeonMatch/Tile")]
 public class TileDefinitionSO : ScriptableObject
 {
