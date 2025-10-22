@@ -519,7 +519,19 @@ namespace Mirror
         /// This is called on the server when a client disconnects.
         /// </summary>
         /// <param name="conn">The connection that disconnected.</param>
-        public virtual void OnRoomServerDisconnect(NetworkConnectionToClient conn) {}
+        public virtual void OnRoomServerDisconnect(NetworkConnectionToClient conn)
+        {
+            var eosLobby = FindAnyObjectByType<EOSLobby>();
+            if (eosLobby != null)
+            {
+                Debug.Log("Trying to leave lobby on client DC.");
+                eosLobby.LeaveLobby();
+            }
+            else
+            {
+                Debug.LogWarning("No EOSLobby, cant request Leave Lobby.");
+            }
+        }
 
         /// <summary>
         /// This is called on the server when a networked scene finishes loading.
