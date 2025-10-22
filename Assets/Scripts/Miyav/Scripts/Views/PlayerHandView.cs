@@ -29,7 +29,7 @@ public class PlayerHandView : MonoBehaviour, IHandView
     private bool isProcessingQueue = false;
     
     protected List<InteractableCard> cards = new List<InteractableCard>();
-    private Player myPlayer;
+    private MiyavPlayer _myMiyavPlayer;
     private void Awake()
     {
         GameStartState.NewGameIsStarting += Init;
@@ -43,7 +43,7 @@ public class PlayerHandView : MonoBehaviour, IHandView
 
     public bool IsMyPlayer(int playerID)
     {
-        return myPlayer.id == playerID;
+        return _myMiyavPlayer.id == playerID;
     }
     
     public InteractableCard RemoveCardFromHand(Guid cardID)

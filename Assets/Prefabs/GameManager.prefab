@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4914379890242743646}
   - component: {fileID: 4363113934257826403}
+  - component: {fileID: 4968720212812281737}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -44,3 +45,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 160fd7bd6d1780247b5ac62c46e29c6f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DorkyProductions.Core.GameMaster
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  player1: {fileID: 0}
+  player2: {fileID: 0}
+  activePlayer: {fileID: 0}
+  currentGameState: 0
+  maxTurnTime: 30
+  turnTimer: 0
+--- !u!114 &4968720212812281737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4769281754604581824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 2152413749
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0

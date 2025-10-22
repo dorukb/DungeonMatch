@@ -8,7 +8,7 @@ namespace DorkyProductions.Core
         public Deck DrawPile;
         public SpecialDeck SpecialDeck;
         public ShelterRow ShelterRow;
-        public Player currentPlayer;
+        public MiyavPlayer CurrentMiyavPlayer;
         public GameMaster gameMaster { get; private set; }
 
         public CatCard CurrentCardInPlay { get; private set; }
@@ -23,7 +23,7 @@ namespace DorkyProductions.Core
         public void SignalEndTurn()
         {
             // Debug.Log("Current player ended their turn.");
-            currentPlayer.TurnEnded(this);
+            CurrentMiyavPlayer.TurnEnded(this);
             TransitionToState(new PlayerTurnState());
         }
 

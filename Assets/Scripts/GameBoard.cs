@@ -1,60 +1,12 @@
 using System.Collections.Generic;
 using DorkyProductions.Algorithms;
+using DorkyProductions.Core;
 using Mirror;
 using UnityEngine;
 
 namespace DorkyProductions
 {
     
-// It tells clients "A tile of this type with this unique ID exists."
-public struct TileState
-{
-    public static ushort INVALID_TILE_ID = 9999;
-    public ushort uniqueID;
-    public int tileType;     // 0=Attack, 1=Attackx2, 2=Shield, etc.
-
-    // A static "empty" tile for logic
-    public static TileState Empty => new TileState 
-    { 
-        uniqueID = INVALID_TILE_ID, // An invalid, recognizable ID
-        tileType = -1           // An invalid type
-    };
-
-    public bool IsEmpty() => tileType == -1;
-}
-
-// This struct holds the data for ONE match (e.g., a 4-in-a-row)
-public class MatchData
-{
-    public int tileTypeID;
-    public int matchCount;
-    // We store the actual positions for clearing them
-    // TODO: maybe make positions HashSet, to prevent duplicate memory usage during find all matches.
-    public List<Vector2Int> positions;
-
-    public string ToString()
-    {
-        return TileDefinitionSO.ToString(tileTypeID);
-    }
-    public string Debug()
-    {
-        string positionsStr;
-        if (positions == null)
-        {
-            positionsStr = "[null list]";
-        }
-        else
-        {
-            // string.Join automatically calls .ToString() on each Vector2Int,
-            // formatting them as (x, y).
-            positionsStr = $"[{string.Join(", ", positions)}]";
-        }
-
-        // Uses this.ToString() to get the friendly type name and adds the count/positions
-        return $"MatchData(Type: {this.ToString()}, Count: {matchCount}, Positions: {positionsStr})";
-    }
-}
-
 public class GameBoard : NetworkBehaviour
 {
     public static readonly int BoardWidth = 5;
@@ -76,15 +28,13 @@ public class GameBoard : NetworkBehaviour
 
     [SerializeField]
     private ClientBoardVisualizer _visualizer;
-
     
     // The "Single Source of Truth" for all clients.
     // This list represents a 5x5 grid, flattened to 1D.
     // Index = (y * BoardWidth) + x
     public readonly SyncList<TileState> boardState = new SyncList<TileState>();
-
     private ushort _nextTileID = 0;
-
+    
     public override void OnStartServer()
     {
         if (!isServer)
@@ -92,16 +42,17 @@ public class GameBoard : NetworkBehaviour
             Debug.LogError("This shouldn't be called on Clients!");
             return;
         }
-        
-        // (Don't just add 25 items, you need to call .Add()
-        // for each one to sync properly)
-        // for (int i = 0; i < BoardHeight * BoardWidth; i++)
-        // {
-        //     boardState.Add(GenerateNewTile());
-        // }
         FillBoardWithNoMatches();
     }
-    
+
+    public override void OnStartClient()
+    {
+        // For Clients, List is populated before handlers are wired up so we
+        // need to manually invoke OnAdd for each element.
+        // for (int i = 0; i < boardState.Count; i++)
+        //     boardState.OnAdd.Invoke(i);
+        SetupBoard();
+    }
     [Server]
     private void FillBoardWithNoMatches()
     {
@@ -164,34 +115,6 @@ public class GameBoard : NetworkBehaviour
         };
     }
     
-    private TileState GetTileAt(int x, int y)
-    {
-        // Check bounds
-        if (x < 0 || x >= BoardWidth || y < 0 || y >= BoardHeight)
-        {
-            // Return an "empty" or "invalid" state, not a real tile
-            return TileState.Empty; 
-        }
-    
-        int index = (y * BoardWidth) + x;
-    
-        // Check if the tile has been added yet
-        if (index >= boardState.Count)
-        {
-            return TileState.Empty;
-        }
-    
-        return boardState[index];
-    }
-    public override void OnStartClient()
-    {
-        // For Clients, List is populated before handlers are wired up so we
-        // need to manually invoke OnAdd for each element.
-        // for (int i = 0; i < boardState.Count; i++)
-        //     boardState.OnAdd.Invoke(i);
-       SetupBoard();
-    }
-
     private void SetupBoard()
     {
         for (int i = 0; i < boardState.Count; i++)
@@ -231,7 +154,7 @@ public class GameBoard : NetworkBehaviour
 
         // --- 2. State Change ---
         // This function does all the work AND checks for matches
-        bool didMatchOccur = AttemptSwapAndProcessBoard(posA, posB);
+        bool didMatchOccur = ProcessSwapMove(posA, posB);
         if (didMatchOccur)
         {
             // Debug.Log($"[Server] Swap {posA} <-> {posB} successful. Board processed.");
@@ -274,9 +197,11 @@ public class GameBoard : NetworkBehaviour
     }
     
     [Server]
-    private bool AttemptSwapAndProcessBoard(Vector2Int posA, Vector2Int posB)
+    private bool ProcessSwapMove(Vector2Int posA, Vector2Int posB)
     {
         // --- 1. Perform the swap ---
+        GameMaster.Instance.currentGameState = GameState.ProcessingMove;
+        
         int indexA = GetIndex(posA);
         int indexB = GetIndex(posB);
         TileState stateA = boardState[indexA];
@@ -292,12 +217,17 @@ public class GameBoard : NetworkBehaviour
         if (matchResults.Count == 0)
         {
             // TODO: Move didnt yield a Match, maybe do not allow and rollback the move.
+            // End turn
+            
+            // also changes the state.
+            GameMaster.Instance.EndTurn();
             return false;
         }
 
         bool hasMoreMatches = true;
         while (hasMoreMatches)
         {
+            
             ApplyMatchEffects(matchResults);
             RemoveMatchedTiles(matchResults);
             SimulateTileFall();
@@ -315,6 +245,8 @@ public class GameBoard : NetworkBehaviour
                 hasMoreMatches = true;
             }
         }
+        // also changes the state.
+        GameMaster.Instance.EndTurn();
         return true; // A match occurred
     }
 
@@ -328,42 +260,6 @@ public class GameBoard : NetworkBehaviour
             }
         }
     }
-
-    [Server]
-    private List<MatchData> FindAllMatchesOnBoard(GameBoard board)
-    {
-        List<MatchData> allMatches = new List<MatchData>();
-        HashSet<Vector2Int> matchedPositions = new HashSet<Vector2Int>();
-     
-        for (int y = 0; y < GameBoard.BoardHeight; y++)
-        {
-            for (int x = 0; x < GameBoard.BoardWidth; x++)
-            {
-                Vector2Int currentPos = new Vector2Int(x, y);
-
-                // OPTIMIZATION: Only check for a match if this tile hasn't already been 
-                // claimed by a previous match.
-                if (matchedPositions.Contains(currentPos))
-                {
-                    continue; // Skip this tile
-                }
-                List<MatchData> matches = MatchAlgorithm.FindMatchesAt(board, currentPos);
-
-                allMatches.AddRange(matches);
-                foreach (MatchData match in matches)
-                {
-                    foreach (var pos in match.positions)
-                    {
-                        matchedPositions.Add(pos);
-                    }
-                }
-            }
-        }
-
-        return allMatches;
-    }
-    
-    
     // --- BOARD PROCESSING HELPERS ---
 
     [Server]
@@ -466,6 +362,39 @@ public class GameBoard : NetworkBehaviour
     }
     // --- COORDINATE & STATE HELPERS ---
 
+    [Server]
+    private List<MatchData> FindAllMatchesOnBoard(GameBoard board)
+    {
+        List<MatchData> allMatches = new List<MatchData>();
+        HashSet<Vector2Int> matchedPositions = new HashSet<Vector2Int>();
+     
+        for (int y = 0; y < GameBoard.BoardHeight; y++)
+        {
+            for (int x = 0; x < GameBoard.BoardWidth; x++)
+            {
+                Vector2Int currentPos = new Vector2Int(x, y);
+
+                // OPTIMIZATION: Only check for a match if this tile hasn't already been 
+                // claimed by a previous match.
+                if (matchedPositions.Contains(currentPos))
+                {
+                    continue; // Skip this tile
+                }
+                List<MatchData> matches = MatchAlgorithm.FindMatchesAt(board, currentPos);
+
+                allMatches.AddRange(matches);
+                foreach (MatchData match in matches)
+                {
+                    foreach (var pos in match.positions)
+                    {
+                        matchedPositions.Add(pos);
+                    }
+                }
+            }
+        }
+
+        return allMatches;
+    }
     public Vector2Int GetGridPos(int idx)
     {
         // idx = 8 , 9th tile
@@ -478,6 +407,27 @@ public class GameBoard : NetworkBehaviour
     public int GetIndex(Vector2Int pos) =>  GetIndex(pos.x, pos.y);
     private int GetIndex(int x, int y) => (x * BoardHeight) + y;
     public TileState GetTileAt(Vector2Int pos) => boardState[GetIndex(pos)];
+
+    private TileState GetTileAt(int x, int y)
+    {
+        // Check bounds
+        if (x < 0 || x >= BoardWidth || y < 0 || y >= BoardHeight)
+        {
+            // Return an "empty" or "invalid" state, not a real tile
+            return TileState.Empty; 
+        }
+    
+        int index = (y * BoardWidth) + x;
+    
+        // Check if the tile has been added yet
+        if (index >= boardState.Count)
+        {
+            return TileState.Empty;
+        }
+    
+        return boardState[index];
+    }
+
 
     public TileState GetTile(ushort id)
     {

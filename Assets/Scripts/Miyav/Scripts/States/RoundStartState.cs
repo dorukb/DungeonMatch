@@ -11,7 +11,7 @@ namespace DorkyProductions.States
         public void Enter(Context context)
         {
             Debug.Log("Round Started!!");
-            context.gameMaster.NextPlayer();
+            // context.gameMaster.NextPlayer();
             context.TransitionToState(new PlayerTurnState());
         }
 

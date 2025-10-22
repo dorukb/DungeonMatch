@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace DorkyProductions.Core
 {
-    public abstract class Player
+    public abstract class MiyavPlayer
     {
         public string DisplayName { get; set; }
         public int id { get; protected set; }

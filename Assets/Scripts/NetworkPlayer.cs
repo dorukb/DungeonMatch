@@ -1,3 +1,5 @@
+using System;
+using DorkyProductions.Core;
 using UnityEngine;
 using Mirror;
 
@@ -9,6 +11,7 @@ public class NetworkPlayer : NetworkBehaviour
     // We need a reference to the one-and-only GameBoard.
     // We can find it when we start.
     private GameBoard _gameBoard;
+    private PlayerInput _playerInput;
     public override void OnStartClient()
     {
         // Find the board on the client
@@ -19,25 +22,78 @@ public class NetworkPlayer : NetworkBehaviour
         }
     }
 
+    private void Update()
+    {
+        if (_playerInput == null) return;
+        
+        // Check if we are allowed to make a move
+        if (GameMaster.Instance.activePlayer == this.netIdentity &&
+            GameMaster.Instance.currentGameState == GameState.WaitingForInput)
+        {
+            // Allow swapping
+            // Debug.Log("Enabling input");
+            _playerInput.EnableControls(); 
+        }
+        else
+        {
+            // Debug.Log("Disabling input");
+            // Not our turn, or game is processing
+            _playerInput.DisableControls();
+        }
+    }
+
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
-        var pInput = FindAnyObjectByType<PlayerInput>();
-        if (pInput == null)
+        _playerInput = FindAnyObjectByType<PlayerInput>();
+        if (_playerInput == null)
         {
             Debug.LogError("Could not find PlayerInput in the scene, check the Player Prefab.");
             return;
         }
         
-        pInput.SetPlayer(this);
+        _playerInput.SetPlayer(this);
     }
 
+    // This function is called ONLY on the Host/Server 
+    // when this player object is spawned.
     public override void OnStartServer()
     {
-        // Find the board on the server
-         _gameBoard = FindAnyObjectByType<GameBoard>();
-    }
+        base.OnStartServer();
 
+        // Find the board on the server
+        _gameBoard = FindAnyObjectByType<GameBoard>();
+        // Find the singleton GameManager
+        GameMaster gm = GameMaster.Instance;
+        if (gm == null)
+        {
+            Debug.LogError("GameManager not found!");
+            return;
+        }
+
+        // Assign this player to an empty slot
+        if (gm.player1 == null)
+        {
+            // this.netIdentity is the NetworkIdentity of this specific Player object
+            Debug.Log("First player joined: " + netIdentity.netId);
+            gm.player1 = this.netIdentity; 
+        }
+        else if (gm.player2 == null)
+        {
+            gm.player2 = this.netIdentity;
+            
+            // --- IMPORTANT ---
+            // The second player has joined! This is the perfect place
+            // to tell the GameManager to start the game.
+            gm.StartGame();
+        }
+        else
+        {
+            // This is a 1v1 game, so a 3rd player is a spectator
+            // or should be disconnected.
+            Debug.LogWarning("A third player tried to join. Ignoring.");
+        }
+    }
     // This is called by the local PlayerInput script.
     public void RequestSwap(Vector2Int posA, Vector2Int posB)
     {

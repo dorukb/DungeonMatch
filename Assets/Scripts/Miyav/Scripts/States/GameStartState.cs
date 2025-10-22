@@ -15,8 +15,8 @@ namespace DorkyProductions.States
             NewGameIsStarting?.Invoke();
             
             SetupDecks(context);
-            context.gameMaster.DealCardsToAllPlayers(4);
-            context.gameMaster.PlaceCardsInTheShelterRow(4);
+            // context.gameMaster.DealCardsToAllPlayers(4);
+            // context.gameMaster.PlaceCardsInTheShelterRow(4);
             context.TransitionToState(new RoundStartState());
         }
 

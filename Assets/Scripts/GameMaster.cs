@@ -5,19 +5,41 @@ using UnityEngine;
 namespace DorkyProductions.Core
 {
     
-public class GameMaster : MonoBehaviour
+    
+public enum GameState {
+    WaitingForPlayers,
+    WaitingForInput,
+    ProcessingMove,
+    WaitingForSpecialInput, // Chest opening
+    GameOver
+}
+public class GameMaster : NetworkBehaviour
 {
     public static GameMaster Instance { get; private set; }
     
     private Context _context;
 
     public IGameState CurrentState { get; private set; }
+    
+    // We add hooks to these. When the server sets them,
+    // the hook method will run on ALL clients.
+    [SyncVar(hook = nameof(OnPlayer1Assigned))] 
+    public NetworkIdentity player1;
 
-    private Player currentPlayer = null;
+    [SyncVar(hook = nameof(OnPlayer2Assigned))]
+    public NetworkIdentity player2;
+    
     public Context context { get; private set; }
     
-    private Player localPlayer;
-    private Player opponent;
+    [SyncVar(hook = nameof(OnActivePlayerChanged))]
+    public NetworkIdentity activePlayer;
+
+    [SyncVar(hook = nameof(OnGameStateChanged))]
+    public GameState currentGameState;
+    
+    private bool extraTurnGranted;
+    public float maxTurnTime = 30f;
+    public float turnTimer;
     
     // TODO: GameMaster match specific state must be reset manually, when the match ends.
     void Awake()
@@ -36,44 +58,88 @@ public class GameMaster : MonoBehaviour
         // TODO: Remove.
         Application.targetFrameRate = 144;
         QualitySettings.vSyncCount = 0;
-
-        RegisterLocalPlayer("");
     }
- 
     private void Update()
     {
-        CurrentState?.Update(this.context);
+        // CurrentState?.Update(this.context);
+    }
+    
+    [Server]
+    public void StartGame()
+    {
+        Debug.Log("Starting game...");
+        // Randomly pick first player
+        activePlayer = (Random.Range(0, 2) == 0) ? player1 : player2;
+        StartTurn();
+    }
+    // HOOK METHOD (runs on clients)
+    void OnPlayer1Assigned(NetworkIdentity oldId, NetworkIdentity newId)
+    {
+        // player1 has been set, tell our local UI to refresh!
+        // UIManager.Instance?.UpdatePlayerUI();
+        Debug.Log($"Player1: {newId} assigned.");
     }
 
-    public void RegisterLocalPlayer(string playerName)
+    // HOOK METHOD (runs on clients)
+    void OnPlayer2Assigned(NetworkIdentity oldId, NetworkIdentity newId)
     {
-        if (localPlayer == null)
-        {
-            localPlayer = new HumanPlayer(0, playerName);
-        }
-        else
-        {
-            Debug.LogError("LocalPlayer already registered. Why are you trying to register again?");
-        }
+        // player2 has been set, tell our local UI to refresh!
+        // UIManager.Instance?.UpdatePlayerUI();
+        Debug.Log($"Player2: {newId} assigned.");
+    }
+    [Server]
+    public void StartTurn()
+    {
+        Debug.Log("Starting turn...");
+        turnTimer = maxTurnTime;
+        currentGameState = GameState.WaitingForInput;
+        extraTurnGranted = false;
+        
+        // You might have a TargetRpc here to tell the active player "Your Turn!"
+        // TargetShowTurnStart(activePlayer.connectionToClient);
     }
 
-    public void RegisterOpponent(string playerName)
+    [Server]
+    public void EndTurn(bool timedOut = false)
     {
-        if (opponent == null)
-        {
-            opponent = new HumanPlayer(1, playerName);
-        }
-        else
-        {
-            Debug.LogError("Opponent already registered. Why are you trying to register the opponent again?");
-        }
-    }
+        if (currentGameState == GameState.GameOver) return;
 
-    public void ChangeLocalPlayerName(string playerName)
-    {
-       localPlayer.DisplayName = playerName;
-       Debug.Log($"Local player is now called: {playerName}");
+        // If an extra turn was granted, just start the *same* player's turn again.
+        if (extraTurnGranted && !timedOut)
+        {
+            StartTurn(); // activePlayer is already correct
+            return;
+        }
+
+        // Otherwise, pass the turn
+        activePlayer = (activePlayer == player1) ? player2 : player1;
+        
+        // This also changes the state.
+        StartTurn();
     }
+    void OnActivePlayerChanged(NetworkIdentity oldPlayer, NetworkIdentity newPlayer)
+    {
+        // Update UI to show whose turn it is.
+        // e.g., if (NetworkClient.localPlayer.netIdentity == newPlayer) { ... }
+        if (NetworkClient.localPlayer.netId == newPlayer.netId)
+        {
+            Debug.Log("We are the active player.");
+        }
+        
+    }
+    
+    void OnGameStateChanged(GameState oldState, GameState newState)
+    {
+        // Use this to enable/disable the board input
+        // if (newState == GameState.WaitingForInput) { EnableBoard(); }
+        // else { DisableBoard(); }
+    }
+    //
+    // public void ChangeLocalPlayerName(string playerName)
+    // {
+    //    _localMiyavPlayer.DisplayName = playerName;
+    //    Debug.Log($"Local player is now called: {playerName}");
+    // }
     public void TransitionToState(IGameState newState)
     {
         CurrentState?.Exit(this.context);
@@ -85,40 +151,7 @@ public class GameMaster : MonoBehaviour
         this.context = new Context(this);
         TransitionToState(new GameStartState());
     }
-    public Player GetLocalPlayer()
-    {
-        return localPlayer;
-    }
-    public Player GetOpponent()
-    {
-        return opponent;
-    }
-
-    public int GetCurrentPlayerID()
-    {
-        return this.context.currentPlayer.id;
-    }
-    public void NextPlayer()
-    {
-        currentPlayer = (currentPlayer == localPlayer) ? opponent : localPlayer;
-        this.context.currentPlayer = currentPlayer;
-    }
-    public void DealCardsToAllPlayers(int amount)
-    {
-        for (int i = 0; i < amount; i++)
-        {
-            localPlayer.ReceiveCatCard(context.DrawPile.Draw());
-            opponent.ReceiveCatCard(context.DrawPile.Draw());
-        }
-    }
-
-    public void PlaceCardsInTheShelterRow(int amount)
-    {
-        for (int i = 0; i < amount; i++)
-        {
-            this.context.ShelterRow.DealCard(context.DrawPile.Draw().data);
-        }
-    }
+   
 }
 
 }

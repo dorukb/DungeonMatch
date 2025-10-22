@@ -29,7 +29,7 @@ namespace DorkyProductions.Effects
                 possibleCaptureGroups.Add(captureGroup);
                 
                 // Let UI Views handle the visuals.
-                PlayCardWithCapture?.Invoke(playedCard.id, possibleCaptureGroups, context.currentPlayer.id);
+                PlayCardWithCapture?.Invoke(playedCard.id, possibleCaptureGroups, context.CurrentMiyavPlayer.id);
             }
             else
             {
@@ -39,13 +39,13 @@ namespace DorkyProductions.Effects
                     Debug.Log($"Group capture found for {playedCard.value}. {matchingResult.Count} many possible groups.");
                     
                     // Important: ShelterRow state is NOT modified here, since we wait for User Input to decide which group to capture.
-                    PlayCardWithCapture?.Invoke(playedCard.id, matchingResult, context.currentPlayer.id);
+                    PlayCardWithCapture?.Invoke(playedCard.id, matchingResult, context.CurrentMiyavPlayer.id);
                 }
                 else
                 {
                     Debug.Log($"No matching groups found for {playedCard.value}. FOSTER.");
                     context.ShelterRow.Foster(playedCard);
-                    PlayCardWithoutCapture?.Invoke(playedCard.id, context.currentPlayer.id);
+                    PlayCardWithoutCapture?.Invoke(playedCard.id, context.CurrentMiyavPlayer.id);
                 }
             }
             

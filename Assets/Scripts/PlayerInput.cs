@@ -26,24 +26,34 @@ public class PlayerInput : MonoBehaviour
         }
     }
 
+    public void DisableControls()
+    {
+        IsEnabled = false;
+    }
+
+    public void EnableControls()
+    {
+        IsEnabled = true;
+    }
+
     public void SetPlayer(NetworkPlayer localPlayer)
     {
         LocalPlayerController = localPlayer;
     }
     
-    // Called by TileView.OnPointerDown()
     public void OnTilePointerDown(TileView tile)
     {
+        if (!IsEnabled) return;
+        
         if (!enabled || _isDragging) return; // Ignore if not our turn or already dragging
         
         _startTile = tile;
         _isDragging = true;
     }
 
-    // Called by TileView.OnPointerUp()
     public void OnTilePointerUp(TileView tile)
     {
-        if (!_isDragging || _startTile == null) return;
+        if (!IsEnabled || !_isDragging || _startTile == null) return;
         
         _isDragging = false;
         

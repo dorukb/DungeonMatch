@@ -6,7 +6,7 @@ namespace DorkyProductions.AI
 {
     public class EasyAI : DecisionAI
     {
-        public void SelectMove(Context context, PlayerAI controller)
+        public void SelectMove(Context context, MiyavPlayerAI controller)
         {
             // Do one of the below. 1st one is the most preferred.
             // 1. Play *exact* match 

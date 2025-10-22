@@ -47,15 +47,15 @@ public class PlayerNameGenerator : MonoBehaviour
 
     void Start()
     {
-        string playerName = GameMaster.Instance.GetLocalPlayer().DisplayName;
-        if (playerName.Length < 1)
-        {
-            SetRandomName();
-        }
-        else
-        {
-            nameDisplayText.text = playerName;
-        }
+        // string playerName = GameMaster.Instance.GetLocalPlayer().DisplayName;
+        // if (playerName.Length < 1)
+        // {
+        //     SetRandomName();
+        // }
+        // else
+        // {
+        //     nameDisplayText.text = playerName;
+        // }
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public class PlayerNameGenerator : MonoBehaviour
     {
         string generatedName = GenerateRandomName();
         nameDisplayText.text = generatedName;
-        GameMaster.Instance.ChangeLocalPlayerName(generatedName);
+        // GameMaster.Instance.ChangeLocalPlayerName(generatedName);
     }
     private string GenerateRandomName()
     {

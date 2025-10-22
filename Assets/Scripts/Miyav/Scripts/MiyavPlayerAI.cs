@@ -4,14 +4,14 @@ using UnityEngine;
 
 namespace DorkyProductions.Core
 {
-    public class PlayerAI : Player
+    public class MiyavPlayerAI : MiyavPlayer
     {   
         // TODO: Pass in a "Strategy" object to select different AI Logic.
         private DecisionAI _logic;
         private float turnStartTime = 0;
         private float decisionFakeDelay = 2.5f;
         private bool hasPlayed = false;
-        public PlayerAI(int id, string displayName = "DumbAI")
+        public MiyavPlayerAI(int id, string displayName = "DumbAI")
         {
             this.id = id;
             this.DisplayName = displayName;

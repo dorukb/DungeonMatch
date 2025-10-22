@@ -2,9 +2,9 @@ using DorkyProductions.Core;
 
 namespace DorkyProductions
 {
-    public class HumanPlayer : Player
+    public class HumanMiyavPlayer : MiyavPlayer
     {
-        public HumanPlayer(int id, string displayName = "Player??")
+        public HumanMiyavPlayer(int id, string displayName = "Player??")
         {
             this.id = id;
             this.DisplayName = displayName;

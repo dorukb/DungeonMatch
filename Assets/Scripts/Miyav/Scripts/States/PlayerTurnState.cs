@@ -8,14 +8,14 @@ namespace DorkyProductions.States
         // maybe a counter, or better yet: a list booleans to know which players has taken their turns.
         public void Enter(Context context)
         {
-            Debug.Log($"Notifying {context.currentPlayer.DisplayName} to begin their turn.");
-            StartPlayerTurn(context.currentPlayer);
-            context.currentPlayer.TurnStarted(context);
+            Debug.Log($"Notifying {context.CurrentMiyavPlayer.DisplayName} to begin their turn.");
+            StartPlayerTurn(context.CurrentMiyavPlayer);
+            context.CurrentMiyavPlayer.TurnStarted(context);
         }
 
         public void Update(Context context)
         {
-            context.currentPlayer.Update(context);
+            context.CurrentMiyavPlayer.Update(context);
         }
 
         // This is called by the Players, if they dont, it will be their turn indefinitely.
@@ -32,11 +32,11 @@ namespace DorkyProductions.States
         }
         public void Exit(Context context)
         {
-            Debug.Log($"Player {context.currentPlayer.DisplayName}'s Turn Ended!");
-            context.gameMaster.NextPlayer();
+            Debug.Log($"Player {context.CurrentMiyavPlayer.DisplayName}'s Turn Ended!");
+            // context.gameMaster.NextPlayer();
             // any kind of cleanup.
         }
-        private void StartPlayerTurn(Player player)
+        private void StartPlayerTurn(MiyavPlayer miyavPlayer)
         {
         }
     }
