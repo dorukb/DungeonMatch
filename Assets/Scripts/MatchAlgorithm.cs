@@ -81,6 +81,39 @@ public static class MatchAlgorithm
             foundMatches.Add(horzMatch);
         }
     }
+    
+    public static List<MatchData> FindAllMatchesOnBoard(GameBoard board)
+    {
+        List<MatchData> allMatches = new List<MatchData>();
+        HashSet<Vector2Int> matchedPositions = new HashSet<Vector2Int>();
+         
+        for (int y = 0; y < GameBoard.BoardHeight; y++)
+        {
+            for (int x = 0; x < GameBoard.BoardWidth; x++)
+            {
+                Vector2Int currentPos = new Vector2Int(x, y);
+
+                // OPTIMIZATION: Only check for a match if this tile hasn't already been 
+                // claimed by a previous match.
+                if (matchedPositions.Contains(currentPos))
+                {
+                    continue; // Skip this tile
+                }
+                List<MatchData> matches = MatchAlgorithm.FindMatchesAt(board, currentPos);
+
+                allMatches.AddRange(matches);
+                foreach (MatchData match in matches)
+                {
+                    foreach (var pos in match.positions)
+                    {
+                        matchedPositions.Add(pos);
+                    }
+                }
+            }
+        }
+
+        return allMatches;
+    }
 }
     
 }

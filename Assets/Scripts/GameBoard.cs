@@ -115,14 +115,6 @@ public class GameBoard : NetworkBehaviour
         };
     }
     
-    private void SetupBoard()
-    {
-        for (int i = 0; i < boardState.Count; i++)
-        {
-            var tile = boardState[i];
-            _visualizer.SpawnVisualTile(tile, GetGridPos(i));
-        }
-    }
     private TileState GenerateNewTile()
     {
         return new TileState
@@ -131,6 +123,16 @@ public class GameBoard : NetworkBehaviour
             tileType = UnityEngine.Random.Range(0, tileDatabase.allTileDefinitions.Count)
         };
     }
+    
+    private void SetupBoard()
+    {
+        for (int i = 0; i < boardState.Count; i++)
+        {
+            var tile = boardState[i];
+            _visualizer.SpawnVisualTile(tile, GetGridPos(i));
+        }
+    }
+   
     //
     [ClientRpc]
     private void RpcAnimateSwap(ushort firstTileID, ushort secondTileID)
@@ -165,35 +167,6 @@ public class GameBoard : NetworkBehaviour
         }
 
         return true;
-    }
-    
-    public bool IsValidSwap(Vector2Int posA, Vector2Int posB)
-    {
-        // Check bounds
-        if (posA.x < 0 || posA.x >= BoardWidth || posA.y < 0 || posA.y >= BoardHeight ||
-            posB.x < 0 || posB.x >= BoardWidth || posB.y < 0 || posB.y >= BoardHeight)
-        {
-            return false;
-        }
-
-        // Tiles must be different type, otherwise no effect.
-        // Prevents accidental no-effect swaps. 
-        if (GetTileAt(posA).tileType == GetTileAt(posB).tileType)
-        {
-            Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. Tiles are same type.");
-            return false;
-        }
-
-        if (GetTileAt(posA).tileType == -1 || GetTileAt(posB).tileType == -1)
-        {
-            Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. at least one of the tiles is Empty.");
-            // dont allow swapping with Empty tiles.
-            return false;
-        }
-        
-        // Check for adjacency (Manhattan distance == 1)
-        int dist = Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
-        return dist == 1;
     }
     
     [Server]
@@ -234,7 +207,7 @@ public class GameBoard : NetworkBehaviour
             RefillBoard();
 
             hasMoreMatches = false;
-            matchResults = FindAllMatchesOnBoard(this);
+            matchResults = MatchAlgorithm.FindAllMatchesOnBoard(this);
             if (matchResults.Count > 0)
             {
                 Debug.Log("[Server] Matches on board:");
@@ -361,39 +334,34 @@ public class GameBoard : NetworkBehaviour
         // Debug.Log($"CLIENT: Refilling ({pos}) with tile{fillingTile.uniqueID}");
     }
     // --- COORDINATE & STATE HELPERS ---
-
-    [Server]
-    private List<MatchData> FindAllMatchesOnBoard(GameBoard board)
+    
+    public bool IsValidSwap(Vector2Int posA, Vector2Int posB)
     {
-        List<MatchData> allMatches = new List<MatchData>();
-        HashSet<Vector2Int> matchedPositions = new HashSet<Vector2Int>();
-     
-        for (int y = 0; y < GameBoard.BoardHeight; y++)
+        // Check bounds
+        if (posA.x < 0 || posA.x >= BoardWidth || posA.y < 0 || posA.y >= BoardHeight ||
+            posB.x < 0 || posB.x >= BoardWidth || posB.y < 0 || posB.y >= BoardHeight)
         {
-            for (int x = 0; x < GameBoard.BoardWidth; x++)
-            {
-                Vector2Int currentPos = new Vector2Int(x, y);
-
-                // OPTIMIZATION: Only check for a match if this tile hasn't already been 
-                // claimed by a previous match.
-                if (matchedPositions.Contains(currentPos))
-                {
-                    continue; // Skip this tile
-                }
-                List<MatchData> matches = MatchAlgorithm.FindMatchesAt(board, currentPos);
-
-                allMatches.AddRange(matches);
-                foreach (MatchData match in matches)
-                {
-                    foreach (var pos in match.positions)
-                    {
-                        matchedPositions.Add(pos);
-                    }
-                }
-            }
+            return false;
         }
 
-        return allMatches;
+        // Tiles must be different type, otherwise no effect.
+        // Prevents accidental no-effect swaps. 
+        if (GetTileAt(posA).tileType == GetTileAt(posB).tileType)
+        {
+            Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. Tiles are same type.");
+            return false;
+        }
+
+        if (GetTileAt(posA).tileType == -1 || GetTileAt(posB).tileType == -1)
+        {
+            Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. at least one of the tiles is Empty.");
+            // dont allow swapping with Empty tiles.
+            return false;
+        }
+        
+        // Check for adjacency (Manhattan distance == 1)
+        int dist = Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
+        return dist == 1;
     }
     public Vector2Int GetGridPos(int idx)
     {
