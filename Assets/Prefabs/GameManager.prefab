@@ -48,12 +48,10 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  player1: {fileID: 0}
-  player2: {fileID: 0}
+  gameState: 0
+  TileDatabase: {fileID: 11400000, guid: 72dfecc0032c29d47b6a0a41b0573550, type: 2}
   activePlayer: {fileID: 0}
-  currentGameState: 0
-  maxTurnTime: 30
-  turnTimer: 0
+  requiredPlayers: 2
 --- !u!114 &4968720212812281737
 MonoBehaviour:
   m_ObjectHideFlags: 0

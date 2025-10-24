@@ -5,14 +5,11 @@ using UnityEngine;
 namespace DorkyProductions
 {
     
-public class GameBoard : MonoBehaviour
+public class GameBoard
 {
     public static readonly int BoardWidth = 5;
     public static readonly int BoardHeight = 5;
  
-    [SerializeField]
-    private TileDatabase tileDatabase;
-   
     // The "Single Source of Truth"
     // This list represents a 5x5 grid, flattened to 1D.
     // Index = (y * BoardWidth) + x
@@ -85,7 +82,7 @@ public class GameBoard : MonoBehaviour
         return new TileState
         {
             uniqueID = _nextTileID++,
-            tileType = UnityEngine.Random.Range(0, tileDatabase.allTileDefinitions.Count)
+            tileType = UnityEngine.Random.Range(0, GameManager.Instance.TileDatabase.allTileDefinitions.Count)
         };
     }
     

@@ -21,6 +21,8 @@ public class GameManager : NetworkBehaviour
     [SyncVar]
     public GameState gameState = GameState.WaitingForPlayers;
 
+    public TileDatabase TileDatabase;
+    
     [Tooltip("The player who is currently allowed to make a move")]
     public NetworkPlayer activePlayer;
 
@@ -36,7 +38,7 @@ public class GameManager : NetworkBehaviour
     // Server-side index for tracking turns
     private int activePlayerIndex = 0;
     
-    private GameBoard board; 
+    private GameBoard _gameBoard; 
     private ClientEventHandler _clientEventHandler;
     
     void Awake()
@@ -98,7 +100,8 @@ public class GameManager : NetworkBehaviour
         // 2. Create the first event batch
         List<GameEvent> eventBatch = new List<GameEvent>();
         
-        var boardState = board.FillBoardWithNoMatches();
+        _gameBoard = new GameBoard();
+        var boardState = _gameBoard.FillBoardWithNoMatches();
         eventBatch.Add(GameEvent.GameStarted(boardState));
         eventBatch.Add(GameEvent.TurnStarted(activePlayer.netIdentity.netId));
 
@@ -144,7 +147,7 @@ public class GameManager : NetworkBehaviour
             return; // Not this player's turn, or game isn't running
         }
         // --- 1. Validation ---
-        if (!board.IsValidSwap(posA, posB))
+        if (!_gameBoard.IsValidSwap(posA, posB))
         {
             // Debug.LogWarning($"[Server] Invalid swap: {posA} <-> {posB}. Not adjacent.");
             eventBatch.Add(GameEvent.SwapFailed(activePlayer.netIdentity.netId));
@@ -154,7 +157,7 @@ public class GameManager : NetworkBehaviour
 
         // --- 2. State Change ---
         // This function does all the work AND checks for matches
-        bool didMatchOccur = board.ProcessSwapMove(posA, posB, sender.identity, eventBatch);
+        bool didMatchOccur = _gameBoard.ProcessSwapMove(posA, posB, sender.identity, eventBatch);
         if (didMatchOccur)
         {
             // Debug.Log($"[Server] Swap {posA} <-> {posB} successful. Board processed.");
