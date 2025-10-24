@@ -18,13 +18,10 @@ public class GameManager : NetworkBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [Header("Game State")]
-    [Tooltip("The current state of the game")]
     [SyncVar]
     public GameState gameState = GameState.WaitingForPlayers;
 
     [Tooltip("The player who is currently allowed to make a move")]
-    [SyncVar]
     public NetworkPlayer activePlayer;
 
     [Header("Game Settings")]
@@ -34,8 +31,6 @@ public class GameManager : NetworkBehaviour
     // --- Server-Only State ---
     // List of all connected players (server-side only)
     private List<NetworkPlayer> players = new List<NetworkPlayer>();
-    
-    // The server's authoritative history of all events
     private List<GameEvent> serverGameHistory = new List<GameEvent>();
     
     // Server-side index for tracking turns
@@ -88,19 +83,17 @@ public class GameManager : NetworkBehaviour
             EndGame(players.FirstOrDefault()); // The remaining player is the winner
         }
     }
-
-
+    
     [Server]
     private void StartGame()
     {
         if (gameState != GameState.WaitingForPlayers) return;
 
         Debug.Log("Starting game...");
-        gameState = GameState.Playing; // This SyncVar will update all clients
+        gameState = GameState.Playing;
 
-        // 1. Pick the first player (e.g., the first to connect)
         activePlayerIndex = 0;
-        activePlayer = players[activePlayerIndex]; // This SyncVar will update all clients
+        activePlayer = players[activePlayerIndex];
 
         // 2. Create the first event batch
         List<GameEvent> eventBatch = new List<GameEvent>();
@@ -109,7 +102,7 @@ public class GameManager : NetworkBehaviour
         eventBatch.Add(GameEvent.GameStarted(boardState));
         eventBatch.Add(GameEvent.TurnStarted(activePlayer.netIdentity.netId));
 
-        // 3. Add to history and send to clients
+        // Add to history and send to clients
         SendAndLogBatch(eventBatch);
     }
 
@@ -142,19 +135,23 @@ public class GameManager : NetworkBehaviour
     [Server]
     public void ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA, Vector2Int posB)
     {
+        List<GameEvent> eventBatch = new List<GameEvent>();
         if (gameState != GameState.Playing || sender.identity != activePlayer.netIdentity)
         {
             Debug.LogWarning($"Player {sender.identity.netId} tried to move out of turn.");
+            eventBatch.Add(GameEvent.SwapFailed(activePlayer.netIdentity.netId));
+            SendAndLogBatch(eventBatch);
             return; // Not this player's turn, or game isn't running
         }
         // --- 1. Validation ---
         if (!board.IsValidSwap(posA, posB))
         {
             // Debug.LogWarning($"[Server] Invalid swap: {posA} <-> {posB}. Not adjacent.");
+            eventBatch.Add(GameEvent.SwapFailed(activePlayer.netIdentity.netId));
+            SendAndLogBatch(eventBatch);
             return;
         }
 
-        List<GameEvent> eventBatch = new List<GameEvent>();
         // --- 2. State Change ---
         // This function does all the work AND checks for matches
         bool didMatchOccur = board.ProcessSwapMove(posA, posB, sender.identity, eventBatch);
@@ -167,32 +164,24 @@ public class GameManager : NetworkBehaviour
             // Debug.Log($"[Server] Swap {posA} <-> {posB} resulted in no match. This is totally fine.");
         }
 
+        EndTurnAndStartNext(eventBatch);
         SendAndLogBatch(eventBatch);
     }
+    
     [Server]
-    private List<GameEvent> EndTurnAndStartNext()
+    public void EndTurnAndStartNext(List<GameEvent> eventBatch)
     {
-        List<GameEvent> events = new List<GameEvent>();
-        
         // 1. End current player's turn
-        events.Add(GameEvent.TurnEnded(activePlayer.netIdentity.netId));
-        
-        // 2. Find next player
+        eventBatch.Add(GameEvent.TurnEnded(activePlayer.netIdentity.netId));
         activePlayerIndex = (activePlayerIndex + 1) % players.Count;
         activePlayer = players[activePlayerIndex]; // SyncVar update
-        
-        // 3. Start new player's turn
-        events.Add(GameEvent.TurnStarted(activePlayer.netIdentity.netId));
-        
-        return events;
+        eventBatch.Add(GameEvent.TurnStarted(activePlayer.netIdentity.netId));
     }
 
     [Server]
     private void SendAndLogBatch(List<GameEvent> batch)
     {
-        // Add to the server's authoritative history
         serverGameHistory.AddRange(batch);
-        
         // Send to all clients
         RpcSendEventBatch(batch);
     }
@@ -200,12 +189,8 @@ public class GameManager : NetworkBehaviour
     [ClientRpc]
     void RpcSendEventBatch(List<GameEvent> batch)
     {
-        // This is called on ALL clients
         Debug.Log($"Client received a batch of {batch.Count} events.");
         
-        // Find the local ClientGameManager and give it the batch
-        // (This assumes you have the ClientGameManager.cs from our previous talk)
-
         if (clientGameMaster == null)
         {
             clientGameMaster = FindAnyObjectByType<ClientGameMaster>();

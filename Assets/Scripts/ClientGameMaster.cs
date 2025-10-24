@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace DorkyProductions
         private Queue<GameEvent> eventQueue = new Queue<GameEvent>();
         private bool isProcessingEvents = false;
         private NetworkPlayer _localPlayer;
-
+    
         private void OnDisable()
         {
             if (eventQueue.Count > 0)
@@ -65,20 +66,20 @@ namespace DorkyProductions
             while (eventQueue.Count > 0)
             {
                 GameEvent ev = eventQueue.Dequeue();
-                EventSyncType syncType = ev.SyncType;
+                SyncType syncType = ev.syncType;
 
-                if (syncType == EventSyncType.Blocking)
+                if (syncType == SyncType.Blocking)
                 {
                     // --- BLOCKING ---
                     // Wait for this one event's animation to fully complete
-                    yield return StartCoroutine(HandleEvent(ev));
+                    yield return StartCoroutine(HandleBlockingEvent(ev));
                 }
-                else if (syncType == EventSyncType.Immediate)
+                else if (syncType == SyncType.Immediate)
                 {
                     // Start the event logic, but do NOT wait for it.
-                    StartCoroutine(HandleEvent(ev));
+                    HandleImmediate(ev);
                 }
-                else if (syncType == EventSyncType.Parallel) // syncType == EventSyncType.Parallel
+                else if (syncType == SyncType.Parallel) // syncType == EventSyncType.Parallel
                 {
                     // 1. Create a batch, starting with this event
                     List<GameEvent> parallelBatch = new List<GameEvent>();
@@ -89,7 +90,7 @@ namespace DorkyProductions
                     // Note: subsequent calls to peek always return the same object, the front of the queue.
                     // dequeue inside the loop changes the front element.
                     while (eventQueue.Count > 0
-                           && eventQueue.Peek().SyncType == EventSyncType.Parallel
+                           && eventQueue.Peek().syncType == SyncType.Parallel
                            && eventQueue.Peek().type == ev.type)
                     {
                         parallelBatch.Add(eventQueue.Dequeue());
@@ -107,31 +108,62 @@ namespace DorkyProductions
             isProcessingEvents = false;
         }
 
+        private void HandleImmediate(GameEvent ev)
+        {
+            switch (ev.type)
+            {
+                case EventType.TurnStarted:
+                    if (ev.turnData.playerNetId == _localPlayer.netId)
+                    {
+                        Debug.Log("My Turn Started");
+                        _localPlayer.StartPlayerTurn();
+                        // TODO: Add UI text that flies from left to right, saying "Your turn!"
+                        // fire UI event for it.
+                        // yourTurnStartedEvent?.Invoke()
+                        // UI CLass listens to that event.
+                    }
+                    break;
+                case EventType.TurnEnded:
+                    if (ev.turnData.playerNetId == _localPlayer.netId)
+                    {
+                        Debug.Log("My Turn Started");
+                        _localPlayer.EndPlayerTurn();
+                    }
+                    break;
+                case EventType.GameEnded:
+                    Debug.LogWarning("Game Ended NOT IMPLEMENTED");
+                    break;
+                default:
+                    Debug.LogError("This event type is not immediate." + ev.type);
+                    break;
+            }
+            
+        }
+
         /// Handles a single event (Blocking or Immediate).
         /// Returns a coroutine that waits for its animation.
-        private IEnumerator HandleEvent(GameEvent ev)
+        private IEnumerator HandleBlockingEvent(GameEvent ev)
         {
             Tween animTween = null;
 
             switch (ev.type)
             {
-                case EventType.TurnStarted:
-                    //NetworkIdentity player = NetworkClient.spawned[ev.playerData.playerNetId];
-                    //UIManager.ShowTurnBanner(player.name);
-                    Debug.Log("Turn Started");
-                    _localPlayer.StartPlayerTurn();
+                case EventType.GameStarted:
+                    Debug.Log("Game started, setup the local board");
+                    var boardState = ev.gameStartData.boardState;
+                    animTween = _visualizer.InitBoard(boardState);
+                    break;
+                    
+                case EventType.MatchOccurred:
+                    animTween = _visualizer.AnimatePop(ev.matchData.matchedTileIDs);
                     break;
 
                 case EventType.SwapOccurred:
                     animTween = _visualizer.AnimateSwap(ev.swapData.firstId, ev.swapData.secondId);
                     break;
-
                 case EventType.SwapDenied:
-                    // animTween = boardVisuals.AnimateFailedSwap(ev.swapData.pos1, ev.swapData.pos2);
-                    Debug.Log("Swap Denied");
+                    _localPlayer.EnableMoves();
                     break;
-
-                // ... other non-parallel cases
             }
 
             // If an animation was created, wait for it to complete.
@@ -157,12 +189,12 @@ namespace DorkyProductions
                 switch (ev.type)
                 {
                     case EventType.TileMoved:
-                        tileTween = _visualizer.AnimateFall(ev.tileMoveData.tileId, ev.tileMoveData.toPos);
+                        tileTween = _visualizer.AnimateFall(ev.tileMoveData.tileId, ev.tileMoveData.toGridPos);
                         break;
 
-                    // case EventType.TileSpawned:
-                    //     tileTween = boardVisuals.AnimateTileSpawn(ev.spawnData.pos);
-                    //     break;
+                    case EventType.TileSpawned:
+                        tileTween = _visualizer.SpawnVisualTile(ev.tileSpawnData.state, ev.tileSpawnData.pos);
+                        break;
                 }
 
                 if (tileTween != null)

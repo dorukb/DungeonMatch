@@ -9,26 +9,10 @@ public class GameBoard : MonoBehaviour
 {
     public static readonly int BoardWidth = 5;
     public static readonly int BoardHeight = 5;
-    
-    [Header("UI Layout (Read by Client)")]
-    [Tooltip("The RectTransform that holds the 5x5 grid UI.")]
-    public RectTransform boardContainer;
-
-    [Tooltip("The size (width/height) of a single tile's RectTransform.")]
-    public Vector2 tileViewSize = new Vector2(100, 100);
-
-    [Tooltip("The space between adjacent tiles.")]
-    public Vector2 tileSpacing = new Vector2(10, 10);
-    
-    [Header("Game Data")]
+ 
     [SerializeField]
-    private TileDatabase tileDatabase; // Assign your TileDatabase SO here
-
-    [SerializeField]
-    private ClientBoardVisualizer _visualizer;
-
-    [SerializeField] private ClientGameMaster _clientGameMaster;
-    
+    private TileDatabase tileDatabase;
+   
     // The "Single Source of Truth"
     // This list represents a 5x5 grid, flattened to 1D.
     // Index = (y * BoardWidth) + x
@@ -37,8 +21,6 @@ public class GameBoard : MonoBehaviour
     
     public List<TileState> FillBoardWithNoMatches()
     {
-        // (Don't just add 25 items, you need to call .Add()
-        // for each one to sync properly)
         for (int i = 0; i < BoardHeight * BoardWidth; i++)
         {
             int x = i % BoardWidth;
@@ -107,15 +89,6 @@ public class GameBoard : MonoBehaviour
         };
     }
     
-    private void SetupBoard()
-    {
-        for (int i = 0; i < boardState.Count; i++)
-        {
-            var tile = boardState[i];
-            _visualizer.SpawnVisualTile(tile, GetGridPos(i));
-        }
-    }
-
     public bool ProcessSwapMove(Vector2Int posA, Vector2Int posB, NetworkIdentity performingPlayer, List<GameEvent> eventBatch)
     {
         // --- 1. Perform the swap ---
@@ -135,11 +108,6 @@ public class GameBoard : MonoBehaviour
         if (matchResults.Count == 0)
         {
             // TODO: Move didnt yield a Match, maybe do not allow and rollback the move.
-            // End turn
-            
-            // also changes the state.
-            eventBatch.Add(GameEvent.TurnEnded(performingPlayer.netId));
-            // GameMaster.Instance.EndTurn();
             return false;
         }
 
@@ -164,8 +132,6 @@ public class GameBoard : MonoBehaviour
                 hasMoreMatches = true;
             }
         }
-        // also changes the state.
-        // GameMaster.Instance.EndTurn();
         return true; // A match occurred
     }
 
@@ -196,6 +162,8 @@ public class GameBoard : MonoBehaviour
                 return true;
             }
             
+            // TODO: Actually handle effects, dmg,heal zart zurt
+            // Send related game events.
             Debug.Log($"Matched: {match.matchCount} of {match.ToString()}");
 
             var ids = new List<ushort>();
@@ -204,21 +172,12 @@ public class GameBoard : MonoBehaviour
                 ids.Add(GetTileAt(pos).uniqueID);
             }
             // RpcApplyMatchEffect(ids);
-            // eventBatch.Add(GameEvent.);
-            
-            // TODO: Create MatchOccurred Event.
-            // events.Add(GameEvent.TurnEnded(activePlayer.netIdentity.netId));
+            eventBatch.Add(GameEvent.MatchOccurred(ids));
             return false;
         }
 
         return false;
     }
-    
-    // [ClientRpc]
-    // private void RpcApplyMatchEffect(List<ushort>ids)
-    // {
-    //     _visualizer.RemoveTilesOnMatch(ids);
-    // }
 
     private void SimulateTileFall( List<GameEvent> eventBatch)
     {
@@ -236,10 +195,12 @@ public class GameBoard : MonoBehaviour
                         {
                             // We found one! Move it down.
                             // Debug.Log($"Move tile ({x},{yAbove}) to ({x},{y})");
-                            boardState[GetIndex(x, y)] = tileToMove;
+                            int moveIndex = GetIndex(x, y);
+                            boardState[moveIndex] = tileToMove;
                             boardState[GetIndex(x, yAbove)] = TileState.Empty;
 
                             // RpcMoveTile(new Vector2Int(x, y), tileToMove);
+                            eventBatch.Add(GameEvent.TileMoved(tileToMove.uniqueID, GetGridPos(moveIndex)));
                             // Break the inner 'yAbove' loop to continue
                             // checking the *current* 'y' position again.
                             break; 
@@ -249,13 +210,6 @@ public class GameBoard : MonoBehaviour
             }
         }
     }
-    
-    // [ClientRpc]
-    // private void RpcMoveTile(Vector2Int toPos, TileState movedTile)
-    // {
-    //     // Debug.Log($"[CLIENT]: Animating tile to {toPos}");
-    //     _visualizer.AnimateFall(movedTile, toPos);
-    // }
     
     [Server]
     private void RefillBoard(List<GameEvent> eventBatch)
@@ -270,24 +224,17 @@ public class GameBoard : MonoBehaviour
                 {
                     // TODO: Spawn considering if we restrict combo-matches.
                     TileState fillingTile = GenerateNewTile();
-                    boardState[GetIndex(x, y)] = fillingTile;
+                    int spawnIdx = GetIndex(x, y);
+                    boardState[spawnIdx] = fillingTile;
 
-                    // TODO: Create SpawnTileEvent
                     // RpcRefillBoard(new Vector2Int(x, y),fillingTile);
+                    eventBatch.Add(GameEvent.TileSpawned(fillingTile, GetGridPos(spawnIdx)));
                     Debug.Log($"Draw new tile to pos: ({x},{y})");
                 }
             }
         }
     }
-
-    // [ClientRpc]
-    // private void RpcRefillBoard(Vector2Int pos, TileState fillingTile)
-    // {
-    //     _visualizer.SpawnVisualTile(fillingTile, pos);
-    //     // Debug.Log($"CLIENT: Refilling ({pos}) with tile{fillingTile.uniqueID}");
-    // }
-    // --- COORDINATE & STATE HELPERS ---
-    
+   
     public bool IsValidSwap(Vector2Int posA, Vector2Int posB)
     {
         // Check bounds
@@ -316,7 +263,7 @@ public class GameBoard : MonoBehaviour
         int dist = Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
         return dist == 1;
     }
-    public Vector2Int GetGridPos(int idx)
+    public static Vector2Int GetGridPos(int idx)
     {
         // idx = 8 , 9th tile
         // (x,y)

@@ -2,6 +2,7 @@ using UnityEngine;
 using Mirror;
 using System;
 using System.Collections.Generic;
+using UnityEngine.Serialization;
 
 namespace  DorkyProductions
 {
@@ -24,7 +25,7 @@ public enum EventType
     GameEnded,
 }
 
-public enum EventSyncType
+public enum SyncType
 {
     // Waits for this event's animation to finish before starting the next event.
     Blocking,
@@ -38,7 +39,7 @@ public enum EventSyncType
 }
 
 [Serializable]
-public struct PlayerData
+public struct TurnData
 {
     public uint playerNetId;
 }
@@ -55,8 +56,16 @@ public struct TileMoveData
 {
     // TODO: do we need tile index?
     public ushort tileId;
-    public Vector2Int toPos;
+    public Vector2Int toGridPos;
 }
+
+[Serializable]
+public struct TileSpawnData
+{
+    public Vector2Int pos;
+    public TileState state;
+}
+
 [Serializable]
 public struct GameStartData
 {
@@ -65,9 +74,7 @@ public struct GameStartData
 [Serializable]
 public struct MatchData
 {
-    public int[] matchedTileIndices;
-    public int matchedTileCount;
-    
+     public List<ushort> matchedTileIDs;
     // TODO: We prob dont need the player id, simple ActivePlayer check can resolve all issues.
     // all events belong to activePlayer unless specified (Sword match fires TakeDamageEvent that will include targetID)
     // public uint playerNetId;
@@ -80,68 +87,23 @@ public struct GameEvent
     public EventType type;
 
     // --- All possible event data, neatly grouped ---
-    public PlayerData playerData;
+    public TurnData turnData;
     public SwapData swapData;
     public TileMoveData tileMoveData;
+    public TileSpawnData tileSpawnData;
     public MatchData matchData;
     public GameStartData gameStartData;
+    public SyncType syncType;
     
-    // --- Client-side "Tagger" ---
-    // This property tells the client how to process this event
-    public EventSyncType SyncType
-    {
-        get
-        {
-            switch (type)
-            {
-                // BLOCKING events
-                case EventType.SwapOccurred:
-                case EventType.SwapDenied:
-                case EventType.MatchOccurred:
-                case EventType.GameStarted:
-                    return EventSyncType.Blocking;
-                
-                // PARALLEL events
-                case EventType.TileMoved:
-                case EventType.TileSpawned:
-                    return EventSyncType.Parallel;
-
-                // IMMEDIATE events
-                case EventType.TurnStarted:
-                case EventType.TurnEnded:
-                case EventType.GameEnded:
-                    return EventSyncType.Immediate;
-
-                // Default to blocking to be safe
-                default:
-                    return EventSyncType.Blocking;
-            }
-        }
-    }
     
-    // --- Static Factory Methods (Server-side) ---
+    // Blocking Event
     public static GameEvent GameStarted (List<TileState> boardState)
     {
         return new GameEvent
         {
             type = EventType.GameStarted,
-            gameStartData = new GameStartData() { boardState = boardState}
-        };
-    }
-    public static GameEvent TurnStarted(uint playerNetId)
-    {
-        return new GameEvent
-        {
-            type = EventType.TurnStarted,
-            playerData = new PlayerData { playerNetId = playerNetId }
-        };
-    }
-    public static GameEvent TurnEnded(uint playerNetId)
-    {
-        return new GameEvent
-        {
-            type = EventType.TurnEnded,
-            playerData = new PlayerData { playerNetId = playerNetId }
+            syncType = SyncType.Blocking,
+            gameStartData = new GameStartData() { boardState = boardState }
         };
     }
     public static GameEvent SwapOccurred(ushort firstId, ushort secondId)
@@ -149,19 +111,68 @@ public struct GameEvent
         return new GameEvent
         {
             type = EventType.SwapOccurred,
+            syncType = SyncType.Blocking,
             swapData = new SwapData { firstId = firstId, secondId = secondId }
         };
     }
 
+    public static GameEvent MatchOccurred(List<ushort> matchedTileIndices)
+    {
+        return new GameEvent()
+        {
+            type = EventType.MatchOccurred,
+            syncType = SyncType.Blocking,
+            matchData = new MatchData { matchedTileIDs = matchedTileIndices }
+        };
+    }
+    
+    // ImmediateEvents
+    public static GameEvent TurnStarted(uint playerNetId)
+    {
+        return new GameEvent
+        {
+            type = EventType.TurnStarted,
+            syncType = SyncType.Immediate,
+            turnData = new TurnData { playerNetId = playerNetId }
+        };
+    }
+    public static GameEvent TurnEnded(uint playerNetId)
+    {
+        return new GameEvent
+        {
+            type = EventType.TurnEnded,
+            syncType = SyncType.Immediate,
+            turnData = new TurnData { playerNetId = playerNetId }
+        };
+    }
+
+    // Parallel Events.
     public static GameEvent TileMoved(ushort tileId, Vector2Int to)
     {
         return new GameEvent
         {
             type = EventType.TileMoved,
-            tileMoveData = new TileMoveData { tileId = tileId, toPos = to }
+            syncType = SyncType.Parallel,
+            tileMoveData = new TileMoveData { tileId = tileId, toGridPos = to }
+        };
+    } 
+    public static GameEvent TileSpawned (TileState state, Vector2Int spawnPos)
+    {
+        return new GameEvent
+        {
+            type = EventType.TileMoved,
+            syncType = SyncType.Parallel,
+            tileSpawnData = new TileSpawnData() { pos = spawnPos, state = state }
         };
     }
-    
-    // ... Add factory methods for all your other events
+    public static GameEvent SwapFailed(uint playerId)
+    {
+        return new GameEvent
+        {
+            type = EventType.SwapDenied,
+            syncType = SyncType.Blocking,
+            turnData = new TurnData { playerNetId = playerId }
+        };
+    }
 }
 }

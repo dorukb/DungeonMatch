@@ -9,7 +9,8 @@ namespace DorkyProductions
         private PlayerInput _playerInput;
         private ClientGameMaster _clientGameMaster;
         private bool isMyTurn = false;
-
+        private bool canMakeMove = false;
+        
         public override void OnStartServer()
         {
             // When the player object is spawned on the server, register it
@@ -45,21 +46,16 @@ namespace DorkyProductions
             _clientGameMaster.SetLocalPlayer(this);
             
         }
-        private void Update()
-        {
-            if (_playerInput == null) return;
 
-            // Check if we are allowed to make a move
-            if (isMyTurn)
-            {
-                _playerInput.EnableControls();
-            }
-            else
-            {
-                _playerInput.DisableControls();
-            }
+        public void EnableMoves()
+        {
+            canMakeMove = true;
         }
 
+        public void DisableMoves()
+        {
+            canMakeMove = false;
+        }
         public void StartPlayerTurn()
         {
             isMyTurn = true;
@@ -75,6 +71,7 @@ namespace DorkyProductions
         {
             if (!isLocalPlayer) return; // Should never happen, but good check
             Debug.Log($"[Local Client] Requesting swap: {posA} <-> {posB}");
+            DisableMoves();
             CmdAttemptSwap(posA, posB);
         }
 

@@ -9,31 +9,29 @@ public class PlayerInput : MonoBehaviour
     public NetworkPlayer LocalPlayerController { get; private set; }
     private TileView _startTile;
     private bool _isDragging = false;
-
-    public bool IsEnabled { get; private set; }
+    private bool isEnabled = false;
 
     private void Start()
     {
-        IsEnabled = false;
+        isEnabled = false;
     }
 
     void Update()
     {
-        // TODO: Add isMyTurn check.
         if (LocalPlayerController != null)
         {
-            IsEnabled = true;
+            isEnabled = true;
         }
     }
 
     public void DisableControls()
     {
-        IsEnabled = false;
+        isEnabled = false;
     }
 
     public void EnableControls()
     {
-        IsEnabled = true;
+        isEnabled = true;
     }
 
     public void SetPlayer(NetworkPlayer localPlayer)
@@ -43,7 +41,7 @@ public class PlayerInput : MonoBehaviour
     
     public void OnTilePointerDown(TileView tile)
     {
-        if (!IsEnabled) return;
+        if (!isEnabled) return;
         
         if (!enabled || _isDragging) return; // Ignore if not our turn or already dragging
         
@@ -53,7 +51,7 @@ public class PlayerInput : MonoBehaviour
 
     public void OnTilePointerUp(TileView tile)
     {
-        if (!IsEnabled || !_isDragging || _startTile == null) return;
+        if (!isEnabled || !_isDragging || _startTile == null) return;
         
         _isDragging = false;
         
