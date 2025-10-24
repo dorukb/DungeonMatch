@@ -143,12 +143,19 @@ public class ClientBoardVisualizer : MonoBehaviour
         foreach (ushort tileId in tileIdsToPop)
         {
             TileView tileView = _visualTiles[tileId];
-            _visualTiles.Remove(tileId);
-            var tween = tileView.RectTransform.DOPunchScale(Vector3.one * 0.2f, REMOVE_DURATION, 10, 1)
-                .OnComplete(() => Destroy(tileView));
+            var tween = tileView.RectTransform.DOPunchScale(Vector3.one * 0.2f, REMOVE_DURATION, 10, 1);
             s.Join(tween);
         }
 
+        s.onComplete = () =>
+        {
+            foreach (ushort tileId in tileIdsToPop)
+            {
+                TileView tileView = _visualTiles[tileId];
+                _visualTiles.Remove(tileId);
+                Destroy(tileView.gameObject);
+            }
+        };
         return s;
     }
 }

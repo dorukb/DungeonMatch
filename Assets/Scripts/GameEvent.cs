@@ -160,7 +160,7 @@ public struct GameEvent
     {
         return new GameEvent
         {
-            type = EventType.TileMoved,
+            type = EventType.TileSpawned,
             syncType = SyncType.Parallel,
             tileSpawnData = new TileSpawnData() { pos = spawnPos, state = state }
         };
