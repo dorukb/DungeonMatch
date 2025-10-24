@@ -1,13 +1,11 @@
 using System.Collections.Generic;
-using DorkyProductions.Algorithms;
-using DorkyProductions.Core;
 using Mirror;
 using UnityEngine;
 
 namespace DorkyProductions
 {
     
-public class GameBoard : NetworkBehaviour
+public class GameBoard : MonoBehaviour
 {
     public static readonly int BoardWidth = 5;
     public static readonly int BoardHeight = 5;
@@ -28,33 +26,16 @@ public class GameBoard : NetworkBehaviour
 
     [SerializeField]
     private ClientBoardVisualizer _visualizer;
+
+    [SerializeField] private ClientGameMaster _clientGameMaster;
     
-    // The "Single Source of Truth" for all clients.
+    // The "Single Source of Truth"
     // This list represents a 5x5 grid, flattened to 1D.
     // Index = (y * BoardWidth) + x
-    public readonly SyncList<TileState> boardState = new SyncList<TileState>();
+    public readonly List<TileState> boardState = new List<TileState>(BoardHeight * BoardWidth);
     private ushort _nextTileID = 0;
     
-    public override void OnStartServer()
-    {
-        if (!isServer)
-        {
-            Debug.LogError("This shouldn't be called on Clients!");
-            return;
-        }
-        FillBoardWithNoMatches();
-    }
-
-    public override void OnStartClient()
-    {
-        // For Clients, List is populated before handlers are wired up so we
-        // need to manually invoke OnAdd for each element.
-        // for (int i = 0; i < boardState.Count; i++)
-        //     boardState.OnAdd.Invoke(i);
-        SetupBoard();
-    }
-    [Server]
-    private void FillBoardWithNoMatches()
+    public List<TileState> FillBoardWithNoMatches()
     {
         // (Don't just add 25 items, you need to call .Add()
         // for each one to sync properly)
@@ -91,6 +72,8 @@ public class GameBoard : NetworkBehaviour
             }
             boardState.Add(GenerateNewTile(availableTypes));
         }
+
+        return boardState;
     }
     // Overload: Generates a random tile from a specific list of allowed types.
     private TileState GenerateNewTile(List<int> availableTypes)
@@ -132,49 +115,10 @@ public class GameBoard : NetworkBehaviour
             _visualizer.SpawnVisualTile(tile, GetGridPos(i));
         }
     }
-   
-    //
-    [ClientRpc]
-    private void RpcAnimateSwap(ushort firstTileID, ushort secondTileID)
-    {
-        // TODO: Consider if client side prediction is necessary, disabled for now.
-        // Called on ALL clients.
-        // (The client who initiated the move can just ignore this)
-        // if (isLocalPlayer) return; // Example of ignoring if you're the one
-        _visualizer.AnimateSwap(firstTileID, secondTileID);
-    }
 
-    [Server]
-    public bool ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA, Vector2Int posB)
-    {
-        // --- 1. Validation ---
-        if (!IsValidSwap(posA, posB))
-        {
-            // Debug.LogWarning($"[Server] Invalid swap: {posA} <-> {posB}. Not adjacent.");
-            return false;
-        }
-
-        // --- 2. State Change ---
-        // This function does all the work AND checks for matches
-        bool didMatchOccur = ProcessSwapMove(posA, posB);
-        if (didMatchOccur)
-        {
-            // Debug.Log($"[Server] Swap {posA} <-> {posB} successful. Board processed.");
-        }
-        else
-        {
-            // Debug.Log($"[Server] Swap {posA} <-> {posB} resulted in no match. This is totally fine.");
-        }
-
-        return true;
-    }
-    
-    [Server]
-    private bool ProcessSwapMove(Vector2Int posA, Vector2Int posB)
+    public bool ProcessSwapMove(Vector2Int posA, Vector2Int posB, NetworkIdentity performingPlayer, List<GameEvent> eventBatch)
     {
         // --- 1. Perform the swap ---
-        GameMaster.Instance.currentGameState = GameState.ProcessingMove;
-        
         int indexA = GetIndex(posA);
         int indexB = GetIndex(posB);
         TileState stateA = boardState[indexA];
@@ -182,7 +126,8 @@ public class GameBoard : NetworkBehaviour
 
         boardState[indexA] = stateB;
         boardState[indexB] = stateA;
-        RpcAnimateSwap(stateA.uniqueID, stateB.uniqueID);
+        // RpcAnimateSwap(stateA.uniqueID, stateB.uniqueID);
+        eventBatch.Add(GameEvent.SwapOccurred(stateA.uniqueID, stateB.uniqueID));
         
         // Check if this swap caused a match
         // We only need to check the rows/cols of the two tiles we moved
@@ -193,18 +138,19 @@ public class GameBoard : NetworkBehaviour
             // End turn
             
             // also changes the state.
-            GameMaster.Instance.EndTurn();
+            eventBatch.Add(GameEvent.TurnEnded(performingPlayer.netId));
+            // GameMaster.Instance.EndTurn();
             return false;
         }
 
         bool hasMoreMatches = true;
         while (hasMoreMatches)
         {
-            
-            ApplyMatchEffects(matchResults);
-            RemoveMatchedTiles(matchResults);
-            SimulateTileFall();
-            RefillBoard();
+            bool shouldOpenChest = ApplyMatchEffects(matchResults, eventBatch);
+            // TODO: Handle chest open case that breaks/pauses the chain events.
+            RemoveMatchedTiles(matchResults, eventBatch);
+            SimulateTileFall(eventBatch);
+            RefillBoard(eventBatch);
 
             hasMoreMatches = false;
             matchResults = MatchAlgorithm.FindAllMatchesOnBoard(this);
@@ -219,11 +165,11 @@ public class GameBoard : NetworkBehaviour
             }
         }
         // also changes the state.
-        GameMaster.Instance.EndTurn();
+        // GameMaster.Instance.EndTurn();
         return true; // A match occurred
     }
 
-    private void RemoveMatchedTiles(List<MatchData> matchResults)
+    private void RemoveMatchedTiles(List<MatchResult> matchResults, List<GameEvent> eventBatch)
     {
         foreach (var match in matchResults)
         {
@@ -235,8 +181,8 @@ public class GameBoard : NetworkBehaviour
     }
     // --- BOARD PROCESSING HELPERS ---
 
-    [Server]
-    private void ApplyMatchEffects(List<MatchData> matchResults)
+    // returns: Whether this match should stop the Chain events immediately: i.e, shouldOpenChest
+    private bool ApplyMatchEffects(List<MatchResult> matchResults, List<GameEvent> eventBatch)
     {
         // This is where Card specific match effect will take place.
         foreach (var match in matchResults)
@@ -247,6 +193,7 @@ public class GameBoard : NetworkBehaviour
                 // This could trigger another skill, which might
                 // modify the board again. Be careful of recursive loops!
                 // For now, let's keep it simple.
+                return true;
             }
             
             Debug.Log($"Matched: {match.matchCount} of {match.ToString()}");
@@ -256,18 +203,24 @@ public class GameBoard : NetworkBehaviour
             {
                 ids.Add(GetTileAt(pos).uniqueID);
             }
-            RpcApplyMatchEffect(ids);
+            // RpcApplyMatchEffect(ids);
+            // eventBatch.Add(GameEvent.);
+            
+            // TODO: Create MatchOccurred Event.
+            // events.Add(GameEvent.TurnEnded(activePlayer.netIdentity.netId));
+            return false;
         }
+
+        return false;
     }
     
-    [ClientRpc]
-    private void RpcApplyMatchEffect(List<ushort>ids)
-    {
-        _visualizer.RemoveTilesOnMatch(ids);
-    }
+    // [ClientRpc]
+    // private void RpcApplyMatchEffect(List<ushort>ids)
+    // {
+    //     _visualizer.RemoveTilesOnMatch(ids);
+    // }
 
-    [Server]
-    private void SimulateTileFall()
+    private void SimulateTileFall( List<GameEvent> eventBatch)
     {
         for (int x = 0; x < BoardWidth; x++)
         {
@@ -286,7 +239,7 @@ public class GameBoard : NetworkBehaviour
                             boardState[GetIndex(x, y)] = tileToMove;
                             boardState[GetIndex(x, yAbove)] = TileState.Empty;
 
-                            RpcMoveTile(new Vector2Int(x, y), tileToMove);
+                            // RpcMoveTile(new Vector2Int(x, y), tileToMove);
                             // Break the inner 'yAbove' loop to continue
                             // checking the *current* 'y' position again.
                             break; 
@@ -297,15 +250,15 @@ public class GameBoard : NetworkBehaviour
         }
     }
     
-    [ClientRpc]
-    private void RpcMoveTile(Vector2Int toPos, TileState movedTile)
-    {
-        // Debug.Log($"[CLIENT]: Animating tile to {toPos}");
-        _visualizer.AnimateFall(movedTile, toPos);
-    }
+    // [ClientRpc]
+    // private void RpcMoveTile(Vector2Int toPos, TileState movedTile)
+    // {
+    //     // Debug.Log($"[CLIENT]: Animating tile to {toPos}");
+    //     _visualizer.AnimateFall(movedTile, toPos);
+    // }
     
     [Server]
-    private void RefillBoard()
+    private void RefillBoard(List<GameEvent> eventBatch)
     {
         Debug.Log("[SERVER] Refilling board");
         // rules: "bottom to top, then left to right"
@@ -315,24 +268,24 @@ public class GameBoard : NetworkBehaviour
             {
                 if (GetTileAt(new Vector2Int(x, y)).IsEmpty())
                 {
-                    // This slot is empty, so fill it with a new tile
+                    // TODO: Spawn considering if we restrict combo-matches.
                     TileState fillingTile = GenerateNewTile();
                     boardState[GetIndex(x, y)] = fillingTile;
 
-                    RpcRefillBoard(new Vector2Int(x, y),fillingTile);
-                    // Debug.Log($"Draw new tile to pos: ({x},{y})");
-
+                    // TODO: Create SpawnTileEvent
+                    // RpcRefillBoard(new Vector2Int(x, y),fillingTile);
+                    Debug.Log($"Draw new tile to pos: ({x},{y})");
                 }
             }
         }
     }
 
-    [ClientRpc]
-    private void RpcRefillBoard(Vector2Int pos, TileState fillingTile)
-    {
-        _visualizer.SpawnVisualTile(fillingTile, pos);
-        // Debug.Log($"CLIENT: Refilling ({pos}) with tile{fillingTile.uniqueID}");
-    }
+    // [ClientRpc]
+    // private void RpcRefillBoard(Vector2Int pos, TileState fillingTile)
+    // {
+    //     _visualizer.SpawnVisualTile(fillingTile, pos);
+    //     // Debug.Log($"CLIENT: Refilling ({pos}) with tile{fillingTile.uniqueID}");
+    // }
     // --- COORDINATE & STATE HELPERS ---
     
     public bool IsValidSwap(Vector2Int posA, Vector2Int posB)
@@ -395,7 +348,6 @@ public class GameBoard : NetworkBehaviour
     
         return boardState[index];
     }
-
 
     public TileState GetTile(ushort id)
     {

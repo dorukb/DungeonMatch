@@ -12,7 +12,7 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     [SerializeField]
     private Image _image;
-    private RectTransform _rectTransform;
+    public RectTransform RectTransform { get; private set; }
     
     // Store our logical position for input reference
     public Vector2Int GridPosition { get; set; }
@@ -20,7 +20,7 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     private void Awake()
     {
         _image = GetComponent<Image>();
-        _rectTransform = GetComponent<RectTransform>();
+        RectTransform = GetComponent<RectTransform>();
     }
 
     // Called by ClientBoardVisualizer when spawned
@@ -72,26 +72,5 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     // }
     // --- Animation Methods ---
 
-    // This is our all-purpose movement method
-    public void MoveToPosition(Vector2 anchoredPosition, float duration = 0.3f)
-    {
-        // Use DOTween to animate the anchoredPosition
-        _rectTransform.DOAnchorPos(anchoredPosition, duration)
-            .SetEase(Ease.OutCubic);
-    }
-    
-    // We'll use this for the "swap back"
-    public void AnimateSwapBack(Vector2 originalPosition, float duration = 0.2f)
-    {
-        _rectTransform.DOAnchorPos(originalPosition, duration)
-            .SetEase(Ease.OutSine);
-    }
-
-    // We'll use this for matches
-    public void AnimatePop(float duration = 0.2f)
-    {
-        _rectTransform.DOPunchScale(Vector3.one * 0.2f, duration, 10, 1)
-            .OnComplete(() => Destroy(gameObject)); // Simple pop and destroy
-    }
 }
 }

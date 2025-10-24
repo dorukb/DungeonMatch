@@ -9,7 +9,7 @@ public static class MatchAlgorithm
         return pos.x >= 0 && pos.x < GameBoard.BoardWidth &&
                pos.y >= 0 && pos.y < GameBoard.BoardHeight;
     }
-    public static MatchData FindMatchesInLine(Vector2Int startPos, Vector2Int direction,  GameBoard board)
+    public static MatchResult FindMatchesInLine(Vector2Int startPos, Vector2Int direction,  GameBoard board)
     {
         List<Vector2Int> candidateTiles = new List<Vector2Int>();
         int currentType = board.GetTileAt(startPos).tileType;
@@ -39,7 +39,7 @@ public static class MatchAlgorithm
 
         if (candidateTiles.Count >= 3)
         {
-            MatchData result = new MatchData
+            MatchResult result = new MatchResult
             {
                 tileTypeID = currentType,
                 positions = candidateTiles,
@@ -50,23 +50,23 @@ public static class MatchAlgorithm
         else return null;
     }
     
-    public static List<MatchData> FindMatchesAfterSwap(GameBoard board, Vector2Int swapPos1, Vector2Int swapPos2)
+    public static List<MatchResult> FindMatchesAfterSwap(GameBoard board, Vector2Int swapPos1, Vector2Int swapPos2)
     {
-        List<MatchData> foundMatches = new List<MatchData>();
+        List<MatchResult> foundMatches = new List<MatchResult>();
         FindMatchesAt(board, swapPos1, foundMatches);
         FindMatchesAt(board, swapPos2, foundMatches);
         return foundMatches;
     }
-    public static List<MatchData> FindMatchesAt(GameBoard board, Vector2Int pos)
+    public static List<MatchResult> FindMatchesAt(GameBoard board, Vector2Int pos)
     {
-        List<MatchData> foundMatches = new List<MatchData>();
+        List<MatchResult> foundMatches = new List<MatchResult>();
         FindMatchesAt(board, pos, foundMatches);
         return foundMatches;
     }
-    private static void FindMatchesAt(GameBoard board, Vector2Int pos, in List<MatchData> foundMatches)
+    private static void FindMatchesAt(GameBoard board, Vector2Int pos, in List<MatchResult> foundMatches)
     {
-        MatchData horzMatch = FindMatchesInLine(pos, Vector2Int.right, board);
-        MatchData vertMatch = FindMatchesInLine(pos, Vector2Int.down, board);
+        MatchResult horzMatch = FindMatchesInLine(pos, Vector2Int.right, board);
+        MatchResult vertMatch = FindMatchesInLine(pos, Vector2Int.down, board);
 
         if (horzMatch != null && vertMatch != null)
         {
@@ -82,9 +82,9 @@ public static class MatchAlgorithm
         }
     }
     
-    public static List<MatchData> FindAllMatchesOnBoard(GameBoard board)
+    public static List<MatchResult> FindAllMatchesOnBoard(GameBoard board)
     {
-        List<MatchData> allMatches = new List<MatchData>();
+        List<MatchResult> allMatches = new List<MatchResult>();
         HashSet<Vector2Int> matchedPositions = new HashSet<Vector2Int>();
          
         for (int y = 0; y < GameBoard.BoardHeight; y++)
@@ -99,10 +99,10 @@ public static class MatchAlgorithm
                 {
                     continue; // Skip this tile
                 }
-                List<MatchData> matches = MatchAlgorithm.FindMatchesAt(board, currentPos);
+                List<MatchResult> matches = MatchAlgorithm.FindMatchesAt(board, currentPos);
 
                 allMatches.AddRange(matches);
-                foreach (MatchData match in matches)
+                foreach (MatchResult match in matches)
                 {
                     foreach (var pos in match.positions)
                     {

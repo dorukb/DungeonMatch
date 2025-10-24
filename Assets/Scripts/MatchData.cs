@@ -5,8 +5,9 @@ namespace DorkyProductions
 {
 
 // This struct holds the data for ONE match (e.g., a 4-in-a-row)
-    public class MatchData
+    public class MatchResult
     {
+        // TODO: Consider enum types for tiles, also update them on the SO setup.
         public int tileTypeID;
         public int matchCount;
         // We store the actual positions for clearing them

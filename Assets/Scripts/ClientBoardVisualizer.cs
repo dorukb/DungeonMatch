@@ -11,7 +11,7 @@ public class ClientBoardVisualizer : MonoBehaviour
     private GameBoard gameBoard; // Assign the networked GameBoard object
 
     [SerializeField]
-    private TileDatabase tileDatabase; // Assign the same TileDatabase SO
+    private TileDatabase tileDatabase; 
 
     [SerializeField]
     private GameObject tileViewPrefab; // A prefab with a SpriteRenderer and a TileView.cs script
@@ -25,11 +25,15 @@ public class ClientBoardVisualizer : MonoBehaviour
     // to its visual GameObject.
     private Dictionary<ushort, TileView> _visualTiles = new Dictionary<ushort, TileView>();
     
+    [Header("Settings")]
+    public const float SWAP_DURATION = 0.3f;
+    public const float FALL_DURATION = 0.5f;
+    
     void Start()
     {
         tileDatabase.Initialize();
     }
-// REBUILT: Spawns the UI prefab
+    
     public void SpawnVisualTile(TileState state, Vector2Int gridPos)
     {
         TileDefinitionSO def = tileDatabase.GetTileByType(state.tileType);
@@ -81,45 +85,65 @@ public class ClientBoardVisualizer : MonoBehaviour
         _visualTiles.Clear();
     }
 
-    public void RemoveTilesOnMatch(List<ushort> ids)
-    {
-        foreach (ushort id in ids)
-        {
-            if (_visualTiles.TryGetValue(id, out TileView tileToPop))
-            {
-                // Play a pop animation and destroy it
-                tileToPop.AnimatePop(); 
-                _visualTiles.Remove(id);
-            }
-        }
-    }
-
-    public void AnimateSwap(ushort firstTileID, ushort secondTileID)
+    // public void RemoveTilesOnMatch(List<ushort> ids)
+    // {
+    //     foreach (ushort id in ids)
+    //     {
+    //         if (_visualTiles.TryGetValue(id, out TileView tileToPop))
+    //         {
+    //             // Play a pop animation and destroy it
+    //             tileToPop.AnimatePop(); 
+    //             _visualTiles.Remove(id);
+    //         }
+    //     }
+    // }
+    public Tween AnimateSwap(ushort firstTileID, ushort secondTileID)
     {
         TileView firstTileView = _visualTiles[firstTileID];
         TileView secondTileView = _visualTiles[secondTileID];
         
         Vector2Int firstGridPos = firstTileView.GridPosition;
-        MoveTile(firstTileView, secondTileView.GridPosition);
-        MoveTile(secondTileView, firstGridPos);
+        var tween1 = MoveTile(firstTileView, secondTileView.GridPosition, SWAP_DURATION);
+        var tween2 = MoveTile(secondTileView, firstGridPos, SWAP_DURATION);
+        
+        
+        // Create the tweens and add them to a Sequence
+        Sequence s = DOTween.Sequence();
+        s.Join(tween1);
+        s.Join(tween2);
+        
+        return s; 
     }
 
-    private const float MoveDuration = 0.3f;
-    private void MoveTile(TileView tileToMove, Vector2Int newGridPos)
+    private Tween MoveTile(TileView tileToMove, Vector2Int newGridPos, float duration)
     {
         Vector2 newAnchoredPos = GetAnchoredPosition(newGridPos);
         tileToMove.GridPosition = newGridPos;
-        tileToMove.MoveToPosition(newAnchoredPos, MoveDuration);
+        
+        return tileToMove.RectTransform.DOAnchorPos(newAnchoredPos, duration)
+            .SetEase(Ease.OutCubic);
     }
 
-    public void AnimateFall(TileState movedTile, Vector2Int toPos)
+    public Tween AnimateFall(ushort tileId, Vector2Int toPos)
     {
-        if (_visualTiles.TryGetValue(movedTile.uniqueID, out TileView tileView))
+        if (_visualTiles.TryGetValue(tileId, out TileView tileView))
         {
-            Vector2 newAnchoredPos = GetAnchoredPosition(toPos);
-            tileView.GridPosition = toPos;
-            tileView.MoveToPosition(newAnchoredPos, MoveDuration); // Faster fall
+            return MoveTile(tileView, toPos, FALL_DURATION);
+        }
+        else
+        {
+            Debug.LogError($"AnimateFall failed, tile ${tileId} not found");
+            return null;
         }
     }
+    // We'll use this for matches
+    // public void AnimatePop(float duration = 0.2f)
+    // {
+    //     RectTransform.DOPunchScale(Vector3.one * 0.2f, duration, 10, 1)
+    //         .OnComplete(() => Destroy(gameObject)); // Simple pop and destroy
+    // }
+    public float swapDuration = 0.4f;
+    public float tileMoveDuration = 0.3f;
+    
 }
 }
