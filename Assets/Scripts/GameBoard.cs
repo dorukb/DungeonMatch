@@ -147,6 +147,7 @@ public class GameBoard
     // returns: Whether this match should stop the Chain events immediately: i.e, shouldOpenChest
     private bool ApplyMatchEffects(List<MatchResult> matchResults, List<GameEvent> eventBatch)
     {
+        bool hasMatchedChest = false;
         // This is where Card specific match effect will take place.
         foreach (var match in matchResults)
         {
@@ -156,13 +157,12 @@ public class GameBoard
                 // This could trigger another skill, which might
                 // modify the board again. Be careful of recursive loops!
                 // For now, let's keep it simple.
-                return true;
+                hasMatchedChest = true;
             }
             
             // TODO: Actually handle effects, dmg,heal zart zurt
             // Send related game events.
             Debug.Log($"Matched: {match.matchCount} of {match.ToString()}");
-
             var ids = new List<ushort>();
             foreach (var pos in match.positions)
             {
@@ -170,7 +170,7 @@ public class GameBoard
             }
             // RpcApplyMatchEffect(ids);
             eventBatch.Add(GameEvent.MatchOccurred(ids));
-            return false;
+            return hasMatchedChest;
         }
 
         return false;
