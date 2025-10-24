@@ -211,7 +211,6 @@ public class GameBoard : MonoBehaviour
         }
     }
     
-    [Server]
     private void RefillBoard(List<GameEvent> eventBatch)
     {
         Debug.Log("[SERVER] Refilling board");

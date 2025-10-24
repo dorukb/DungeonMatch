@@ -3,15 +3,16 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using UnityEngine.Serialization;
 using Sequence = DG.Tweening.Sequence;
 
 namespace DorkyProductions
 {
-    public class ClientGameMaster : MonoBehaviour
+    public class ClientEventHandler : MonoBehaviour
     {
-        public ClientBoardVisualizer _visualizer;
+        public ClientBoardVisualizer Visualizer;
 
-        public List<GameEvent> gameHistory = new List<GameEvent>();
+        private List<GameEvent> gameHistory = new List<GameEvent>();
         private Queue<GameEvent> eventQueue = new Queue<GameEvent>();
         private bool isProcessingEvents = false;
         private NetworkPlayer _localPlayer;
@@ -151,15 +152,15 @@ namespace DorkyProductions
                 case EventType.GameStarted:
                     Debug.Log("Game started, setup the local board");
                     var boardState = ev.gameStartData.boardState;
-                    animTween = _visualizer.InitBoard(boardState);
+                    animTween = Visualizer.InitBoard(boardState);
                     break;
                     
                 case EventType.MatchOccurred:
-                    animTween = _visualizer.AnimatePop(ev.matchData.matchedTileIDs);
+                    animTween = Visualizer.AnimatePop(ev.matchData.matchedTileIDs);
                     break;
 
                 case EventType.SwapOccurred:
-                    animTween = _visualizer.AnimateSwap(ev.swapData.firstId, ev.swapData.secondId);
+                    animTween = Visualizer.AnimateSwap(ev.swapData.firstId, ev.swapData.secondId);
                     break;
                 case EventType.SwapDenied:
                     _localPlayer.EnableMoves();
@@ -189,11 +190,11 @@ namespace DorkyProductions
                 switch (ev.type)
                 {
                     case EventType.TileMoved:
-                        tileTween = _visualizer.AnimateFall(ev.tileMoveData.tileId, ev.tileMoveData.toGridPos);
+                        tileTween = Visualizer.AnimateFall(ev.tileMoveData.tileId, ev.tileMoveData.toGridPos);
                         break;
 
                     case EventType.TileSpawned:
-                        tileTween = _visualizer.SpawnVisualTile(ev.tileSpawnData.state, ev.tileSpawnData.pos);
+                        tileTween = Visualizer.SpawnVisualTile(ev.tileSpawnData.state, ev.tileSpawnData.pos);
                         break;
                 }
 

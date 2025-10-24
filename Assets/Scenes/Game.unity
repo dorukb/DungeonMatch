@@ -378,12 +378,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62c1bfdb8f9cf224fa994ae064ba7ef1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  boardContainer: {fileID: 2028735000}
-  tileViewSize: {x: 200, y: 200}
-  tileSpacing: {x: 15, y: 15}
   tileDatabase: {fileID: 11400000, guid: 72dfecc0032c29d47b6a0a41b0573550, type: 2}
-  _visualizer: {fileID: 1605994703}
-  _clientGameMaster: {fileID: 0}
 --- !u!114 &490248619
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -411,6 +406,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1605994704}
   - component: {fileID: 1605994703}
+  - component: {fileID: 1605994705}
   m_Layer: 0
   m_Name: ClientBoardVisualizer
   m_TagString: Untagged
@@ -430,13 +426,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33ef4f292b7223d4f8dd38bda748e0c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ClientBoardVisualizer
-  gameBoard: {fileID: 490248618}
   tileDatabase: {fileID: 11400000, guid: 72dfecc0032c29d47b6a0a41b0573550, type: 2}
   tileViewPrefab: {fileID: 6552938585266915852, guid: 426f9812f6894e247ab46d68703b8a72, type: 3}
-  boardContainer: {fileID: 490248617}
   playerInput: {fileID: 144706341}
-  swapDuration: 0.4
-  tileMoveDuration: 0.3
+  boardContainer: {fileID: 2028735000}
+  tileViewSize: {x: 100, y: 100}
+  tileSpacing: {x: 10, y: 10}
 --- !u!4 &1605994704
 Transform:
   m_ObjectHideFlags: 0
@@ -452,6 +447,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1605994705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1605994702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b8a17b74fab2ce458eaef521098c1cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DorkyProductions.ClientGameMaster
+  Visualizer: {fileID: 1605994703}
 --- !u!1001 &1683641281
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -7,7 +7,7 @@ namespace DorkyProductions
     public class NetworkPlayer : NetworkBehaviour
     {
         private PlayerInput _playerInput;
-        private ClientGameMaster _clientGameMaster;
+        private ClientEventHandler _clientEventHandler;
         private bool isMyTurn = false;
         private bool canMakeMove = false;
         
@@ -36,14 +36,14 @@ namespace DorkyProductions
 
             _playerInput.SetPlayer(this);
             
-            _clientGameMaster = FindAnyObjectByType<ClientGameMaster>();
-            if (_clientGameMaster == null)
+            _clientEventHandler = FindAnyObjectByType<ClientEventHandler>();
+            if (_clientEventHandler == null)
             {
                 Debug.LogError("Could not find ClientGameMaster in the scene, check the Player Prefab.");
                 return;
             }
 
-            _clientGameMaster.SetLocalPlayer(this);
+            _clientEventHandler.SetLocalPlayer(this);
             
         }
 

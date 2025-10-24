@@ -37,7 +37,7 @@ public class GameManager : NetworkBehaviour
     private int activePlayerIndex = 0;
     
     private GameBoard board; 
-    private ClientGameMaster clientGameMaster;
+    private ClientEventHandler _clientEventHandler;
     
     void Awake()
     {
@@ -191,15 +191,15 @@ public class GameManager : NetworkBehaviour
     {
         Debug.Log($"Client received a batch of {batch.Count} events.");
         
-        if (clientGameMaster == null)
+        if (_clientEventHandler == null)
         {
-            clientGameMaster = FindAnyObjectByType<ClientGameMaster>();
-            if (clientGameMaster == null)
+            _clientEventHandler = FindAnyObjectByType<ClientEventHandler>();
+            if (_clientEventHandler == null)
             {
                 Debug.LogError("No client game master found.");
             }
         }
-        clientGameMaster.EnqueueEventBatch(batch);
+        _clientEventHandler.EnqueueEventBatch(batch);
     }
     
 }
