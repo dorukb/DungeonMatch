@@ -127,7 +127,7 @@ namespace DorkyProductions
                 case EventType.TurnEnded:
                     if (ev.turnData.playerNetId == _localPlayer.netId)
                     {
-                        Debug.Log("My Turn Started");
+                        Debug.Log("My Turn Ended");
                         _localPlayer.EndPlayerTurn();
                     }
                     break;
@@ -156,13 +156,16 @@ namespace DorkyProductions
                     break;
                     
                 case EventType.MatchOccurred:
+                    Debug.Log($"MatchOccurred/RemoveTiles for: {ev.matchData.matchedTileIDs}");
                     animTween = Visualizer.AnimatePop(ev.matchData.matchedTileIDs);
                     break;
 
                 case EventType.SwapOccurred:
+                    Debug.Log($"Swap tiles: {ev.swapData.firstId}, {ev.swapData.secondId}");
                     animTween = Visualizer.AnimateSwap(ev.swapData.firstId, ev.swapData.secondId);
                     break;
                 case EventType.SwapDenied:
+                    Debug.Log($"Swap denied");
                     _localPlayer.EnableMoves();
                     break;
             }
@@ -179,7 +182,7 @@ namespace DorkyProductions
         // Handles a batch of parallel events, playing them all at once.
         private IEnumerator HandleParallelBatch(List<GameEvent> batch)
         {
-            Debug.Log($"Starting a parallel batch of {batch.Count} events.");
+            Debug.Log($"Starting a parallel batch of {batch.Count} events of Type: {batch[0].type}");
 
             // 1. Create one "master" sequence
             Sequence parallelSequence = DOTween.Sequence();

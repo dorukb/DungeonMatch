@@ -146,7 +146,7 @@ public class ClientBoardVisualizer : MonoBehaviour
             var tween = tileView.RectTransform.DOPunchScale(Vector3.one * 0.2f, REMOVE_DURATION, 10, 1);
             s.Join(tween);
         }
-
+        
         s.onComplete = () =>
         {
             foreach (ushort tileId in tileIdsToPop)
