@@ -82,7 +82,7 @@ public class GameBoard
         return new TileState
         {
             uniqueID = _nextTileID++,
-            tileType = UnityEngine.Random.Range(0, GameManager.Instance.TileDatabase.allTileDefinitions.Count)
+            tileType = UnityEngine.Random.Range(0, GameMaster.Instance.TileDatabase.allTileDefinitions.Count)
         };
     }
     

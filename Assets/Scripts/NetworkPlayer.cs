@@ -14,14 +14,14 @@ namespace DorkyProductions
         public override void OnStartServer()
         {
             // When the player object is spawned on the server, register it
-            GameManager.Instance.RegisterPlayer(this);
+            GameMaster.Instance.RegisterPlayer(this);
         }
 
         public override void OnStopServer()
         {
             // When the player disconnects, unregister it
             // Use '?.' for safety in case GameManager is destroyed first
-            GameManager.Instance?.UnregisterPlayer(this);
+            GameMaster.Instance?.UnregisterPlayer(this);
         }
 
         public override void OnStartLocalPlayer()
@@ -78,14 +78,14 @@ namespace DorkyProductions
         [Command]
         private void CmdAttemptSwap(Vector2Int posA, Vector2Int posB)
         {
-            if (GameManager.Instance == null)
+            if (GameMaster.Instance == null)
             {
                 Debug.LogError("Command failed: GameBoard not found on server.");
                 return;
             }
             
             Debug.Log($"[Server] Received swap request: {posA} <-> {posB}");
-            GameManager.Instance.ProcessPlayerSwap(connectionToClient, posA, posB);
+            GameMaster.Instance.ProcessPlayerSwap(connectionToClient, posA, posB);
         }
     }
 }

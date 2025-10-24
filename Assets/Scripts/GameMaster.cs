@@ -14,9 +14,9 @@ public enum GameState
     GameEnded
 }
 
-public class GameManager : NetworkBehaviour
+public class GameMaster : NetworkBehaviour
 {
-    public static GameManager Instance { get; private set; }
+    public static GameMaster Instance { get; private set; }
 
     [SyncVar]
     public GameState gameState = GameState.WaitingForPlayers;
@@ -40,17 +40,22 @@ public class GameManager : NetworkBehaviour
     
     private GameBoard _gameBoard; 
     private ClientEventHandler _clientEventHandler;
-    
     void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
+            DontDestroyOnLoad(this);
         }
-        else
+        else if (Instance != this)
         {
+            Debug.LogWarning("GameMaster already exists.Trying to create another one signals something is wrong.");
             Destroy(gameObject);
         }
+        
+        // TODO: Remove.
+        Application.targetFrameRate = 144;
+        QualitySettings.vSyncCount = 0;
     }
 
     [Server]
