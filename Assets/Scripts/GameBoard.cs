@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Dynamic;
 using Mirror;
 using UnityEngine;
 
@@ -230,7 +231,52 @@ public class GameBoard
             }
         }
     }
-   
+
+    public bool CheckForValidSwaps()
+    {
+        for (int x = 0; x < BoardWidth; x++)
+        {
+            for (int y = 0; y < BoardHeight; y++)
+            {
+                // 1. Check a swap with the right neighbor
+                if (y < BoardHeight - 1)
+                {
+                    if (TestSwap(new Vector2Int(x, y), new Vector2Int(x, y + 1))) 
+                    {
+                        return true; // Found a valid move!
+                    }
+                }
+
+                // 2. Check a swap with the bottom neighbor
+                if (x < BoardWidth - 1)
+                {
+                    if (TestSwap(new Vector2Int(x, y), new Vector2Int(x + 1, y)))
+                    {
+                        return true; // Found a valid move!
+                    }
+                }
+            }
+        }
+
+        return false; // No valid moves found after checking all possibilities
+    }
+    
+    public bool TestSwap(Vector2Int pos1, Vector2Int pos2)
+    {
+        TileState tmp = boardState[GetIndex(pos1)];
+        boardState[GetIndex(pos1)] = boardState[GetIndex(pos2)];
+        boardState[GetIndex(pos2)] = tmp;
+
+        List<MatchResult> matchResults = MatchAlgorithm.FindMatchesAfterSwap(this, pos1, pos2);
+
+        if (matchResults.Count > 0)
+        {
+            return true;
+        }
+
+        return false;
+    }
+    //To-Do & Q: include test swap here? 
     public bool IsValidSwap(Vector2Int posA, Vector2Int posB)
     {
         // Check bounds

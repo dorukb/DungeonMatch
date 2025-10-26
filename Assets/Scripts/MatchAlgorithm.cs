@@ -81,6 +81,8 @@ public static class MatchAlgorithm
             foundMatches.Add(horzMatch);
         }
     }
+
+
     
     public static List<MatchResult> FindAllMatchesOnBoard(GameBoard board)
     {
