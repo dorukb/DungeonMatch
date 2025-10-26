@@ -10,6 +10,7 @@ namespace DorkyProductions
 /// </summary>
 public class PlayerNameGenerator : MonoBehaviour
 {
+    private static string _chosenName = "";
     public TextMeshProUGUI nameDisplayText;
 
     [Header("Masculine/Neutral Names")]
@@ -45,15 +46,14 @@ public class PlayerNameGenerator : MonoBehaviour
 
     void Start()
     {
-        // string playerName = GameMaster.Instance.GetLocalPlayer().DisplayName;
-        // if (playerName.Length < 1)
-        // {
-        //     SetRandomName();
-        // }
-        // else
-        // {
-        //     nameDisplayText.text = playerName;
-        // }
+        if (string.IsNullOrEmpty(_chosenName))
+        {
+            SetRandomName();
+        }
+        else
+        {
+            nameDisplayText.text = _chosenName;
+        }
     }
 
     /// <summary>
@@ -65,6 +65,13 @@ public class PlayerNameGenerator : MonoBehaviour
         string generatedName = GenerateRandomName();
         nameDisplayText.text = generatedName;
         // GameMaster.Instance.ChangeLocalPlayerName(generatedName);
+        _chosenName = generatedName;
+    }
+    
+    public static string GetChosenName()
+    {
+        // Returns the last name generated and stored by the generator.
+        return _chosenName;
     }
     private string GenerateRandomName()
     {
@@ -94,5 +101,6 @@ public class PlayerNameGenerator : MonoBehaviour
         
         return generatedName;
     }
+    
 }
 }

@@ -43,8 +43,20 @@ public class PlayerNameDisplayer : NetworkBehaviour
     {
         // Get the name you chose in the menu (from your NameGenerator or a player prefs file).
         // I'm assuming your GameMaster stores this for you.
-        // string localName = GameMaster.Instance.GetLocalPlayer().DisplayName;
+        string localName = PlayerNameGenerator.GetChosenName();
         // playerNameText.text = localName;
+        // 1. Check if a name was actually generated (safety check)
+        if (string.IsNullOrEmpty(localName))
+        {
+            localName = "Unnamed Player"; // Fallback name
+        }
+
+        // 2. Set the text for the local client immediately
+        playerNameText.text = localName;
+    
+        // 3. Send a command to the server, telling it what our name is.
+        CmdSetDisplayName(localName);
+    
         // // Send a command to the server, telling it what our name is.
         // CmdSetDisplayName(localName);
     }
