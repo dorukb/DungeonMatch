@@ -13,21 +13,25 @@ public class PlayerNameDisplayer : NetworkBehaviour
     // The 'hook' will automatically call our update method whenever this changes.
     [SyncVar(hook = nameof(OnNameUpdated))]
     public string networkDisplayName = "Waiting..."; // Default name while loading
-    
+
+    private PlayerAvatarUIController _avatarUIController;
+    private void Start()
+    {
+        _avatarUIController = FindAnyObjectByType<PlayerAvatarUIController>();
+        if (_avatarUIController == null)
+        {
+            Debug.LogError("PlayerAvatarUIController not found in Game Scene. Make sure one exists.");
+        }
+    }
+
     // This method is called automatically on ALL clients when 'networkDisplayName' changes value on the server.
     private void OnNameUpdated(string oldName, string newName)
     {
-        // Update the UI text with the new name received from the server.
         playerNameText.text = newName;
-
-        // if (!isLocalPlayer)
-        // {
-        //     GameMaster.Instance.RegisterOpponent(newName);
-        // }
-        // else
-        // {
-        //     Debug.Log("[low] LOCAL PLAYER skipping registration");
-        // }
+        if (!isLocalPlayer)
+        {
+            _avatarUIController.SetOpponentPlayerNameText(newName);
+        }
     }
 
     // This is called for every player object when they are first created on a client.
@@ -41,24 +45,15 @@ public class PlayerNameDisplayer : NetworkBehaviour
     // This is called ONLY for the player that you control.
     public override void OnStartLocalPlayer()
     {
-        // Get the name you chose in the menu (from your NameGenerator or a player prefs file).
-        // I'm assuming your GameMaster stores this for you.
         string localName = PlayerNameGenerator.GetChosenName();
-        // playerNameText.text = localName;
-        // 1. Check if a name was actually generated (safety check)
         if (string.IsNullOrEmpty(localName))
         {
             localName = "Unnamed Player"; // Fallback name
         }
 
-        // 2. Set the text for the local client immediately
+        _avatarUIController.SetLocalPlayerNameText(localName);
         playerNameText.text = localName;
-    
-        // 3. Send a command to the server, telling it what our name is.
         CmdSetDisplayName(localName);
-    
-        // // Send a command to the server, telling it what our name is.
-        // CmdSetDisplayName(localName);
     }
 
     // This [Command] is sent from your client to the server.
