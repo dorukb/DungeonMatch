@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Dynamic;
+using System.Linq;
 using Mirror;
 using UnityEngine;
 
@@ -16,7 +16,7 @@ public class GameBoard
     // Index = (y * BoardWidth) + x
     public readonly List<TileState> boardState = new List<TileState>(BoardHeight * BoardWidth);
     private ushort _nextTileID = 0;
-    
+           
     public List<TileState> FillBoardWithNoMatches()
     {
         for (int i = 0; i < BoardHeight * BoardWidth; i++)
@@ -25,13 +25,13 @@ public class GameBoard
             int y = i / BoardWidth;
 
             // 1. Get a list of all possible tile types
-            List<int> availableTypes = new List<int> { 0, 1, 2, 3, 4};
+            List<Tile> availableTypes = new List<Tile> { Tile.Attack, Tile.Shield, Tile.Cross, Tile.Potion, Tile.Chest};
             
             // 2. Check for potential horizontal matches (check 2 tiles to the left)
             if (x > 1)
             {
-                int left1ID = GetTileAt(x-1,y).tileType;
-                int left2ID = GetTileAt(x-2,y).tileType;
+                Tile left1ID = GetTileAt(x-1,y).type;
+                Tile left2ID = GetTileAt(x-2,y).type;
                 if (left1ID == left2ID)
                 {
                     // Both tiles to the left match, so we cannot use their type.
@@ -42,8 +42,8 @@ public class GameBoard
             // 3. Check for potential vertical matches (check 2 tiles below)
             if (y > 1)
             {
-                int down1ID = GetTileAt(x,y-1).tileType;
-                int down2ID = GetTileAt(x,y-2).tileType;
+                Tile down1ID = GetTileAt(x,y-1).type;
+                Tile down2ID = GetTileAt(x,y-2).type;
                 if (down1ID == down2ID)
                 {
                     // Both tiles below match, so we cannot use their type.
@@ -56,7 +56,7 @@ public class GameBoard
         return boardState;
     }
     // Overload: Generates a random tile from a specific list of allowed types.
-    private TileState GenerateNewTile(List<int> availableTypes)
+    private TileState GenerateNewTile(List<Tile> availableTypes)
     {
         if (availableTypes.Count == 0)
         {
@@ -69,12 +69,12 @@ public class GameBoard
     
         // Pick a random ID from the *allowed* list
         int randomIndex = Random.Range(0, availableTypes.Count);
-        int randomType = availableTypes[randomIndex];
+        Tile randomType = availableTypes[randomIndex];
 
         return new TileState
         {
             uniqueID = _nextTileID++,
-            tileType = randomType
+            type = randomType
         };
     }
     
@@ -83,7 +83,7 @@ public class GameBoard
         return new TileState
         {
             uniqueID = _nextTileID++,
-            tileType = UnityEngine.Random.Range(0, GameMaster.Instance.TileDatabase.allTileDefinitions.Count)
+            type = (Tile) UnityEngine.Random.Range(1, GameMaster.Instance.TileDatabase.allTileDefinitions.Count)
         };
     }
     
@@ -152,7 +152,7 @@ public class GameBoard
         // This is where Card specific match effect will take place.
         foreach (var match in matchResults)
         {
-            if (match.tileTypeID == 4) // e.g., '5' is your CHEST_TILE_ID
+            if (match.tileType == Tile.Chest)
             {
                 // TODO: OpenChest();
                 // This could trigger another skill, which might
@@ -162,7 +162,9 @@ public class GameBoard
             }
             
             // TODO: Actually handle effects, dmg,heal zart zurt
-            // Send related game events.
+            // dogruPlayer.TakeDamage()
+            GameMaster.Instance.GetInactivePlayer();
+            // Send related game events
             Debug.Log($"Matched: {match.matchCount} of {match.ToString()}");
             var ids = new List<ushort>();
             foreach (var pos in match.positions)
@@ -288,13 +290,13 @@ public class GameBoard
 
         // Tiles must be different type, otherwise no effect.
         // Prevents accidental no-effect swaps. 
-        if (GetTileAt(posA).tileType == GetTileAt(posB).tileType)
+        if (GetTileAt(posA).type == GetTileAt(posB).type)
         {
             Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. Tiles are same type.");
             return false;
         }
 
-        if (GetTileAt(posA).tileType == -1 || GetTileAt(posB).tileType == -1)
+        if (GetTileAt(posA).type == Tile.Unknown|| GetTileAt(posB).type == Tile.Unknown)
         {
             Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. at least one of the tiles is Empty.");
             // dont allow swapping with Empty tiles.

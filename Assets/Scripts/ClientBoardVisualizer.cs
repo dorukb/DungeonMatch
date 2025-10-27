@@ -55,10 +55,10 @@ public class ClientBoardVisualizer : MonoBehaviour
     }
     public Tween SpawnVisualTile(TileState state, Vector2Int gridPos)
     {
-        TileDefinitionSO def = tileDatabase.GetTileByType(state.tileType);
+        TileDefinitionSO def = tileDatabase.GetTileByType(state.type);
         if (def == null)
         {
-            Debug.LogError($"[CLIENT] Spawn, Tile definition not found for type: {state.tileType}");
+            Debug.LogError($"[CLIENT] Spawn, Tile definition not found for type: {state.type}");
             return null;
         }
 

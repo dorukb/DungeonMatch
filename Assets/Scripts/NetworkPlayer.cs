@@ -10,7 +10,11 @@ namespace DorkyProductions
         private ClientEventHandler _clientEventHandler;
         private bool isMyTurn = false;
         private bool canMakeMove = false;
+
+        public readonly int PLAYER_STARTING_HEALTH = 20;
+        private int health = 0;
         
+        public System.Action<int> OnHealthChange;
         public override void OnStartServer()
         {
             // When the player object is spawned on the server, register it
@@ -26,6 +30,8 @@ namespace DorkyProductions
 
         public override void OnStartLocalPlayer()
         {
+            health = PLAYER_STARTING_HEALTH;
+            
             base.OnStartLocalPlayer();
             _playerInput = FindAnyObjectByType<PlayerInput>();
             if (_playerInput == null)
@@ -47,6 +53,19 @@ namespace DorkyProductions
             
         }
 
+
+        [Server]
+        public void TakeDamage(int damage)
+        {
+            health -= damage;
+        }
+
+        [Server]
+        public void Heal(int heal)
+        {
+            health = Mathf.Clamp(health, health, health + heal);
+        }
+        
         public void EnableMoves()
         {
             canMakeMove = true;

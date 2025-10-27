@@ -9,29 +9,29 @@ public class TileDatabase : ScriptableObject
     public List<TileDefinitionSO> allTileDefinitions;
 
     // A dictionary for fast lookups on the client
-    private Dictionary<int, TileDefinitionSO> _lookup;
+    private Dictionary<Tile, TileDefinitionSO> _lookup;
 
     public void Initialize()
     {
-        _lookup = new Dictionary<int, TileDefinitionSO>();
+        _lookup = new Dictionary<Tile, TileDefinitionSO>();
         foreach (var tile in allTileDefinitions)
         {
-            _lookup[tile.tileTypeID] = tile;
+            _lookup[tile.type] = tile;
         }
     }
 
     // Get the static tile data from its ID
-    public TileDefinitionSO GetTileByType(int typeID)
+    public TileDefinitionSO GetTileByType(Tile type)
     {
-        _lookup.TryGetValue(typeID, out TileDefinitionSO def);
+        _lookup.TryGetValue(type, out TileDefinitionSO def);
         return def;
     }
 
     // Get a random tile type ID for the server to use
-    public int GetRandomTileTypeID()
+    public Tile GetRandomTileTypeID()
     {
         int index = Random.Range(0, allTileDefinitions.Count);
-        return allTileDefinitions[index].tileTypeID;
+        return allTileDefinitions[index].type;
     }
 }
 }

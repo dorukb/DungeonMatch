@@ -12,7 +12,7 @@ public static class MatchAlgorithm
     public static MatchResult FindMatchesInLine(Vector2Int startPos, Vector2Int direction,  GameBoard board)
     {
         List<Vector2Int> candidateTiles = new List<Vector2Int>();
-        int currentType = board.GetTileAt(startPos).tileType;
+        Tile currentType = board.GetTileAt(startPos).type;
     
         candidateTiles.Add(startPos);
         // 2 units to the pos dir, 2 units to the neg.
@@ -20,7 +20,7 @@ public static class MatchAlgorithm
         for (int i = 1; i <= 2; i++)
         {
             Vector2Int pos = startPos + direction * i;
-            if (!IsPosInBounds(pos) || board.GetTileAt(pos).tileType != currentType)
+            if (!IsPosInBounds(pos) || board.GetTileAt(pos).type != currentType)
             {
                 break; // End of line or type mismatch
             }
@@ -30,7 +30,7 @@ public static class MatchAlgorithm
         for (int i = 1; i <= 2; i++)
         {
             Vector2Int pos = startPos - direction * i;
-            if (!IsPosInBounds(pos) || board.GetTileAt(pos).tileType != currentType)
+            if (!IsPosInBounds(pos) || board.GetTileAt(pos).type != currentType)
             {
                 break; // End of line or type mismatch
             }
@@ -41,7 +41,7 @@ public static class MatchAlgorithm
         {
             MatchResult result = new MatchResult
             {
-                tileTypeID = currentType,
+                tileType = currentType,
                 positions = candidateTiles,
                 matchCount = candidateTiles.Count
             };

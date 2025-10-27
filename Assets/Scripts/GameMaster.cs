@@ -175,6 +175,18 @@ public class GameMaster : NetworkBehaviour
         EndTurnAndStartNext(eventBatch);
         SendAndLogBatch(eventBatch);
     }
+
+    
+    // This assumes a 2-player game.
+    [Server]
+    public NetworkPlayer GetInactivePlayer()
+    {
+        if (players.Count != 2)
+        {
+            Debug.LogError($"GetInactivePlayer assumes there are 2 players. but we have: {players.Count}");
+        }
+        return players.Find(t => t.netId != activePlayer.netIdentity.netId);
+    }
     
     [Server]
     public void EndTurnAndStartNext(List<GameEvent> eventBatch)

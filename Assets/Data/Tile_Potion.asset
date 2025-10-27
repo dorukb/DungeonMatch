@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df4e26f11c4b87a4fb09aba0f6ebeb31, type: 3}
   m_Name: Tile_Potion
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinitionSO
-  tileTypeID: 3
+  type: 4
   tileSprite: {fileID: 21300000, guid: 05ecbd8ddec5acf44a1704bc119e9af0, type: 3}

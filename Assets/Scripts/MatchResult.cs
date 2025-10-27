@@ -8,7 +8,7 @@ namespace DorkyProductions
     public class MatchResult
     {
         // TODO: Consider enum types for tiles, also update them on the SO setup.
-        public int tileTypeID;
+        public Tile tileType;
         public int matchCount;
         // We store the actual positions for clearing them
         // TODO: maybe make positions HashSet, to prevent duplicate memory usage during find all matches.
@@ -16,7 +16,7 @@ namespace DorkyProductions
 
         public string ToString()
         {
-            return TileDefinitionSO.ToString(tileTypeID);
+            return tileType.ToString();
         }
         public string Debug()
         {
@@ -41,15 +41,15 @@ namespace DorkyProductions
     {
         public static ushort INVALID_TILE_ID = 9999;
         public ushort uniqueID;
-        public int tileType;     // 0=Attack, 1=Attackx2, 2=Shield, etc.
+        public Tile type;     // 0=Attack, 1=Attack x2, 2=Shield, etc.
 
         // A static "empty" tile for logic
         public static TileState Empty => new TileState 
         { 
             uniqueID = INVALID_TILE_ID, // An invalid, recognizable ID
-            tileType = -1           // An invalid type
+            type = Tile.Unknown         // An invalid type
         };
 
-        public bool IsEmpty() => tileType == -1;
+        public bool IsEmpty() => type == Tile.Unknown;
     }
 }
