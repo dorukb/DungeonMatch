@@ -8,8 +8,6 @@ namespace DorkyProductions
     {
         private PlayerInput _playerInput;
         private ClientEventHandler _clientEventHandler;
-        private bool isMyTurn = false;
-        private bool canMakeMove = false;
 
         public readonly int PLAYER_STARTING_HEALTH = 20;
         private int health = 0;
@@ -68,23 +66,14 @@ namespace DorkyProductions
             health = Mathf.Clamp(health, health, health + heal);
         }
         
-        public void EnableMoves()
+        public void EnableControls()
         {
-            canMakeMove = true;
+            _playerInput.EnableControls();
         }
 
-        public void DisableMoves()
+        public void DisableControls()
         {
-            canMakeMove = false;
-        }
-        public void StartPlayerTurn()
-        {
-            isMyTurn = true;
-        }
-
-        public void EndPlayerTurn()
-        {
-            isMyTurn = false;
+            _playerInput.DisableControls();
         }
 
         // This is called by the local PlayerInput script.
@@ -92,7 +81,7 @@ namespace DorkyProductions
         {
             if (!isLocalPlayer) return; // Should never happen, but good check
             Debug.Log($"[Local Client] Requesting swap: {posA} <-> {posB}");
-            DisableMoves();
+            DisableControls();
             CmdAttemptSwap(posA, posB);
         }
 

@@ -117,7 +117,7 @@ namespace DorkyProductions
                     if (ev.turnData.playerNetId == _localPlayer.netId)
                     {
                         Debug.Log("My Turn Started");
-                        _localPlayer.StartPlayerTurn();
+                        _localPlayer.EnableControls();
                         // TODO: Add UI text that flies from left to right, saying "Your turn!"
                         // fire UI event for it.
                         // yourTurnStartedEvent?.Invoke()
@@ -128,7 +128,7 @@ namespace DorkyProductions
                     if (ev.turnData.playerNetId == _localPlayer.netId)
                     {
                         Debug.Log("My Turn Ended");
-                        _localPlayer.EndPlayerTurn();
+                        _localPlayer.DisableControls();
                     }
                     break;
                 case EventType.GameEnded:
@@ -166,7 +166,7 @@ namespace DorkyProductions
                     break;
                 case EventType.SwapDenied:
                     Debug.Log($"Swap denied");
-                    _localPlayer.EnableMoves();
+                    _localPlayer.EnableControls();
                     break;
                 
                 case EventType.Attack:
