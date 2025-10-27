@@ -155,18 +155,34 @@ namespace DorkyProductions
                     animTween = Visualizer.InitBoard(boardState);
                     break;
                     
-                case EventType.MatchOccurred:
+                case EventType.MatchedTiles:
                     Debug.Log($"MatchOccurred/RemoveTiles for: {ev.matchData.matchedTileIDs}");
                     animTween = Visualizer.AnimatePop(ev.matchData.matchedTileIDs);
                     break;
 
-                case EventType.SwapOccurred:
+                case EventType.SwappedTiles:
                     Debug.Log($"Swap tiles: {ev.swapData.firstId}, {ev.swapData.secondId}");
                     animTween = Visualizer.AnimateSwap(ev.swapData.firstId, ev.swapData.secondId);
                     break;
                 case EventType.SwapDenied:
                     Debug.Log($"Swap denied");
                     _localPlayer.EnableMoves();
+                    break;
+                
+                case EventType.Attack:
+                    Debug.Log($"Attack event received.");
+                    uint attackerId = ev.attackData.attackerNetId;
+                    if (attackerId == _localPlayer.netId)
+                    {
+                        // we play the attack anim
+                        _localPlayer.DealDamage(ev.attackData.damageAmount);
+                    }
+                    else
+                    {
+                        // we play the "get attacked" anim.
+                        _localPlayer.ReceiveDamage(ev.attackData.damageAmount);
+                    }
+
                     break;
             }
 

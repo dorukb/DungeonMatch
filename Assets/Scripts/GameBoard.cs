@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace DorkyProductions
 {
@@ -152,19 +154,6 @@ public class GameBoard
         // This is where Card specific match effect will take place.
         foreach (var match in matchResults)
         {
-            if (match.tileType == Tile.Chest)
-            {
-                // TODO: OpenChest();
-                // This could trigger another skill, which might
-                // modify the board again. Be careful of recursive loops!
-                // For now, let's keep it simple.
-                hasMatchedChest = true;
-            }
-            
-            // TODO: Actually handle effects, dmg,heal zart zurt
-            // dogruPlayer.TakeDamage()
-            GameMaster.Instance.GetInactivePlayer();
-            // Send related game events
             Debug.Log($"Matched: {match.matchCount} of {match.ToString()}");
             var ids = new List<ushort>();
             foreach (var pos in match.positions)
@@ -173,9 +162,41 @@ public class GameBoard
             }
             // RpcApplyMatchEffect(ids);
             eventBatch.Add(GameEvent.MatchOccurred(ids));
+
+            var activePlayer = GameMaster.Instance.activePlayer;
+            var opponent = GameMaster.Instance.GetInactivePlayer();
+            // Then apply the effect
+            switch (match.tileType)
+            {
+                case Tile.Unknown:
+                    Debug.LogError($"Unknown tiles matched. Shouldnt happen : {match.tileType}");
+                    break;
+                case Tile.Attack:
+                    int dmgAmount = AttackEffect.GetDamage(match.matchCount);
+                    opponent.TakeDamage(dmgAmount);
+                    // TODO: set isPowerful to true for x2 effect.
+                    eventBatch.Add(GameEvent.Attack(dmgAmount, activePlayer.netId, false));
+                    break;
+                case Tile.Shield:
+                    break;
+                case Tile.Cross:
+                    break;
+                case Tile.Potion:
+                    GameMaster.Instance.activePlayer.Heal(HealEffect.GetHeal(match.matchCount));
+                    break;
+                case Tile.Chest:
+                    // TODO: OpenChest();
+                    // This could trigger another skill, which might
+                    // modify the board again. Be careful of recursive loops!
+                    // For now, let's keep it simple.
+                    hasMatchedChest = true;
+                    break;
+                default:
+                    Debug.LogError($"Sth is wrong. what is this tile type?? : {match.tileType}");
+                    break;
+            }
             return hasMatchedChest;
         }
-
         return false;
     }
 

@@ -14,7 +14,9 @@ namespace DorkyProductions
         public readonly int PLAYER_STARTING_HEALTH = 20;
         private int health = 0;
         
-        public System.Action<int> OnHealthChange;
+        public System.Action<uint, int> OnHealthChange;
+        public System.Action<uint, int> OnDealtDamage;
+        public System.Action<uint, int> OnReceivedDamage;
         public override void OnStartServer()
         {
             // When the player object is spawned on the server, register it
@@ -105,6 +107,25 @@ namespace DorkyProductions
             
             Debug.Log($"[Server] Received swap request: {posA} <-> {posB}");
             GameMaster.Instance.ProcessPlayerSwap(connectionToClient, posA, posB);
+        }
+
+        public void DealDamage(int dealtAmount)
+        {
+            // we attacked the other player.
+            // TODO: Fire events for SFX, UI bla bla.
+            OnDealtDamage?.Invoke(netIdentity.netId, dealtAmount);
+        } 
+        public void ReceiveDamage(int dealtAmount)
+        {
+            // Other played dealt damage to us.
+            health -= dealtAmount;
+            var uiController = FindAnyObjectByType<PlayerAvatarUIController>();
+            if (uiController != null)
+            {
+                uiController.UpdateLocalPlayerHealth(health, PLAYER_STARTING_HEALTH);
+            }
+            OnHealthChange?.Invoke(netIdentity.netId, health);
+            OnReceivedDamage?.Invoke(netIdentity.netId, dealtAmount);
         }
     }
 }

@@ -1,8 +1,6 @@
 using UnityEngine;
-using Mirror;
 using System;
 using System.Collections.Generic;
-using UnityEngine.Serialization;
 
 namespace  DorkyProductions
 {
@@ -10,9 +8,10 @@ namespace  DorkyProductions
 public enum EventType
 {
     // Blocking
-    SwapOccurred,
+    SwappedTiles,
     SwapDenied,
-    MatchOccurred, // e.g., show an explosion
+    MatchedTiles, // e.g., show an explosion
+    Attack,
     
     // Parallel
     TileMoved,
@@ -82,6 +81,17 @@ public struct MatchData
 }
 
 [Serializable]
+public struct AttackData
+{
+    public int damageAmount;
+    public bool isPowerful;
+    public uint attackerNetId;
+}
+
+
+// Note: This class should only be created via the Static Factory methods below.
+// dont use new GameEvent() yourself.
+[Serializable]
 public struct GameEvent
 {
     public EventType type;
@@ -94,6 +104,7 @@ public struct GameEvent
     public MatchData matchData;
     public GameStartData gameStartData;
     public SyncType syncType;
+    public AttackData attackData;
     
     
     // Blocking Event
@@ -110,7 +121,7 @@ public struct GameEvent
     {
         return new GameEvent
         {
-            type = EventType.SwapOccurred,
+            type = EventType.SwappedTiles,
             syncType = SyncType.Blocking,
             swapData = new SwapData { firstId = firstId, secondId = secondId }
         };
@@ -120,9 +131,19 @@ public struct GameEvent
     {
         return new GameEvent()
         {
-            type = EventType.MatchOccurred,
+            type = EventType.MatchedTiles,
             syncType = SyncType.Blocking,
             matchData = new MatchData { matchedTileIDs = matchedTileIndices }
+        };
+    }
+
+    public static GameEvent Attack(int damageAmount, uint attackerID ,bool isPowerful = false)
+    {
+        return new GameEvent()
+        {
+            type = EventType.Attack,
+            syncType = SyncType.Blocking,
+            attackData = new AttackData() { isPowerful = isPowerful , attackerNetId = attackerID , damageAmount = damageAmount}
         };
     }
     

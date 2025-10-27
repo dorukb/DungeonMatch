@@ -185,7 +185,7 @@ public class GameMaster : NetworkBehaviour
         {
             Debug.LogError($"GetInactivePlayer assumes there are 2 players. but we have: {players.Count}");
         }
-        return players.Find(t => t.netId != activePlayer.netIdentity.netId);
+        return players.Find(t => t.netId != activePlayer.netId);
     }
     
     [Server]
