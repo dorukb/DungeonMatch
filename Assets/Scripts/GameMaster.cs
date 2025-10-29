@@ -217,6 +217,7 @@ public class GameMaster : NetworkBehaviour
             if (_clientEventHandler == null)
             {
                 Debug.LogError("No client game master found.");
+                return;
             }
         }
         _clientEventHandler.EnqueueEventBatch(batch);
