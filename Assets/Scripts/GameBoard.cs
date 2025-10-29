@@ -183,7 +183,7 @@ public class GameBoard
                 case Tile.Potion:
                     int healAmount = PotionEffect.GetHeal(match.matchCount);
                     GameMaster.Instance.activePlayer.Heal(healAmount);
-                    eventBatch.Add(GameEvent.Potion(healAmount, false));
+                    eventBatch.Add(GameEvent.Potion(healAmount, activePlayer.netId, false));
                     break;
                 case Tile.Chest:
                     // TODO: OpenChest();

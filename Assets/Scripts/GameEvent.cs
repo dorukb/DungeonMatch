@@ -1,10 +1,16 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using UnityEngine.Serialization;
 
 namespace  DorkyProductions
 {
-    
+
+// Packet size: 1196 byte
+// We should try to fit a turn's events into a single packet.
+// TODO: Idea: Get rid of useless event data. We send all of them for all events. each event curr costs around 60 bytes.
+// we could do with 8-10 bytes instead.
+
 public enum EventType
 {
     // Blocking
@@ -84,17 +90,17 @@ public struct MatchData
 [Serializable]
 public struct AttackData
 {
-    public int damageAmount;
+     public int targetsUpdatedHealth;
     public bool isPowerful;
-    public uint attackerNetId;
+    public uint targetPlayerID;
 }
 
 [Serializable]
 public struct PotionData
 {
-    public int healAmount;
+    public int targetsUpdatedHealth;
     public bool isPowerful;
-    public uint playerNetId;
+    public uint targetPlayerID;
 }
 // Note: This class should only be created via the Static Factory methods below.
 // dont use new GameEvent() yourself.
@@ -113,7 +119,6 @@ public struct GameEvent
     public SyncType syncType;
     public AttackData attackData;
     public PotionData potionData;
-    
     
     // Blocking Event
     public static GameEvent GameStarted (List<TileState> boardState)
@@ -145,23 +150,23 @@ public struct GameEvent
         };
     }
 
-    public static GameEvent Attack(int damageAmount, uint attackerID ,bool isPowerful = false)
+    public static GameEvent Attack(int playerHealthAfter, uint attackerID ,bool isPowerful = false)
     {
         return new GameEvent()
         {
             type = EventType.Attack,
             syncType = SyncType.Blocking,
-            attackData = new AttackData() { isPowerful = isPowerful , attackerNetId = attackerID , damageAmount = damageAmount}
+            attackData = new AttackData() { isPowerful = isPowerful , targetPlayerID = attackerID , targetsUpdatedHealth = playerHealthAfter}
         };
     }
     
-    public static GameEvent Potion(int healAmount, bool isPowerful = false)
+    public static GameEvent Potion(int playerHealthAfter, uint effectedPlayerId, bool isPowerful = false)
     {
         return new GameEvent()
         {
             type = EventType.Potion,
             syncType = SyncType.Blocking,
-            potionData = new PotionData() { isPowerful = isPowerful, healAmount = healAmount}
+            potionData = new PotionData() { isPowerful = isPowerful, targetsUpdatedHealth = playerHealthAfter, targetPlayerID = effectedPlayerId}
         };
     }
     // ImmediateEvents

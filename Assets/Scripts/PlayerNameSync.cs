@@ -9,13 +9,30 @@ public class PlayerNameSync : NetworkBehaviour
     [SyncVar(hook = nameof(OnNameUpdated))]
     private string networkDisplayName = "...";
 
-    private PlayerAvatarUIController _avatarUIController;
+    private PlayerPortraitUI _localPlayerPortraitUI;
+    private PlayerPortraitUI _opponentPlayerPortraitUI;
+
+
     private void Awake()
     {
-        _avatarUIController = FindAnyObjectByType<PlayerAvatarUIController>();
-        if (_avatarUIController == null)
+        var playerPortraitUIs = FindObjectsByType<PlayerPortraitUI>(FindObjectsSortMode.None);
+        if (playerPortraitUIs.Length == 2)
         {
-            Debug.LogError("PlayerAvatarUIController not found in Game Scene. Make sure one exists.");
+            for (int i = 0; i < playerPortraitUIs.Length; i++)
+            {
+                if (playerPortraitUIs[i].IsLocalPlayer)
+                {
+                    _localPlayerPortraitUI = playerPortraitUIs[i];
+                }
+                else
+                {
+                    _opponentPlayerPortraitUI = playerPortraitUIs[i];
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError("There must be exactly 2 Player portrait UI scripts.");
         }
     }
 
@@ -24,7 +41,7 @@ public class PlayerNameSync : NetworkBehaviour
     {
         if (!isLocalPlayer)
         {
-            _avatarUIController.SetOpponentPlayerNameText(newName);
+            _opponentPlayerPortraitUI.SetPlayerNameText(newName);
         }
     }
     
@@ -36,7 +53,7 @@ public class PlayerNameSync : NetworkBehaviour
             localName = "Unnamed Player"; // Fallback name
         }
 
-        _avatarUIController.SetLocalPlayerNameText(localName);
+        _localPlayerPortraitUI.SetPlayerNameText(localName);
         CmdSetDisplayName(localName);
     }
 

@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
-using UnityEngine.Serialization;
+using DorkyProductions.UI;
 using Sequence = DG.Tweening.Sequence;
 
 namespace DorkyProductions
@@ -17,6 +17,8 @@ namespace DorkyProductions
         private bool isProcessingEvents = false;
         private NetworkPlayer _localPlayer;
     
+        [SerializeField]
+        private UIMediator _mediator;
         private void OnDisable()
         {
             if (eventQueue.Count > 0)
@@ -37,7 +39,6 @@ namespace DorkyProductions
         {
             Debug.Log("ClientGameMaster is destroyed.");
         }
-
         public void SetLocalPlayer(NetworkPlayer networkPlayer)
         {
             _localPlayer = networkPlayer;
@@ -171,22 +172,35 @@ namespace DorkyProductions
                 
                 case EventType.Attack:
                     Debug.Log($"Attack event received.");
-                    uint attackerId = ev.attackData.attackerNetId;
-                    if (attackerId == _localPlayer.netId)
+                    
+                    // var p  = NetworkClient.spawned.TryGetValue(healthEvent.playerID, out NetworkIdentity playerIdentity);
+                    if (ev.attackData.targetPlayerID == _localPlayer.netId)
                     {
-                        // we play the attack anim
-                        _localPlayer.DealDamage(ev.attackData.damageAmount);
+                        // Opponent attacked us.
+                        // lower our health.
+                        UIMediator.OnLocalPlayerHealthUpdated?.Invoke(ev.attackData.targetsUpdatedHealth);
+                        // play "getting attacked SFX, animations etc."
                     }
                     else
                     {
-                        // we play the "get attacked" anim.
-                        _localPlayer.ReceiveDamage(ev.attackData.damageAmount);
+                        // we attacked the opponent.
+                        UIMediator.OnOpponentPlayerHealthUpdated?.Invoke(ev.attackData.targetsUpdatedHealth);
                     }
 
                     break;
                 case EventType.Potion:
                     Debug.Log($"Potion event received.");
-                    _localPlayer.ReceiveHeal(ev.potionData.healAmount);
+                    if (ev.potionData.targetPlayerID == _localPlayer.netId)
+                    {
+                        // We are healed
+                        UIMediator.OnLocalPlayerHealthUpdated?.Invoke(ev.potionData.targetsUpdatedHealth);
+                        // play "getting healed SFX, animations etc."
+                    }
+                    else
+                    {
+                        // we attacked the opponent.
+                        UIMediator.OnOpponentPlayerHealthUpdated?.Invoke(ev.potionData.targetsUpdatedHealth);
+                    }
                     break;
                 
             }

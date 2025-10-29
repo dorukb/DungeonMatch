@@ -119,6 +119,50 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &63925963
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 63925965}
+  - component: {fileID: 63925964}
+  m_Layer: 0
+  m_Name: UIMediator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &63925964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 63925963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7db60b2206038b5488f7be4cabef6839, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+--- !u!4 &63925965
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 63925963}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 674.9261, y: 1113.9896, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &133237262
 GameObject:
   m_ObjectHideFlags: 0
@@ -333,17 +377,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1201209865 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1819279568921784064, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
-  m_PrefabInstance: {fileID: 4831300338534117710}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1 &1546281181
 GameObject:
   m_ObjectHideFlags: 0
@@ -356,7 +389,6 @@ GameObject:
   - component: {fileID: 1546281184}
   - component: {fileID: 1546281183}
   - component: {fileID: 1546281182}
-  - component: {fileID: 1546281186}
   m_Layer: 5
   m_Name: Player Avatar UI
   m_TagString: Untagged
@@ -448,22 +480,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &1546281186
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1546281181}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9dba00110ebd12e4885ce0f8b02b9643, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  localPlayerNameText: {fileID: 1201209865}
-  opponentPlayerNameText: {fileID: 1939849645}
-  localPlayerHealthBar: {fileID: 4831300338534117711}
-  opponentPlayerHealthBar: {fileID: 1939849646}
 --- !u!1 &1605994702
 GameObject:
   m_ObjectHideFlags: 0
@@ -528,6 +544,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DorkyProductions.ClientGameMaster
   Visualizer: {fileID: 1605994703}
+  _mediator: {fileID: 63925964}
 --- !u!1001 &1683641281
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -827,28 +844,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 5135115826543921028, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
   m_PrefabInstance: {fileID: 1939849643}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1939849645 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1819279568921784064, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
-  m_PrefabInstance: {fileID: 1939849643}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
---- !u!114 &1939849646 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5483406914314695723, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
-  m_PrefabInstance: {fileID: 1939849643}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1 &1992513521
 GameObject:
   m_ObjectHideFlags: 0
@@ -1158,6 +1153,10 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6153940385547252321, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
+      propertyPath: IsLocalPlayer
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7276271885782362431, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -1195,17 +1194,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
---- !u!114 &4831300338534117711 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5483406914314695723, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
-  m_PrefabInstance: {fileID: 4831300338534117710}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1217,3 +1205,4 @@ SceneRoots:
   - {fileID: 133237266}
   - {fileID: 144706342}
   - {fileID: 1546281185}
+  - {fileID: 63925965}
