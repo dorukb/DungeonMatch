@@ -150,7 +150,6 @@ public class GameBoard
     // returns: Whether this match should stop the Chain events immediately: i.e, shouldOpenChest
     private bool ApplyMatchEffects(List<MatchResult> matchResults, List<GameEvent> eventBatch)
     {
-        bool hasMatchedChest = false;
         // This is where Card specific match effect will take place.
         foreach (var match in matchResults)
         {
@@ -191,14 +190,13 @@ public class GameBoard
                     // This could trigger another skill, which might
                     // modify the board again. Be careful of recursive loops!
                     // For now, let's keep it simple.
-                    hasMatchedChest = true;
                     break;
                 default:
                     Debug.LogError($"Sth is wrong. what is this tile type?? : {match.tileType}");
                     break;
             }
-            return hasMatchedChest;
         }
+
         return false;
     }
 

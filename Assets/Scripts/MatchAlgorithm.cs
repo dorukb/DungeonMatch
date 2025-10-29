@@ -101,7 +101,7 @@ public static class MatchAlgorithm
                 {
                     continue; // Skip this tile
                 }
-                List<MatchResult> matches = MatchAlgorithm.FindMatchesAt(board, currentPos);
+                List<MatchResult> matches = FindMatchesAt(board, currentPos);
 
                 allMatches.AddRange(matches);
                 foreach (MatchResult match in matches)
