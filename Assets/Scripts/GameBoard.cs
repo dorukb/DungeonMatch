@@ -182,7 +182,9 @@ public class GameBoard
                 case Tile.Cross:
                     break;
                 case Tile.Potion:
-                    GameMaster.Instance.activePlayer.Heal(HealEffect.GetHeal(match.matchCount));
+                    int healAmount = PotionEffect.GetHeal(match.matchCount);
+                    GameMaster.Instance.activePlayer.Heal(healAmount);
+                    eventBatch.Add(GameEvent.Potion(healAmount, false));
                     break;
                 case Tile.Chest:
                     // TODO: OpenChest();
@@ -376,4 +378,5 @@ public class GameBoard
     }
     // ... Server logic for checking matches, etc., goes here ...
 }
+
 }

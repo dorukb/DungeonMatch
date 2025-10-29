@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace DorkyProductions
 {
-    public class HealEffect
+    public static class PotionEffect
     {
         public static int GetHeal(int matchedTileCount)
         {
