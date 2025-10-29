@@ -9,8 +9,8 @@ namespace DorkyProductions
         private PlayerInput _playerInput;
         private ClientEventHandler _clientEventHandler;
 
-        public readonly int PLAYER_STARTING_HEALTH = 20;
-        private int health = 0; // server only.
+        public static readonly int PLAYER_STARTING_HEALTH = 20;
+        private int health = PLAYER_STARTING_HEALTH; // server only.
         
         public override void OnStartServer()
         {
@@ -27,8 +27,6 @@ namespace DorkyProductions
 
         public override void OnStartLocalPlayer()
         {
-            health = PLAYER_STARTING_HEALTH;
-            
             base.OnStartLocalPlayer();
             _playerInput = FindAnyObjectByType<PlayerInput>();
             if (_playerInput == null)

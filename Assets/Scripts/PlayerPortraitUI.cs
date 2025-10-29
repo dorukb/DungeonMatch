@@ -16,7 +16,6 @@ public class PlayerPortraitUI : MonoBehaviour
     public bool IsLocalPlayer;
     
     // TODO: move this to a central constant file.
-    public readonly int PLAYER_STARTING_HEALTH = 20;
 
     private void OnEnable()
     {
@@ -49,7 +48,7 @@ public class PlayerPortraitUI : MonoBehaviour
     }
     public void UpdatePlayerHealth(int currentHealth)
     {
-        float fillAmount = (float)currentHealth / (float)PLAYER_STARTING_HEALTH;
+        float fillAmount = (float)currentHealth / (float) NetworkPlayer.PLAYER_STARTING_HEALTH;
         playerHealthBar.fillAmount = fillAmount;
     }
 }
