@@ -126,5 +126,6 @@ namespace DorkyProductions
                 uiController.UpdateLocalPlayerHealth(health, PLAYER_STARTING_HEALTH);
             }
             OnHealthChange?.Invoke(netIdentity.netId, health);
+        }
     }
 }
