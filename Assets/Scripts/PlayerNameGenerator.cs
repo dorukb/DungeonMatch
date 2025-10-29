@@ -64,7 +64,6 @@ public class PlayerNameGenerator : MonoBehaviour
     {
         string generatedName = GenerateRandomName();
         nameDisplayText.text = generatedName;
-        // GameMaster.Instance.ChangeLocalPlayerName(generatedName);
         _chosenName = generatedName;
     }
     

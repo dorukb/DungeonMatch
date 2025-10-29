@@ -1,7 +1,6 @@
 using UnityEngine;
 using Mirror;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace  DorkyProductions
 {
@@ -18,8 +17,7 @@ public class GameMaster : NetworkBehaviour
 {
     public static GameMaster Instance { get; private set; }
 
-    [SyncVar]
-    public GameState gameState = GameState.WaitingForPlayers;
+    private GameState gameState = GameState.WaitingForPlayers;
 
     public TileDatabase TileDatabase;
     

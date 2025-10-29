@@ -73,6 +73,7 @@ namespace Mirror
         [ReadOnly, Tooltip("List of Room Player objects")]
         public HashSet<NetworkRoomPlayer> roomSlots = new HashSet<NetworkRoomPlayer>();
 
+        [SerializeField] private GameObject GameMasterPrefab;
         public bool allPlayersReady
         {
             get => _allPlayersReady;
@@ -376,6 +377,11 @@ namespace Mirror
         /// </summary>
         public override void OnStartServer()
         {
+            // Instantiate the prefab
+            // Spawn it on the network. This will create it on all clients.
+            GameObject gmInstance = Instantiate(GameMasterPrefab);
+            NetworkServer.Spawn(gmInstance);
+            
             if (string.IsNullOrWhiteSpace(RoomScene))
             {
                 Debug.LogError("NetworkRoomManager RoomScene is empty. Set the RoomScene in the inspector for the NetworkRoomManager");
