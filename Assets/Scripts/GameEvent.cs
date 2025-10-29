@@ -94,6 +94,7 @@ public struct PotionData
 {
     public int healAmount;
     public bool isPowerful;
+    public uint playerNetId;
 }
 // Note: This class should only be created via the Static Factory methods below.
 // dont use new GameEvent() yourself.

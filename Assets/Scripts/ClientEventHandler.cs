@@ -184,6 +184,11 @@ namespace DorkyProductions
                     }
 
                     break;
+                case EventType.Potion:
+                    Debug.Log($"Potion event received.");
+                    _localPlayer.ReceiveHeal(ev.potionData.healAmount);
+                    break;
+                
             }
 
             // If an animation was created, wait for it to complete.

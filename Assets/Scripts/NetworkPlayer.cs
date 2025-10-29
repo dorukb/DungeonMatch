@@ -116,5 +116,15 @@ namespace DorkyProductions
             OnHealthChange?.Invoke(netIdentity.netId, health);
             OnReceivedDamage?.Invoke(netIdentity.netId, dealtAmount);
         }
+
+        public void ReceiveHeal(int healAmount)
+        {
+            health += healAmount;
+            var uiController = FindAnyObjectByType<PlayerAvatarUIController>();
+            if (uiController != null)
+            {
+                uiController.UpdateLocalPlayerHealth(health, PLAYER_STARTING_HEALTH);
+            }
+            OnHealthChange?.Invoke(netIdentity.netId, health);
     }
 }
