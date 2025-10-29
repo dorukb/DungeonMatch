@@ -52,6 +52,11 @@ namespace DorkyProductions
 
 
         [Server]
+        public int GetCurrentHealth()
+        {
+            return health;
+        }
+        [Server]
         public void TakeDamage(int damage)
         {
             health -= damage;

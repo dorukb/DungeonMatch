@@ -171,10 +171,10 @@ public class GameBoard
                     Debug.LogError($"Unknown tiles matched. Shouldnt happen : {match.tileType}");
                     break;
                 case Tile.Attack:
+                    // TODO: set isPowerful to true for x2 effect.
                     int dmgAmount = AttackEffect.GetDamage(match.matchCount);
                     opponent.TakeDamage(dmgAmount);
-                    // TODO: set isPowerful to true for x2 effect.
-                    eventBatch.Add(GameEvent.Attack(dmgAmount, activePlayer.netId, false));
+                    eventBatch.Add(GameEvent.Attack(opponent.GetCurrentHealth(), opponent.netId, false));
                     break;
                 case Tile.Shield:
                     break;
@@ -182,8 +182,8 @@ public class GameBoard
                     break;
                 case Tile.Potion:
                     int healAmount = PotionEffect.GetHeal(match.matchCount);
-                    GameMaster.Instance.activePlayer.Heal(healAmount);
-                    eventBatch.Add(GameEvent.Potion(healAmount, activePlayer.netId, false));
+                    activePlayer.Heal(healAmount);
+                    eventBatch.Add(GameEvent.Potion(activePlayer.GetCurrentHealth(), activePlayer.netId, false));
                     break;
                 case Tile.Chest:
                     // TODO: OpenChest();
