@@ -63,7 +63,7 @@ namespace DorkyProductions
         [Server]
         public void Heal(int heal)
         {
-            health = Mathf.Clamp(health, health, health + heal);
+            health = Mathf.Clamp(health + heal, health, PLAYER_STARTING_HEALTH);
         }
         
         public void EnableControls()
