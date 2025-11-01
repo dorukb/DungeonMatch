@@ -19,6 +19,7 @@ public enum EventType
     MatchedTiles, // e.g., show an explosion
     Attack,
     Potion,
+    Shield,
     
     // Parallel
     TileMoved,
@@ -102,6 +103,12 @@ public struct PotionData
     public bool isPowerful;
     public uint targetPlayerID;
 }
+
+[Serializable]
+public struct ShieldData
+{
+    public uint targetPlayerID;
+}
 // Note: This class should only be created via the Static Factory methods below.
 // dont use new GameEvent() yourself.
 [Serializable]
@@ -119,6 +126,7 @@ public struct GameEvent
     public SyncType syncType;
     public AttackData attackData;
     public PotionData potionData;
+    public ShieldData shieldData;
     
     // Blocking Event
     public static GameEvent GameStarted (List<TileState> boardState)
@@ -167,6 +175,16 @@ public struct GameEvent
             type = EventType.Potion,
             syncType = SyncType.Blocking,
             potionData = new PotionData() { isPowerful = isPowerful, targetsUpdatedHealth = playerHealthAfter, targetPlayerID = effectedPlayerId}
+        };
+    }
+
+    public static GameEvent Shield(uint shieldedPayerId)
+    {
+        return new GameEvent()
+        {
+            type = EventType.Shield,
+            syncType = SyncType.Blocking,
+            shieldData = new ShieldData() { targetPlayerID = shieldedPayerId }
         };
     }
     // ImmediateEvents

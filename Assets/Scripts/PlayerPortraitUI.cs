@@ -12,6 +12,9 @@ public class PlayerPortraitUI : MonoBehaviour
 
     [SerializeField]
     private Image playerHealthBar;
+    
+    [SerializeField]
+    private TextMeshProUGUI playerHealthText;
 
     public bool IsLocalPlayer;
     
@@ -50,7 +53,10 @@ public class PlayerPortraitUI : MonoBehaviour
     {
         float fillAmount = (float)currentHealth / (float) NetworkPlayer.PLAYER_STARTING_HEALTH;
         playerHealthBar.fillAmount = fillAmount;
+        playerHealthText.text = currentHealth.ToString();
     }
+    
+    
 }
 
 }

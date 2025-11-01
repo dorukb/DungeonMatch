@@ -11,7 +11,8 @@ namespace DorkyProductions
 
         public static readonly int PLAYER_STARTING_HEALTH = 20;
         private int health = PLAYER_STARTING_HEALTH; // server only.
-        
+
+        public bool shielded = false;
         public override void OnStartServer()
         {
             // When the player object is spawned on the server, register it
@@ -55,9 +56,9 @@ namespace DorkyProductions
             return health;
         }
         [Server]
-        public void TakeDamage(int damage)
+        public void TakeDamage(int damage, bool isShielded)
         {
-            health -= damage;
+            health = isShielded ? health : (health - damage);
         }
 
         [Server]

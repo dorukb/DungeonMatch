@@ -173,10 +173,12 @@ public class GameBoard
                 case Tile.Attack:
                     // TODO: set isPowerful to true for x2 effect.
                     int dmgAmount = AttackEffect.GetDamage(match.matchCount);
-                    opponent.TakeDamage(dmgAmount);
+                    opponent.TakeDamage(dmgAmount, opponent.shielded);
                     eventBatch.Add(GameEvent.Attack(opponent.GetCurrentHealth(), opponent.netId, false));
+                    opponent.shielded = false;
                     break;
                 case Tile.Shield:
+                    activePlayer.shielded = true;
                     break;
                 case Tile.Cross:
                     break;

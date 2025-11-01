@@ -202,6 +202,21 @@ namespace DorkyProductions
                         UIMediator.OnOpponentPlayerHealthUpdated?.Invoke(ev.potionData.targetsUpdatedHealth);
                     }
                     break;
+                case EventType.Shield:
+                    Debug.Log($"Shield event received.");
+                    if (ev.shieldData.targetPlayerID == _localPlayer.netId)
+                    {
+                        // we are shielded for the next turn
+                        // TODO: set a var that blocks opponent
+                        
+                    }
+                    else
+                    {
+                        // the opponent shielded
+                        // TODO : do same 
+                        
+                    }
+                    break;
                 
             }
 
