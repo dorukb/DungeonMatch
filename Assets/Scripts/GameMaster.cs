@@ -193,6 +193,7 @@ public class GameMaster : NetworkBehaviour
         eventBatch.Add(GameEvent.TurnEnded(activePlayer.netIdentity.netId));
         activePlayerIndex = (activePlayerIndex + 1) % players.Count;
         activePlayer = players[activePlayerIndex]; // SyncVar update
+        activePlayer.shielded = false;
         eventBatch.Add(GameEvent.TurnStarted(activePlayer.netIdentity.netId));
     }
 

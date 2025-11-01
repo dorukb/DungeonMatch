@@ -175,7 +175,7 @@ public class GameBoard
                     int dmgAmount = AttackEffect.GetDamage(match.matchCount);
                     opponent.TakeDamage(dmgAmount, opponent.shielded);
                     eventBatch.Add(GameEvent.Attack(opponent.GetCurrentHealth(), opponent.netId, false));
-                    opponent.shielded = false;
+                    //opponent.shielded = false;
                     break;
                 case Tile.Shield:
                     activePlayer.shielded = true;

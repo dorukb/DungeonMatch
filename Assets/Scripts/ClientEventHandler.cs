@@ -118,6 +118,7 @@ namespace DorkyProductions
                     if (ev.turnData.playerNetId == _localPlayer.netId)
                     {
                         Debug.Log("My Turn Started");
+                        Debug.Log($"my shield: {_localPlayer.shielded}");
                         _localPlayer.EnableControls();
                         // TODO: Add UI text that flies from left to right, saying "Your turn!"
                         // fire UI event for it.
