@@ -80,7 +80,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   playerNameText: {fileID: 1819279568921784064}
   playerHealthBar: {fileID: 5483406914314695723}
-  playerHealthText: {fileID: 0}
+  playerHealthText: {fileID: 5891241883517984718}
   IsLocalPlayer: 0
 --- !u!1 &3486811652101037563
 GameObject:
@@ -147,7 +147,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 20
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -174,7 +174,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 44.75
+  m_fontSize: 48
   m_fontSizeBase: 48
   m_fontWeight: 400
   m_enableAutoSizing: 1
