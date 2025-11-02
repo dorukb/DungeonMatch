@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using Mirror;
 using UnityEngine.Serialization;
 
 namespace  DorkyProductions
@@ -78,6 +79,13 @@ public struct GameStartData
 {
     public List<TileState> boardState;
 }
+
+[Serializable]
+public struct GameEndData
+{
+    public uint winnerID;
+}
+
 [Serializable]
 public struct MatchData
 {
@@ -123,6 +131,7 @@ public struct GameEvent
     public TileSpawnData tileSpawnData;
     public MatchData matchData;
     public GameStartData gameStartData;
+    public GameEndData gameEndData;
     public SyncType syncType;
     public AttackData attackData;
     public PotionData potionData;
@@ -136,6 +145,16 @@ public struct GameEvent
             type = EventType.GameStarted,
             syncType = SyncType.Blocking,
             gameStartData = new GameStartData() { boardState = boardState }
+        };
+    }
+
+    public static GameEvent GameEnded(uint winner)
+    {
+        return new GameEvent
+        {
+            type = EventType.GameEnded,
+            syncType = SyncType.Blocking,
+            gameEndData = new GameEndData() { winnerID = winner }
         };
     }
     public static GameEvent SwapOccurred(ushort firstId, ushort secondId)

@@ -156,7 +156,9 @@ namespace DorkyProductions
                     var boardState = ev.gameStartData.boardState;
                     animTween = Visualizer.InitBoard(boardState);
                     break;
-                    
+                case EventType.GameEnded:
+                    Debug.Log($"GAME END and WINNER is {ev.gameEndData.winnerID}");
+                    break;
                 case EventType.MatchedTiles:
                     Debug.Log($"MatchOccurred/RemoveTiles for: {ev.matchData.matchedTileIDs}");
                     animTween = Visualizer.AnimatePop(ev.matchData.matchedTileIDs);

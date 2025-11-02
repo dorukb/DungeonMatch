@@ -113,7 +113,7 @@ public class GameMaster : NetworkBehaviour
     }
 
     [Server]
-    private void EndGame(NetworkPlayer winner)
+    public void EndGame(NetworkPlayer winner)
     {
         //TODO: End game is not implemented yet.
         
@@ -128,12 +128,12 @@ public class GameMaster : NetworkBehaviour
         // We check for null winner in case both disconnected at once
         if (winner != null)
         {
-            // eventBatch.Add(GameEvent.GameEnded(winner.netIdentity));
+            eventBatch.Add(GameEvent.GameEnded(winner.netId));
         }
         
-        // SendAndLogBatch(eventBatch);
+        SendAndLogBatch(eventBatch);
         
-        // You might want to disconnect players or reset the server here
+        // TODO : You might want to disconnect players or reset the server here
     }
 
     // This is the main "transaction" method called by a Player [Command].
