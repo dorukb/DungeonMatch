@@ -58,7 +58,7 @@ namespace DorkyProductions
         [Server]
         public void TakeDamage(int damage, bool isShielded)
         {
-            health = isShielded ? health : (health - damage);
+            health = isShielded ? health : Mathf.Clamp(health - damage, 0, PLAYER_STARTING_HEALTH);
         }
 
         [Server]
