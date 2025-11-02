@@ -51,9 +51,9 @@ namespace DorkyProductions
 
 
         [Server]
-        public int GetCurrentHealth()
+        public ushort GetCurrentHealth()
         {
-            return health;
+            return (ushort)health;
         }
         [Server]
         public void TakeDamage(int damage, bool isShielded)

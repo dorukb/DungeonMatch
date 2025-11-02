@@ -91,7 +91,7 @@ public struct MatchData
 [Serializable]
 public struct AttackData
 {
-     public int targetsUpdatedHealth;
+    public ushort targetsUpdatedHealth;
     public bool isPowerful;
     public uint targetPlayerID;
 }
@@ -99,7 +99,7 @@ public struct AttackData
 [Serializable]
 public struct PotionData
 {
-    public int targetsUpdatedHealth;
+    public ushort targetsUpdatedHealth;
     public bool isPowerful;
     public uint targetPlayerID;
 }
@@ -158,7 +158,7 @@ public struct GameEvent
         };
     }
 
-    public static GameEvent Attack(int playerHealthAfter, uint attackerID ,bool isPowerful = false)
+    public static GameEvent Attack(ushort playerHealthAfter, uint attackerID ,bool isPowerful = false)
     {
         return new GameEvent()
         {
@@ -168,7 +168,7 @@ public struct GameEvent
         };
     }
     
-    public static GameEvent Potion(int playerHealthAfter, uint effectedPlayerId, bool isPowerful = false)
+    public static GameEvent Potion(ushort playerHealthAfter, uint effectedPlayerId, bool isPowerful = false)
     {
         return new GameEvent()
         {
