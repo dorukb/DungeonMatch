@@ -142,6 +142,11 @@ public class ClientBoardVisualizer : MonoBehaviour
         Sequence s = DOTween.Sequence();
         foreach (ushort tileId in tileIdsToPop)
         {
+            if (!_visualTiles.ContainsKey(tileId))
+            {
+                Debug.LogError($"AnimatePop failed, tile ${tileId} already popped");
+                continue;
+            }
             TileView tileView = _visualTiles[tileId];
             var tween = tileView.RectTransform.DOPunchScale(Vector3.one * 0.2f, REMOVE_DURATION, 10, 1);
             s.Join(tween);
