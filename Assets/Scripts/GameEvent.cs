@@ -21,6 +21,7 @@ public enum EventType
     Attack,
     Potion,
     Shield,
+    NegateAttackByShield,
     
     // Parallel
     TileMoved,
@@ -117,6 +118,13 @@ public struct ShieldData
 {
     public uint targetPlayerID;
 }
+
+[Serializable]
+public struct NegateAttackByShieldData
+{
+    public uint attackerPlayerID;
+    public bool isPowerful;
+}
 // Note: This class should only be created via the Static Factory methods below.
 // dont use new GameEvent() yourself.
 [Serializable]
@@ -136,6 +144,7 @@ public struct GameEvent
     public AttackData attackData;
     public PotionData potionData;
     public ShieldData shieldData;
+    public NegateAttackByShieldData negateAttackByShieldData;
     
     // Blocking Event
     public static GameEvent GameStarted (List<TileState> boardState)
@@ -186,7 +195,16 @@ public struct GameEvent
             attackData = new AttackData() { isPowerful = isPowerful , targetPlayerID = attackerID , targetsUpdatedHealth = playerHealthAfter}
         };
     }
-    
+    public static GameEvent NegateAttackByShield(uint attackerID, bool isPowerful = false)
+    {
+        return new GameEvent()
+        {
+            type = EventType.NegateAttackByShield,
+            syncType = SyncType.Blocking,
+            negateAttackByShieldData = new NegateAttackByShieldData() { isPowerful = isPowerful , attackerPlayerID = attackerID}
+        };
+    }
+
     public static GameEvent Potion(ushort playerHealthAfter, uint effectedPlayerId, bool isPowerful = false)
     {
         return new GameEvent()

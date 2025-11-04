@@ -11,8 +11,8 @@ namespace DorkyProductions
 
         public static readonly int PLAYER_STARTING_HEALTH = 20;
         private int health = PLAYER_STARTING_HEALTH; // server only.
-
-        public bool shielded = false;
+        private bool _hasShield = false;
+        
         public override void OnStartServer()
         {
             // When the player object is spawned on the server, register it
@@ -56,9 +56,9 @@ namespace DorkyProductions
             return (ushort)health;
         }
         [Server]
-        public void TakeDamage(int damage, bool isShielded)
+        public void TakeDamage(int damage)
         {
-            health = isShielded ? health : Mathf.Clamp(health - damage, 0, PLAYER_STARTING_HEALTH);
+            health =  Mathf.Clamp(health - damage, 0, PLAYER_STARTING_HEALTH);
         }
 
         [Server]
@@ -97,6 +97,21 @@ namespace DorkyProductions
             
             Debug.Log($"[Server] Received swap request: {posA} <-> {posB}");
             GameMaster.Instance.ProcessPlayerSwap(connectionToClient, posA, posB);
+        }
+
+        public bool HasShield()
+        {
+            return _hasShield;
+        }
+
+        public void DeactivateShield()
+        {
+            _hasShield = false;
+        }
+
+        public void ActivateShield()
+        {
+            _hasShield = true;
         }
     }
 }

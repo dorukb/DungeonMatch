@@ -119,7 +119,7 @@ public class GameMaster : NetworkBehaviour
         
         if (gameState == GameState.GameEnded) return;
 
-        Debug.Log($"Ending game. Winner: {winner.netId}");
+        Debug.Log($"[SERVER] Ending game. Winner: {winner.netId}");
         gameState = GameState.GameEnded;
         activePlayer = null;
 
@@ -193,7 +193,6 @@ public class GameMaster : NetworkBehaviour
         eventBatch.Add(GameEvent.TurnEnded(activePlayer.netIdentity.netId));
         activePlayerIndex = (activePlayerIndex + 1) % players.Count;
         activePlayer = players[activePlayerIndex]; // SyncVar update
-        activePlayer.shielded = false;
         eventBatch.Add(GameEvent.TurnStarted(activePlayer.netIdentity.netId));
     }
 

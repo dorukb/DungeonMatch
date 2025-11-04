@@ -44,7 +44,7 @@ namespace DorkyProductions
             _localPlayer = networkPlayer;
         }
 
-        // Called by the CleintRPC to add a batch of events from the server.
+        // Called by the ClientRPC to add a batch of events from the server.
         public void EnqueueEventBatch(List<GameEvent> batch)
         {
             foreach (GameEvent ev in batch)
@@ -118,7 +118,7 @@ namespace DorkyProductions
                     if (ev.turnData.playerNetId == _localPlayer.netId)
                     {
                         Debug.Log("My Turn Started");
-                        Debug.Log($"my shield: {_localPlayer.shielded}");
+                        Debug.Log($"HasShield: {_localPlayer.HasShield()}");
                         _localPlayer.EnableControls();
                         // TODO: Add UI text that flies from left to right, saying "Your turn!"
                         // fire UI event for it.
@@ -132,9 +132,6 @@ namespace DorkyProductions
                         Debug.Log("My Turn Ended");
                         _localPlayer.DisableControls();
                     }
-                    break;
-                case EventType.GameEnded:
-                    Debug.LogWarning("Game Ended NOT IMPLEMENTED");
                     break;
                 default:
                     Debug.LogError("This event type is not immediate." + ev.type);
@@ -206,7 +203,7 @@ namespace DorkyProductions
                     }
                     break;
                 case EventType.Shield:
-                    Debug.Log($"Shield event received.");
+                    Debug.Log($"Player {ev.shieldData.targetPlayerID} activated shield.");
                     if (ev.shieldData.targetPlayerID == _localPlayer.netId)
                     {
                         // we are shielded for the next turn
@@ -217,11 +214,25 @@ namespace DorkyProductions
                     {
                         // the opponent shielded
                         // TODO : do same 
-                        
                     }
                     break;
-                
-            }
+                case EventType.NegateAttackByShield:
+                    Debug.Log($"Shield event received.");
+                    if (ev.negateAttackByShieldData.attackerPlayerID == _localPlayer.netId)
+                    {
+                        Debug.Log("We attacked, but opponent negated the attack by shield.");
+                        // we should see the opponent lose their shield.
+                        // we should see attack anim + block/parry anim with shield.
+                    }
+                    else
+                    {
+                        Debug.Log("Got attacked, but we negated the attack by shield!");
+                        // we should lose our shield.
+                        // we should see Shield blocking the attack anim.
+                        // play SFX.
+                    }
+                    break;
+                }
 
             // If an animation was created, wait for it to complete.
             if (animTween != null)

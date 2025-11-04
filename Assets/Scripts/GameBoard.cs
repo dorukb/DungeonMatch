@@ -159,7 +159,6 @@ public class GameBoard
             {
                 ids.Add(GetTileAt(pos).uniqueID);
             }
-            // RpcApplyMatchEffect(ids);
             eventBatch.Add(GameEvent.MatchOccurred(ids));
 
             var activePlayer = GameMaster.Instance.activePlayer;
@@ -168,22 +167,30 @@ public class GameBoard
             switch (match.tileType)
             {
                 case Tile.Unknown:
-                    Debug.LogError($"Unknown tiles matched. Shouldnt happen : {match.tileType}");
+                    Debug.LogError($"Unknown tiles matched. Shouldn't happen : {match.tileType}");
                     break;
                 case Tile.Attack:
                     // TODO: set isPowerful to true for x2 effect.
                     int dmgAmount = AttackEffect.GetDamage(match.matchCount);
-                    opponent.TakeDamage(dmgAmount, opponent.shielded);
-                    eventBatch.Add(GameEvent.Attack(opponent.GetCurrentHealth(), opponent.netId, false));
-                    //check for end game cond. if health == 0
-                    if (opponent.GetCurrentHealth() == 0)
+                    if (!opponent.HasShield())
                     {
-                        GameMaster.Instance.EndGame(activePlayer);
+                        opponent.TakeDamage(dmgAmount);
+                        eventBatch.Add(GameEvent.Attack(opponent.GetCurrentHealth(), opponent.netId, false));
+                        if (opponent.GetCurrentHealth() == 0)
+                        {
+                            GameMaster.Instance.EndGame(activePlayer);
+                        }
                     }
-                    //opponent.shielded = false;
+                    else // the Shield has blocked the attack.
+                    {
+                        opponent.DeactivateShield();
+                        // Send "AttackNegatedByActiveShield" event.
+                        eventBatch.Add(GameEvent.NegateAttackByShield(activePlayer.netId));
+
+                    }
                     break;
                 case Tile.Shield:
-                    activePlayer.shielded = true;
+                    activePlayer.ActivateShield();
                     break;
                 case Tile.Cross:
                     break;
