@@ -64,7 +64,7 @@ public class ClientBoardVisualizer : MonoBehaviour
 
         // 1. Locally instantiate as a child of the board container
         GameObject tileGO = Instantiate(tileViewPrefab, boardContainer);
-
+        tileGO.name = "Tile"+ state.uniqueID.ToString();
         // 2. Set its starting scale to 0 (so it's invisible)
         tileGO.transform.localScale = Vector3.zero;
      
