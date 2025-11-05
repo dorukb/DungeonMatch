@@ -4,16 +4,17 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using DorkyProductions.UI;
+using Mirror;
 using Sequence = DG.Tweening.Sequence;
 
 namespace DorkyProductions
 {
-    public class ClientEventHandler : MonoBehaviour
+    public class ClientEventHandler : MonoBehaviour, IGameEventHandler
     {
         public ClientBoardVisualizer Visualizer;
 
-        private List<GameEvent> gameHistory = new List<GameEvent>();
-        private Queue<GameEvent> eventQueue = new Queue<GameEvent>();
+        // private List<GameEvent> gameHistory = new List<GameEvent>();
+        private Queue<GameEventBase> eventQueue = new Queue<GameEventBase>();
         private bool isProcessingEvents = false;
         private NetworkPlayer _localPlayer;
     
@@ -45,237 +46,228 @@ namespace DorkyProductions
         }
 
         // Called by the ClientRPC to add a batch of events from the server.
-        public void EnqueueEventBatch(List<GameEvent> batch)
+        public void EnqueueEventBatch(ArraySegment<byte> eventBatch)
         {
-            foreach (GameEvent ev in batch)
+            // Use a PooledReader to deserialize the data
+            using (NetworkReaderPooled reader = NetworkReaderPool.Get(eventBatch))
             {
-                eventQueue.Enqueue(ev);
-                gameHistory.Add(ev); // Log to history
+                // Read the number of events
+                ushort eventCount = reader.Read<ushort>();
+                Debug.Log($"[Client] received {eventCount} events.");
+                
+                for (int i = 0; i < eventCount; i++)
+                {
+                    // The ReadGameEvent() method now returns a
+                    // pooled object, so no 'new' is called here.
+                    GameEventBase ev = reader.ReadGameEvent();
+                    if (ev != null)
+                    {
+                        eventQueue.Enqueue(ev);
+                    }
+                }
             }
-
             // If the processor isn't already running, start it.
             if (!isProcessingEvents)
             {
                 StartCoroutine(ProcessEventQueue());
             }
         }
-
-        /// The main processor coroutine. Reads from the queue.
+ // --- Event Loop (Now with Pooling) ---
         private IEnumerator ProcessEventQueue()
         {
             isProcessingEvents = true;
 
             while (eventQueue.Count > 0)
             {
-                GameEvent ev = eventQueue.Dequeue();
-                SyncType syncType = ev.syncType;
+                GameEventBase ev = eventQueue.Dequeue();
+                SyncType syncType = ev.SyncType;
 
                 if (syncType == SyncType.Blocking)
                 {
                     // --- BLOCKING ---
-                    // Wait for this one event's animation to fully complete
-                    yield return StartCoroutine(HandleBlockingEvent(ev));
+                    Tween animTween = ev.Accept(this);
+                    if (animTween != null)
+                    {
+                        yield return animTween.WaitForCompletion();
+                    }
+                    EventPool.Release(ev); // Release after processing
                 }
                 else if (syncType == SyncType.Immediate)
                 {
-                    // Start the event logic, but do NOT wait for it.
-                    HandleImmediate(ev);
+                    // --- IMMEDIATE ---
+                    ev.Accept(this);
+                    EventPool.Release(ev); // Release immediately
                 }
-                else if (syncType == SyncType.Parallel) // syncType == EventSyncType.Parallel
+                else if (syncType == SyncType.Parallel)
                 {
-                    // 1. Create a batch, starting with this event
-                    List<GameEvent> parallelBatch = new List<GameEvent>();
+                    // --- PARALLEL ---
+                    List<GameEventBase> parallelBatch = new List<GameEventBase>();
                     parallelBatch.Add(ev);
 
-                    // 2. Look ahead and group all other parallel events
-                    // Only group events that are of the SAME type!
-                    // Note: subsequent calls to peek always return the same object, the front of the queue.
-                    // dequeue inside the loop changes the front element.
                     while (eventQueue.Count > 0
-                           && eventQueue.Peek().syncType == SyncType.Parallel
-                           && eventQueue.Peek().type == ev.type)
+                           && eventQueue.Peek().SyncType == SyncType.Parallel
+                           && eventQueue.Peek().EventType == ev.EventType)
                     {
                         parallelBatch.Add(eventQueue.Dequeue());
                     }
 
-                    // 3. Play all of them and wait for ALL to finish.
                     yield return StartCoroutine(HandleParallelBatch(parallelBatch));
-                }
-                else
-                {
-                    Debug.LogError("Unhandled/Unknown SyncType: " + syncType);
+                    
+                    // Release all events in the batch
+                    foreach (var e in parallelBatch)
+                    {
+                        EventPool.Release(e);
+                    }
                 }
             }
 
             isProcessingEvents = false;
         }
 
-        private void HandleImmediate(GameEvent ev)
+        private IEnumerator HandleParallelBatch(List<GameEventBase> batch)
         {
-            switch (ev.type)
-            {
-                case EventType.TurnStarted:
-                    if (ev.turnData.playerNetId == _localPlayer.netId)
-                    {
-                        Debug.Log("My Turn Started");
-                        Debug.Log($"HasShield: {_localPlayer.HasShield()}");
-                        _localPlayer.EnableControls();
-                        // TODO: Add UI text that flies from left to right, saying "Your turn!"
-                        // fire UI event for it.
-                        // yourTurnStartedEvent?.Invoke()
-                        // UI CLass listens to that event.
-                    }
-                    break;
-                case EventType.TurnEnded:
-                    if (ev.turnData.playerNetId == _localPlayer.netId)
-                    {
-                        Debug.Log("My Turn Ended");
-                        _localPlayer.DisableControls();
-                    }
-                    break;
-                default:
-                    Debug.LogError("This event type is not immediate." + ev.type);
-                    break;
-            }
-            
-        }
+            Debug.Log($"Starting a parallel batch of {batch.Count} events of Type: {batch[0].EventType}");
 
-        /// Handles a single event (Blocking or Immediate).
-        /// Returns a coroutine that waits for its animation.
-        private IEnumerator HandleBlockingEvent(GameEvent ev)
-        {
-            Tween animTween = null;
-
-            switch (ev.type)
-            {
-                case EventType.GameStarted:
-                    Debug.Log("Game started, setup the local board");
-                    var boardState = ev.gameStartData.boardState;
-                    animTween = Visualizer.InitBoard(boardState);
-                    break;
-                case EventType.GameEnded:
-                    Debug.Log($"GAME END and WINNER is {ev.gameEndData.winnerID}");
-                    break;
-                case EventType.MatchedTiles:
-                    Debug.Log($"MatchOccurred/RemoveTiles for: {ev.matchData.matchedTileIDs}");
-                    animTween = Visualizer.AnimatePop(ev.matchData.matchedTileIDs);
-                    break;
-
-                case EventType.SwappedTiles:
-                    Debug.Log($"Swap tiles: {ev.swapData.firstId}, {ev.swapData.secondId}");
-                    animTween = Visualizer.AnimateSwap(ev.swapData.firstId, ev.swapData.secondId);
-                    break;
-                case EventType.SwapDenied:
-                    Debug.Log($"Swap denied");
-                    _localPlayer.EnableControls();
-                    break;
-                
-                case EventType.Attack:
-                    Debug.Log($"Attack event received.");
-                    
-                    // var p  = NetworkClient.spawned.TryGetValue(healthEvent.playerID, out NetworkIdentity playerIdentity);
-                    if (ev.attackData.targetPlayerID == _localPlayer.netId)
-                    {
-                        // Opponent attacked us.
-                        // lower our health.
-                        UIMediator.OnLocalPlayerHealthUpdated?.Invoke(ev.attackData.targetsUpdatedHealth);
-                        // play "getting attacked SFX, animations etc."
-                    }
-                    else
-                    {
-                        // we attacked the opponent.
-                        UIMediator.OnOpponentPlayerHealthUpdated?.Invoke(ev.attackData.targetsUpdatedHealth);
-                    }
-
-                    break;
-                case EventType.Potion:
-                    Debug.Log($"Potion event received.");
-                    if (ev.potionData.targetPlayerID == _localPlayer.netId)
-                    {
-                        // We are healed
-                        UIMediator.OnLocalPlayerHealthUpdated?.Invoke(ev.potionData.targetsUpdatedHealth);
-                        // play "getting healed SFX, animations etc."
-                    }
-                    else
-                    {
-                        // we attacked the opponent.
-                        UIMediator.OnOpponentPlayerHealthUpdated?.Invoke(ev.potionData.targetsUpdatedHealth);
-                    }
-                    break;
-                case EventType.Shield:
-                    Debug.Log($"Player {ev.shieldData.targetPlayerID} activated shield.");
-                    if (ev.shieldData.targetPlayerID == _localPlayer.netId)
-                    {
-                        // we are shielded for the next turn
-                        // TODO: set a var that blocks opponent
-                        
-                    }
-                    else
-                    {
-                        // the opponent shielded
-                        // TODO : do same 
-                    }
-                    break;
-                case EventType.NegateAttackByShield:
-                    Debug.Log($"Shield event received.");
-                    if (ev.negateAttackByShieldData.attackerPlayerID == _localPlayer.netId)
-                    {
-                        Debug.Log("We attacked, but opponent negated the attack by shield.");
-                        // we should see the opponent lose their shield.
-                        // we should see attack anim + block/parry anim with shield.
-                    }
-                    else
-                    {
-                        Debug.Log("Got attacked, but we negated the attack by shield!");
-                        // we should lose our shield.
-                        // we should see Shield blocking the attack anim.
-                        // play SFX.
-                    }
-                    break;
-                }
-
-            // If an animation was created, wait for it to complete.
-            if (animTween != null)
-            {
-                yield return animTween.WaitForCompletion();
-            }
-
-            yield break;
-        }
-
-        // Handles a batch of parallel events, playing them all at once.
-        private IEnumerator HandleParallelBatch(List<GameEvent> batch)
-        {
-            Debug.Log($"Starting a parallel batch of {batch.Count} events of Type: {batch[0].type}");
-
-            // 1. Create one "master" sequence
             Sequence parallelSequence = DOTween.Sequence();
-
             foreach (var ev in batch)
             {
-                Tween tileTween = null;
-                switch (ev.type)
-                {
-                    case EventType.TileMoved:
-                        tileTween = Visualizer.AnimateFall(ev.tileMoveData.tileId, ev.tileMoveData.toGridPos);
-                        break;
-
-                    case EventType.TileSpawned:
-                        tileTween = Visualizer.SpawnVisualTile(ev.tileSpawnData.state, ev.tileSpawnData.pos);
-                        break;
-                }
-
+                Tween tileTween = ev.Accept(this);
                 if (tileTween != null)
                 {
-                    // 2. Add the tween to the master sequence to play concurrently
                     parallelSequence.Join(tileTween);
                 }
             }
 
-            // 3. Wait for the *entire sequence* of parallel tweens to finish.
             yield return parallelSequence.WaitForCompletion();
-
             Debug.Log("Parallel batch finished.");
         }
+
+        // =======================================================
+        // --- IGameEventHandler (VISITOR) IMPLEMENTATION ---
+        // =======================================================
+        // This logic is identical to your original, just
+        // separated into type-safe methods.
+        // =======================================================
+
+        #region Blocking Handlers
+        public Tween Handle(GameStartedEvent e)
+        {
+            Debug.Log("Game started, setup the local board");
+            return Visualizer.InitBoard(e.boardState);
+        }
+
+        public Tween Handle(GameEndedEvent e)
+        {
+            Debug.Log($"GAME END and WINNER is {e.winnerID}");
+            // return UIMediator.ShowGameOverScreen(e.winnerID);
+            return null;
+        }
+
+        public Tween Handle(MatchedTilesEvent e)
+        {
+            Debug.Log($"MatchOccurred/RemoveTiles for: {e.matchedTileIDs}");
+            return Visualizer.AnimatePop(e.matchedTileIDs);
+        }
+
+        public Tween Handle(SwappedTilesEvent e)
+        {
+            Debug.Log($"Swap tiles: {e.firstId}, {e.secondId}");
+            return Visualizer.AnimateSwap(e.firstId, e.secondId);
+        }
+
+        public Tween Handle(SwapDeniedEvent e)
+        {
+            Debug.Log($"Swap denied");
+            if (_localPlayer != null && e.playerNetId == _localPlayer.netId)
+            {
+                _localPlayer.EnableControls();
+            }
+            return null;
+        }
+
+        public Tween Handle(AttackEvent e)
+        {
+            Debug.Log($"Attack event received.");
+            if (_localPlayer != null && e.targetPlayerID == _localPlayer.netId)
+            {
+                UIMediator.OnLocalPlayerHealthUpdated?.Invoke(e.targetsUpdatedHealth);
+            }
+            else
+            {
+                UIMediator.OnOpponentPlayerHealthUpdated?.Invoke(e.targetsUpdatedHealth);
+            }
+            return null;
+        }
+
+        public Tween Handle(HealEvent e)
+        {
+            Debug.Log($"Potion event received.");
+            if (_localPlayer != null && e.targetPlayerID == _localPlayer.netId)
+            {
+                UIMediator.OnLocalPlayerHealthUpdated?.Invoke(e.targetsUpdatedHealth);
+            }
+            else
+            {
+                UIMediator.OnOpponentPlayerHealthUpdated?.Invoke(e.targetsUpdatedHealth);
+            }
+            return null;
+        }
+
+        public Tween Handle(ShieldEvent e)
+        {
+            Debug.Log($"Player {e.targetPlayerID} activated shield.");
+            // Add shield visualization logic
+            return null;
+        }
+
+        public Tween Handle(NegateAttackByShieldEvent e)
+        {
+            Debug.Log($"Shield event received.");
+            if (_localPlayer != null && e.attackerPlayerID == _localPlayer.netId)
+            {
+                Debug.Log("We attacked, but opponent negated the attack by shield.");
+            }
+            else
+            {
+                Debug.Log("Got attacked, but we negated the attack by shield!");
+            }
+            return null;
+        }
+        #endregion
+
+        #region Immediate Handlers
+        public Tween Handle(TurnStartedEvent e)
+        {
+            if (_localPlayer != null && e.playerNetId == _localPlayer.netId)
+            {
+                Debug.Log("My Turn Started");
+                Debug.Log($"HasShield: {_localPlayer.HasShield()}");
+                _localPlayer.EnableControls();
+            }
+            return null;
+        }
+
+        public Tween Handle(TurnEndedEvent e)
+        {
+            if (_localPlayer != null && e.playerNetId == _localPlayer.netId)
+            {
+                Debug.Log("My Turn Ended");
+                _localPlayer.DisableControls();
+            }
+            return null;
+        }
+        #endregion
+
+        #region Parallel Handlers
+        public Tween Handle(TileMovedEvent e)
+        {
+            return Visualizer.AnimateFall(e.tileId, e.toGridPos);
+        }
+
+        public Tween Handle(TileSpawnedEvent e)
+        {
+            return Visualizer.SpawnVisualTile(e.state, e.pos);
+        }
+        #endregion
     }
 }

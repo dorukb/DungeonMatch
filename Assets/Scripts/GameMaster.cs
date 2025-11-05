@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Mirror;
 using System.Collections.Generic;
@@ -31,7 +32,7 @@ public class GameMaster : NetworkBehaviour
     // --- Server-Only State ---
     // List of all connected players (server-side only)
     private List<NetworkPlayer> players = new List<NetworkPlayer>();
-    private List<GameEvent> serverGameHistory = new List<GameEvent>();
+    private List<GameEventBase> serverGameHistory = new List<GameEventBase>();
     
     // Server-side index for tracking turns
     private int activePlayerIndex = 0;
@@ -101,15 +102,16 @@ public class GameMaster : NetworkBehaviour
         activePlayer = players[activePlayerIndex];
 
         // 2. Create the first event batch
-        List<GameEvent> eventBatch = new List<GameEvent>();
+        List<GameEventBase> eventBatch = new List<GameEventBase>();
         
         _gameBoard = new GameBoard();
         var boardState = _gameBoard.FillBoardWithNoMatches();
-        eventBatch.Add(GameEvent.GameStarted(boardState));
-        eventBatch.Add(GameEvent.TurnStarted(activePlayer.netIdentity.netId));
+        
+        eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState));
+        eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId));
 
         // Add to history and send to clients
-        SendAndLogBatch(eventBatch);
+        SendEventBatch(eventBatch);
     }
 
     [Server]
@@ -123,15 +125,15 @@ public class GameMaster : NetworkBehaviour
         gameState = GameState.GameEnded;
         activePlayer = null;
 
-        List<GameEvent> eventBatch = new List<GameEvent>();
+        List<GameEventBase> eventBatch = new List<GameEventBase>();
         
         // We check for null winner in case both disconnected at once
         if (winner != null)
         {
-            eventBatch.Add(GameEvent.GameEnded(winner.netId));
+            eventBatch.Add(EventPool.Get<GameEndedEvent>().Setup(winner.netId));
         }
         
-        SendAndLogBatch(eventBatch);
+        SendEventBatch(eventBatch);
         
         // TODO : You might want to disconnect players or reset the server here
     }
@@ -141,25 +143,19 @@ public class GameMaster : NetworkBehaviour
     [Server]
     public void ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA, Vector2Int posB)
     {
-        List<GameEvent> eventBatch = new List<GameEvent>();
-        if (gameState != GameState.Playing || sender.identity != activePlayer.netIdentity)
+        List<GameEventBase> eventBatch = new List<GameEventBase>();
+        bool canMakeMove = gameState == GameState.Playing && sender.identity != activePlayer.netIdentity;
+        bool isValidMove = canMakeMove && _gameBoard.IsValidSwap(posA, posB);
+        if (!isValidMove)
         {
-            Debug.LogWarning($"Player {sender.identity.netId} tried to move out of turn.");
-            eventBatch.Add(GameEvent.SwapFailed(activePlayer.netIdentity.netId));
-            SendAndLogBatch(eventBatch);
-            return; // Not this player's turn, or game isn't running
-        }
-        // --- 1. Validation ---
-        if (!_gameBoard.IsValidSwap(posA, posB))
-        {
-            // Debug.LogWarning($"[Server] Invalid swap: {posA} <-> {posB}. Not adjacent.");
-            eventBatch.Add(GameEvent.SwapFailed(activePlayer.netIdentity.netId));
-            SendAndLogBatch(eventBatch);
+            Debug.LogWarning($"Player {sender.identity.netId} tried to move out of turn or the swap was not valid.");
+            eventBatch.Add(EventPool.Get<SwapDeniedEvent>().Setup(activePlayer.netId));
+            // we send this to both players, is that a problem?
+            SendEventBatch(eventBatch);
             return;
         }
 
-        // --- 2. State Change ---
-        // This function does all the work AND checks for matches
+        // Core algorithm.
         bool didMatchOccur = _gameBoard.ProcessSwapMove(posA, posB, sender.identity, eventBatch);
         if (didMatchOccur)
         {
@@ -171,7 +167,7 @@ public class GameMaster : NetworkBehaviour
         }
 
         EndTurnAndStartNext(eventBatch);
-        SendAndLogBatch(eventBatch);
+        SendEventBatch(eventBatch);
     }
 
     
@@ -187,28 +183,49 @@ public class GameMaster : NetworkBehaviour
     }
     
     [Server]
-    public void EndTurnAndStartNext(List<GameEvent> eventBatch)
+    public void EndTurnAndStartNext(List<GameEventBase> eventBatch)
     {
         // 1. End current player's turn
-        eventBatch.Add(GameEvent.TurnEnded(activePlayer.netIdentity.netId));
+        eventBatch.Add(EventPool.Get<TurnEndedEvent>().Setup(activePlayer.netId));
+        
         activePlayerIndex = (activePlayerIndex + 1) % players.Count;
         activePlayer = players[activePlayerIndex]; // SyncVar update
-        eventBatch.Add(GameEvent.TurnStarted(activePlayer.netIdentity.netId));
+        eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId));
     }
 
     [Server]
-    private void SendAndLogBatch(List<GameEvent> batch)
+    private void SendEventBatch(List<GameEventBase> batch)
     {
-        serverGameHistory.AddRange(batch);
-        // Send to all clients
-        RpcSendEventBatch(batch);
-    }
+        if (batch.Count == 0) return;
 
+        // Use a PooledWriter for efficiency
+        using (NetworkWriterPooled writer = NetworkWriterPool.Get())
+        {
+            // First, write the number of events
+            writer.Write((ushort)batch.Count);
+
+            // Loop and write each event using our custom serializer
+            foreach (GameEventBase ev in batch)
+            {
+                writer.WriteGameEvent(ev);
+            }
+
+            // Get the raw byte data and send it in the RPC
+            RpcReceiveEventBatch(writer.ToArraySegment());
+        }
+
+        // --- CRITICAL ---
+        // Release all events back to the pool after sending
+        foreach (GameEventBase ev in batch)
+        {
+            EventPool.Release(ev);
+        }
+        batch.Clear();
+    }
+    
     [ClientRpc]
-    void RpcSendEventBatch(List<GameEvent> batch)
+    void RpcReceiveEventBatch(ArraySegment<byte> eventBatch)
     {
-        Debug.Log($"Client received a batch of {batch.Count} events.");
-        
         if (_clientEventHandler == null)
         {
             _clientEventHandler = FindAnyObjectByType<ClientEventHandler>();
@@ -218,7 +235,7 @@ public class GameMaster : NetworkBehaviour
                 return;
             }
         }
-        _clientEventHandler.EnqueueEventBatch(batch);
+        _clientEventHandler.EnqueueEventBatch(eventBatch);
     }
     
 }

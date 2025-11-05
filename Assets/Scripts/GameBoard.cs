@@ -89,7 +89,7 @@ public class GameBoard
         };
     }
     
-    public bool ProcessSwapMove(Vector2Int posA, Vector2Int posB, NetworkIdentity performingPlayer, List<GameEvent> eventBatch)
+    public bool ProcessSwapMove(Vector2Int posA, Vector2Int posB, NetworkIdentity performingPlayer, List<GameEventBase> eventBatch)
     {
         // --- 1. Perform the swap ---
         int indexA = GetIndex(posA);
@@ -100,7 +100,7 @@ public class GameBoard
         boardState[indexA] = stateB;
         boardState[indexB] = stateA;
         // RpcAnimateSwap(stateA.uniqueID, stateB.uniqueID);
-        eventBatch.Add(GameEvent.SwapOccurred(stateA.uniqueID, stateB.uniqueID));
+        eventBatch.Add(EventPool.Get<SwappedTilesEvent>().Setup(stateA.uniqueID, stateB.uniqueID));
         
         // Check if this swap caused a match
         // We only need to check the rows/cols of the two tiles we moved
@@ -135,7 +135,7 @@ public class GameBoard
         return true; // A match occurred
     }
 
-    private void RemoveMatchedTiles(List<MatchResult> matchResults, List<GameEvent> eventBatch)
+    private void RemoveMatchedTiles(List<MatchResult> matchResults, List<GameEventBase> eventBatch)
     {
         foreach (var match in matchResults)
         {
@@ -148,7 +148,7 @@ public class GameBoard
     // --- BOARD PROCESSING HELPERS ---
 
     // returns: Whether this match should stop the Chain events immediately: i.e, shouldOpenChest
-    private bool ApplyMatchEffects(List<MatchResult> matchResults, List<GameEvent> eventBatch)
+    private bool ApplyMatchEffects(List<MatchResult> matchResults, List<GameEventBase> eventBatch)
     {
         // This is where Card specific match effect will take place.
         foreach (var match in matchResults)
@@ -159,7 +159,7 @@ public class GameBoard
             {
                 ids.Add(GetTileAt(pos).uniqueID);
             }
-            eventBatch.Add(GameEvent.MatchOccurred(ids));
+            eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(ids));
 
             var activePlayer = GameMaster.Instance.activePlayer;
             var opponent = GameMaster.Instance.GetInactivePlayer();
@@ -175,7 +175,7 @@ public class GameBoard
                     if (!opponent.HasShield())
                     {
                         opponent.TakeDamage(dmgAmount);
-                        eventBatch.Add(GameEvent.Attack(opponent.GetCurrentHealth(), opponent.netId, false));
+                        eventBatch.Add(EventPool.Get<AttackEvent>().Setup(opponent.GetCurrentHealth(), opponent.netId, false));
                         if (opponent.GetCurrentHealth() == 0)
                         {
                             GameMaster.Instance.EndGame(activePlayer);
@@ -185,8 +185,7 @@ public class GameBoard
                     {
                         opponent.DeactivateShield();
                         // Send "AttackNegatedByActiveShield" event.
-                        eventBatch.Add(GameEvent.NegateAttackByShield(activePlayer.netId));
-
+                        eventBatch.Add(EventPool.Get<NegateAttackByShieldEvent>().Setup(activePlayer.netId));
                     }
                     break;
                 case Tile.Shield:
@@ -197,7 +196,7 @@ public class GameBoard
                 case Tile.Potion:
                     int healAmount = PotionEffect.GetHeal(match.matchCount);
                     activePlayer.Heal(healAmount);
-                    eventBatch.Add(GameEvent.Potion(activePlayer.GetCurrentHealth(), activePlayer.netId, false));
+                    eventBatch.Add(EventPool.Get<HealEvent>().Setup(activePlayer.GetCurrentHealth(), activePlayer.netId, false));
                     break;
                 case Tile.Chest:
                     // TODO: OpenChest();
@@ -214,7 +213,7 @@ public class GameBoard
         return false;
     }
 
-    private void SimulateTileFall( List<GameEvent> eventBatch)
+    private void SimulateTileFall( List<GameEventBase> eventBatch)
     {
         for (int x = 0; x < BoardWidth; x++)
         {
@@ -235,7 +234,7 @@ public class GameBoard
                             boardState[GetIndex(x, yAbove)] = TileState.Empty;
 
                             // RpcMoveTile(new Vector2Int(x, y), tileToMove);
-                            eventBatch.Add(GameEvent.TileMoved(tileToMove.uniqueID, GetGridPos(moveIndex)));
+                            eventBatch.Add(EventPool.Get<TileMovedEvent>().Setup(tileToMove.uniqueID, GetGridPos(moveIndex)));
                             // Break the inner 'yAbove' loop to continue
                             // checking the *current* 'y' position again.
                             break; 
@@ -246,7 +245,7 @@ public class GameBoard
         }
     }
     
-    private void RefillBoard(List<GameEvent> eventBatch)
+    private void RefillBoard(List<GameEventBase> eventBatch)
     {
         Debug.Log("[SERVER] Refilling board");
         // rules: "bottom to top, then left to right"
@@ -262,7 +261,7 @@ public class GameBoard
                     boardState[spawnIdx] = fillingTile;
 
                     // RpcRefillBoard(new Vector2Int(x, y),fillingTile);
-                    eventBatch.Add(GameEvent.TileSpawned(fillingTile, GetGridPos(spawnIdx)));
+                    eventBatch.Add(EventPool.Get<TileSpawnedEvent>().Setup(fillingTile, GetGridPos(spawnIdx)));
                     Debug.Log($"Draw new tile to pos: ({x},{y})");
                 }
             }
