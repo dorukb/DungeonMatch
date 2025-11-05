@@ -104,38 +104,42 @@ public class GameBoard
         
         // Check if this swap caused a match
         // We only need to check the rows/cols of the two tiles we moved
-        var matchResults = MatchAlgorithm.FindMatchesAfterSwap(this, posA, posB);
-        if (matchResults.Count == 0)
+        var matchesToProcess = MatchAlgorithm.FindMatchesAfterSwap(this, posA, posB);
+        if (matchesToProcess.Count == 0)
         {
             // TODO: Move didnt yield a Match, maybe do not allow and rollback the move.
             return false;
         }
 
-        bool hasMoreMatches = true;
-        while (hasMoreMatches)
-        {
-            bool shouldOpenChest = ApplyMatchEffects(matchResults, eventBatch);
-            // TODO: Handle chest open case that breaks/pauses the chain events.
-            RemoveMatchedTiles(matchResults, eventBatch);
-            SimulateTileFall(eventBatch);
-            RefillBoard(eventBatch);
-
-            hasMoreMatches = false;
-            matchResults = MatchAlgorithm.FindAllMatchesOnBoard(this);
-            if (matchResults.Count > 0)
+        // This 'master' loop handles all chain reactions (cascades AND refills).
+        // StabilizeBoard procedure
+        while (matchesToProcess.Count > 0)
+        { 
+            Debug.Log("[Server] Matches on board:");
+            foreach (var res in matchesToProcess)
             {
-                Debug.Log("[Server] Matches on board:");
-                foreach (var res in matchResults)
-                {
-                    Debug.Log(res.Debug());
-                }
-                hasMoreMatches = true;
+                Debug.Log(res.Debug());
+            }
+            // TODO: Handle chest open case that breaks/pauses the chain events.
+            // Idea chest:
+            // finish this loop, stabilize the board, then DO NOT END the turn, send open chest to clients, wait for the result, client should send "chest open"
+            // we execute that effect, then again run StabilizeBoard.
+            bool shouldOpenChest = ApplyMatchEffects(matchesToProcess, eventBatch);
+            RemoveMatchedTiles(matchesToProcess);
+            SimulateTileFall(eventBatch);
+            matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
+            
+            // Refill, when no more falling matches
+            if (matchesToProcess.Count == 0)
+            {
+                RefillBoard(eventBatch);
+                matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
             }
         }
         return true; // A match occurred
     }
 
-    private void RemoveMatchedTiles(List<MatchResult> matchResults, List<GameEventBase> eventBatch)
+    private void RemoveMatchedTiles(List<MatchResult> matchResults)
     {
         foreach (var match in matchResults)
         {
@@ -247,22 +251,22 @@ public class GameBoard
     
     private void RefillBoard(List<GameEventBase> eventBatch)
     {
-        Debug.Log("[SERVER] Refilling board");
+        Debug.Log("[Server] Refilling board");
         // rules: "bottom to top, then left to right"
         for (int x = 0; x < BoardWidth; x++)
         {
             for (int y = 0; y < BoardHeight; y++)
             {
-                if (GetTileAt(new Vector2Int(x, y)).IsEmpty())
+                var gridPros = new Vector2Int(x, y);
+                if (GetTileAt(gridPros).IsEmpty())
                 {
                     // TODO: Spawn considering if we restrict combo-matches.
                     TileState fillingTile = GenerateNewTile();
                     int spawnIdx = GetIndex(x, y);
                     boardState[spawnIdx] = fillingTile;
-
-                    // RpcRefillBoard(new Vector2Int(x, y),fillingTile);
-                    eventBatch.Add(EventPool.Get<TileSpawnedEvent>().Setup(fillingTile, GetGridPos(spawnIdx)));
-                    Debug.Log($"Draw new tile to pos: ({x},{y})");
+                    
+                    eventBatch.Add(EventPool.Get<TileSpawnedEvent>().Setup(fillingTile, gridPros));
+                    Debug.Log($"[Server] Draw new tile to pos: ({x},{y})");
                 }
             }
         }

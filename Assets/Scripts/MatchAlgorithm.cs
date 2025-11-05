@@ -39,13 +39,7 @@ public static class MatchAlgorithm
 
         if (candidateTiles.Count >= 3)
         {
-            MatchResult result = new MatchResult
-            {
-                tileType = currentType,
-                positions = candidateTiles,
-                matchCount = candidateTiles.Count
-            };
-            return result;
+            return new MatchResult(candidateTiles, currentType);
         }
         else return null;
     }
@@ -109,6 +103,93 @@ public static class MatchAlgorithm
                     foreach (var pos in match.positions)
                     {
                         matchedPositions.Add(pos);
+                    }
+                }
+            }
+        }
+
+        return allMatches;
+    }
+    
+    public static List<MatchResult> FindAllMatchesOnBoardAlternative(GameBoard board)
+    {
+        List<MatchResult> allMatches = new List<MatchResult>();
+        
+        // This set tracks tiles that are already part of a confirmed match.
+        // This ensures a tile is only processed once and prevents duplicate matches.
+        
+        // TODO: we have to send remove tile message based on these claimedTiles.
+        // but then the order is not visible? otherwise we send multiple "remove messages" for intersections...
+        HashSet<Vector2Int> claimedTiles = new HashSet<Vector2Int>();
+
+        // Iterate from bottom-left (0,0) to top-right
+        for (int y = 0; y < GameBoard.BoardHeight; y++)
+        {
+            for (int x = 0; x < GameBoard.BoardWidth; x++)
+            {
+                Vector2Int currentPos = new Vector2Int(x, y);
+                TileState currentTile = board.GetTileAt(currentPos);
+                
+                // 1. Skip this tile if it's already part of a match we've found
+                if (claimedTiles.Contains(currentPos) || currentTile.IsEmpty())
+                {
+                    continue;
+                }
+                
+                List<Vector2Int> horizontalMatch = new List<Vector2Int> { currentPos };
+                for (int i = x + 1; i < GameBoard.BoardWidth; i++)
+                {
+                    var searchPos = new Vector2Int(i, y);
+                    TileState nextTile = board.GetTileAt(searchPos);
+                    if (nextTile.IsEmpty() 
+                        || nextTile.type != currentTile.type
+                        || claimedTiles.Contains(searchPos))
+                    {
+                        break;
+                    }
+                    
+                    // Add the valid matching tile
+                    horizontalMatch.Add(new Vector2Int(i, y));
+                }
+
+                // --- 4. Check for VERTICAL match starting from currentPos (moving up) ---
+                List<Vector2Int> verticalMatch = new List<Vector2Int> { currentPos };
+                for (int j = y + 1; j < GameBoard.BoardHeight; j++)
+                {
+                    var searchPos = new Vector2Int(x,j);
+                    TileState nextTile = board.GetTileAt(searchPos);
+                    if (nextTile.IsEmpty() 
+                        || nextTile.type != currentTile.type
+                        || claimedTiles.Contains(searchPos))
+                    {
+                        break;
+                    }
+
+                    // Add the valid matching tile
+                    verticalMatch.Add(new Vector2Int(x, j));
+                }
+
+                if (horizontalMatch.Count >= 3)
+                {
+                    allMatches.Add(new MatchResult(horizontalMatch, currentTile.type));
+                    // "Claim" all tiles in this match so they can't start a new (sub) match
+                    foreach (Vector2Int pos in horizontalMatch)
+                    {
+                        claimedTiles.Add(pos);
+                    }
+                }
+
+                // If we found a vertical match of 3 or more...
+                if (verticalMatch.Count >= 3)
+                {
+                    // Add it to our main list (this handles T/L shapes)
+                    allMatches.Add(new MatchResult(verticalMatch, currentTile.type));
+                    
+                    // "Claim" all tiles. The HashSet gracefully handles
+                    // duplicates (the intersection tile in a T/L shape).
+                    foreach (Vector2Int pos in verticalMatch)
+                    {
+                        claimedTiles.Add(pos);
                     }
                 }
             }

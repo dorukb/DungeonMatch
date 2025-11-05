@@ -14,6 +14,12 @@ namespace DorkyProductions
         // TODO: maybe make positions HashSet, to prevent duplicate memory usage during find all matches.
         public List<Vector2Int> positions;
 
+        public MatchResult(List<Vector2Int> positions, Tile tileType)
+        {
+            this.tileType = tileType;
+            this.positions = positions;
+            this.matchCount = positions.Count;
+        }
         public string ToString()
         {
             return tileType.ToString();

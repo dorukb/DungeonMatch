@@ -169,7 +169,7 @@ namespace DorkyProductions
 
     public class TileMovedEvent : GameEventBase
     {
-        public override SyncType SyncType => SyncType.Parallel;
+        public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.TileMoved;
         public ushort tileId;
         public Vector2Int toGridPos;
@@ -186,7 +186,7 @@ namespace DorkyProductions
 
     public class TileSpawnedEvent : GameEventBase
     {
-        public override SyncType SyncType => SyncType.Parallel;
+        public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.TileSpawned;
         public Vector2Int pos;
         public TileState state;
