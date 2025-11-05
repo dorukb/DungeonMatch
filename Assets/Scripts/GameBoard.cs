@@ -16,9 +16,17 @@ public class GameBoard
     // The "Single Source of Truth"
     // This list represents a 5x5 grid, flattened to 1D.
     // Index = (y * BoardWidth) + x
-    public readonly List<TileState> boardState = new List<TileState>(BoardHeight * BoardWidth);
+    private readonly List<TileState> boardState = new List<TileState>(BoardHeight * BoardWidth);
     private ushort _nextTileID = 0;
-           
+    
+    private readonly List<Tile> _allTileTypes = new List<Tile> 
+    { 
+        Tile.Attack, Tile.Shield, Tile.Cross, 
+        Tile.Potion, Tile.Chest 
+    };
+    // 2. A single, reusable list to hold available types for each tile.
+    private readonly List<Tile> _availableTypes = new List<Tile>();
+    
     public List<TileState> FillBoardWithNoMatches()
     {
         for (int i = 0; i < BoardHeight * BoardWidth; i++)
@@ -26,33 +34,33 @@ public class GameBoard
             int x = i % BoardWidth;
             int y = i / BoardWidth;
 
-            // 1. Get a list of all possible tile types
-            List<Tile> availableTypes = new List<Tile> { Tile.Attack, Tile.Shield, Tile.Cross, Tile.Potion, Tile.Chest};
-            
+            // 1. Reset the reusable list to the master list
+            _availableTypes.Clear();
+            _availableTypes.AddRange(_allTileTypes);
             // 2. Check for potential horizontal matches (check 2 tiles to the left)
             if (x > 1)
             {
-                Tile left1ID = GetTileAt(x-1,y).type;
-                Tile left2ID = GetTileAt(x-2,y).type;
+                Tile left1ID = GetTileSafe(x-1,y).type;
+                Tile left2ID = GetTileSafe(x-2,y).type;
                 if (left1ID == left2ID)
                 {
                     // Both tiles to the left match, so we cannot use their type.
-                    availableTypes.Remove(left1ID);
+                    _availableTypes.Remove(left1ID);
                 }
             }
 
             // 3. Check for potential vertical matches (check 2 tiles below)
             if (y > 1)
             {
-                Tile down1ID = GetTileAt(x,y-1).type;
-                Tile down2ID = GetTileAt(x,y-2).type;
+                Tile down1ID = GetTileSafe(x,y-1).type;
+                Tile down2ID = GetTileSafe(x,y-2).type;
                 if (down1ID == down2ID)
                 {
                     // Both tiles below match, so we cannot use their type.
-                    availableTypes.Remove(down1ID);
+                    _availableTypes.Remove(down1ID);
                 }
             }
-            boardState.Add(GenerateNewTile(availableTypes));
+            boardState.Add(GenerateNewTile(_availableTypes));
         }
 
         return boardState;
@@ -113,6 +121,7 @@ public class GameBoard
 
         // This 'master' loop handles all chain reactions (cascades AND refills).
         // StabilizeBoard procedure
+        int refillCnt = 0;
         while (matchesToProcess.Count > 0)
         { 
             Debug.Log("[Server] Matches on board:");
@@ -132,7 +141,9 @@ public class GameBoard
             // Refill, when no more falling matches
             if (matchesToProcess.Count == 0)
             {
-                RefillBoard(eventBatch);
+                bool avoidFurtherMatches = refillCnt > 0;
+                RefillBoard(eventBatch, avoidFurtherMatches);
+                refillCnt++;
                 matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
             }
         }
@@ -249,8 +260,15 @@ public class GameBoard
         }
     }
     
-    private void RefillBoard(List<GameEventBase> eventBatch)
+    private void RefillBoard(List<GameEventBase> eventBatch, bool avoidMatches)
     {
+        // TODO: impl. Avoid/prevent Matches while refilling.
+        // we cant directly use the logic from  setupWithoutMatches, as it assumes empty tiles in many places.
+        // current check for match functions are also unusable as-is, as they query the board and check the tile type from there.
+        // sure, we could set the tile and then check for matches, then revert, that would be fine.
+        // but we also dont need all those matchresult allocations, we just want to know whether this would cause ANY MATCH
+        // and we would try it for all types of cards, hopefully finding one that doesn't cause match, and spawn that one.
+        
         Debug.Log("[Server] Refilling board");
         // rules: "bottom to top, then left to right"
         for (int x = 0; x < BoardWidth; x++)
@@ -261,6 +279,7 @@ public class GameBoard
                 if (GetTileAt(gridPros).IsEmpty())
                 {
                     // TODO: Spawn considering if we restrict combo-matches.
+                    
                     TileState fillingTile = GenerateNewTile();
                     int spawnIdx = GetIndex(x, y);
                     boardState[spawnIdx] = fillingTile;
@@ -358,7 +377,7 @@ public class GameBoard
     private int GetIndex(int x, int y) => (x * BoardHeight) + y;
     public TileState GetTileAt(Vector2Int pos) => boardState[GetIndex(pos)];
 
-    private TileState GetTileAt(int x, int y)
+    private TileState GetTileSafe(int x, int y)
     {
         // Check bounds
         if (x < 0 || x >= BoardWidth || y < 0 || y >= BoardHeight)
