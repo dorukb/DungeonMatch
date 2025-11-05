@@ -144,7 +144,7 @@ public class GameMaster : NetworkBehaviour
     public void ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA, Vector2Int posB)
     {
         List<GameEventBase> eventBatch = new List<GameEventBase>();
-        bool canMakeMove = gameState == GameState.Playing && sender.identity != activePlayer.netIdentity;
+        bool canMakeMove = (gameState == GameState.Playing) && (sender.identity == activePlayer.netIdentity);
         bool isValidMove = canMakeMove && _gameBoard.IsValidSwap(posA, posB);
         if (!isValidMove)
         {

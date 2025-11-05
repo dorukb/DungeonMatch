@@ -201,7 +201,7 @@ namespace DorkyProductions
 
         public Tween Handle(HealEvent e)
         {
-            Debug.Log($"Potion event received.");
+            Debug.Log($"Heal player {e.targetPlayerID}");
             if (_localPlayer != null && e.targetPlayerID == _localPlayer.netId)
             {
                 UIMediator.OnLocalPlayerHealthUpdated?.Invoke(e.targetsUpdatedHealth);
