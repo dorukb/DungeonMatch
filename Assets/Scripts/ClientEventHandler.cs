@@ -190,11 +190,14 @@ namespace DorkyProductions
             Debug.Log($"Attack event received.");
             if (_localPlayer != null && e.targetPlayerID == _localPlayer.netId)
             {
+                // we are being attacked.
                 UIMediator.OnLocalPlayerHealthUpdated?.Invoke(e.targetsUpdatedHealth);
+                UIMediator.OnLocalPlayerShieldUpdated?.Invoke(e.targetsUpdatedShield);
             }
             else
             {
                 UIMediator.OnOpponentPlayerHealthUpdated?.Invoke(e.targetsUpdatedHealth);
+                UIMediator.OnOpponentPlayerShieldUpdated?.Invoke(e.targetsUpdatedShield);
             }
             return null;
         }
