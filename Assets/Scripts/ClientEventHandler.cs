@@ -218,8 +218,15 @@ namespace DorkyProductions
 
         public Tween Handle(ShieldEvent e)
         {
-            Debug.Log($"Player {e.targetPlayerID} activated shield.");
-            // Add shield visualization logic
+            Debug.Log($"Player {e.targetPlayerID} gained some shield.");
+            if (_localPlayer != null && e.targetPlayerID == _localPlayer.netId)
+            {
+                UIMediator.OnLocalPlayerShieldUpdated?.Invoke(e.targetsUpdatedShield);
+            }
+            else
+            {
+                UIMediator.OnOpponentPlayerShieldUpdated?.Invoke(e.targetsUpdatedShield);
+            }
             return null;
         }
         #endregion

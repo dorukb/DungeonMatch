@@ -126,8 +126,13 @@ namespace DorkyProductions
         public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.Shield;
         public uint targetPlayerID;
-        
-        public ShieldEvent Setup(uint target) { targetPlayerID = target; return this; }
+        public int targetsUpdatedShield;
+
+        public ShieldEvent Setup(uint target, int updatedShieldAmount)
+        {
+            targetPlayerID = target; return this;
+            targetsUpdatedShield = updatedShieldAmount;
+        }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
         public override void Reset() => targetPlayerID = 0;
     }

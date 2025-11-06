@@ -188,7 +188,7 @@ public class GameBoard
                     ApplyAttackEffect(eventBatch, match, opponent, activePlayer);
                     break;
                 case Tile.Shield:
-                    ApplyShieldEffect(activePlayer, match);
+                    ApplyShieldEffect(eventBatch, activePlayer, match);
                     break;
                 case Tile.Cross:
                     ApplyCrossEffect(activePlayer);
@@ -223,10 +223,13 @@ public class GameBoard
         eventBatch.Add(EventPool.Get<HealEvent>().Setup(activePlayer.GetCurrentHealth(), activePlayer.netId, false));
     }
 
-    private static void ApplyShieldEffect(NetworkPlayer activePlayer, MatchResult match)
+    private static void ApplyShieldEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match)
     {
-        int shieldAmount = ShieldEffect.GetShield(match.matchCount);
-        activePlayer.GainShield(shieldAmount);
+        activePlayer.GainShield(ShieldEffect.GetShield(match.matchCount));
+        ShieldEvent shieldEvent = EventPool.Get<ShieldEvent>();
+        shieldEvent.Setup(activePlayer.netId, activePlayer.GetShield());
+        
+        eventBatch.Add(shieldEvent);
     }
 
     private static void ApplyAttackEffect(List<GameEventBase> eventBatch, MatchResult match, NetworkPlayer opponent,

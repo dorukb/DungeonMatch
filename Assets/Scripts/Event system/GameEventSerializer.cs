@@ -55,6 +55,7 @@ namespace DorkyProductions
                 case ShieldEvent e:
                     writer.Write((byte)EventType.Shield);
                     writer.Write(e.targetPlayerID);
+                    writer.Write(e.targetsUpdatedShield);
                     break;
                 case TurnStartedEvent e:
                     writer.Write((byte)EventType.TurnStarted);
@@ -125,7 +126,9 @@ namespace DorkyProductions
                     potionEvent.targetPlayerID = reader.Read<uint>();
                     break;
                 case EventType.Shield:
-                    ((ShieldEvent)ev).targetPlayerID = reader.Read<uint>();
+                    var shieldEvent = (ShieldEvent)ev;
+                    shieldEvent.targetPlayerID = reader.Read<uint>();
+                    shieldEvent.targetsUpdatedShield = reader.Read<int>();
                     break;
                 case EventType.TurnStarted:
                     ((TurnStartedEvent)ev).playerNetId = reader.Read<uint>();
