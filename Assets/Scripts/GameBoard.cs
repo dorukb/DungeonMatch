@@ -194,7 +194,7 @@ public class GameBoard
                     Debug.LogError($"Unknown tiles matched. Shouldn't happen : {match.tileType}");
                     break;
                 case Tile.Attack:
-                    ApplyAttackEffect(eventBatch, match, opponent, activePlayer);
+                    ApplyAttackEffect(eventBatch, match, opponent, activePlayer, match.isDoubleEffect);
                     break;
                 case Tile.Shield:
                     ApplyShieldEffect(eventBatch, activePlayer, match);
@@ -203,7 +203,7 @@ public class GameBoard
                     ApplyCrossEffect(activePlayer);
                     break;
                 case Tile.Heal:
-                    ApplyHealEffect(eventBatch, match, activePlayer);
+                    ApplyHealEffect(eventBatch, match, activePlayer, match.isDoubleEffect);
                     break;
                 case Tile.Chest:
                     // TODO: OpenChest();
@@ -225,11 +225,15 @@ public class GameBoard
         
     }
 
-    private static void ApplyHealEffect(List<GameEventBase> eventBatch, MatchResult match, NetworkPlayer activePlayer)
+    private static void ApplyHealEffect(List<GameEventBase> eventBatch, MatchResult match, NetworkPlayer activePlayer, bool isDoubleEffect)
     {
         int healAmount = BasicCardEffects.GetHeal(match.matchCount);
+        if (isDoubleEffect)
+        {
+            healAmount *= 2;
+        }
         activePlayer.Heal(healAmount);
-        eventBatch.Add(EventPool.Get<HealEvent>().Setup(activePlayer.GetCurrentHealth(), activePlayer.netId, false));
+        eventBatch.Add(EventPool.Get<HealEvent>().Setup(activePlayer.GetCurrentHealth(), activePlayer.netId, powerful: isDoubleEffect));
     }
 
     private static void ApplyShieldEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match)
@@ -240,10 +244,13 @@ public class GameBoard
     }
 
     private static void ApplyAttackEffect(List<GameEventBase> eventBatch, MatchResult match, NetworkPlayer opponent,
-        NetworkPlayer activePlayer)
+        NetworkPlayer activePlayer, bool isDoubleEffect)
     {
-        // TODO: set isPowerful to true for x2 effect.
         int dmgAmount = AttackEffect.GetDamage(match.matchCount);
+        if (isDoubleEffect)
+        {
+            dmgAmount *= 2;
+        }
         int opponentShieldAmount = opponent.GetShield();
 
         int absorbedAmount = 0;
@@ -261,7 +268,8 @@ public class GameBoard
         opponent.TakeDamage(remainingDmg);
 
         var attackEvent = EventPool.Get<AttackEvent>();
-        attackEvent.Setup( opponent.GetCurrentHealth(), opponent.GetShield(), opponent.netId, false, absorbedAmount, remainingDmg);
+        bool isPowerfulAttack = match.isDoubleEffect;
+        attackEvent.Setup( opponent.GetCurrentHealth(), opponent.GetShield(), opponent.netId, isPowerfulAttack, absorbedAmount, remainingDmg);
         eventBatch.Add(attackEvent);
         
         if (opponent.GetCurrentHealth() == 0)
