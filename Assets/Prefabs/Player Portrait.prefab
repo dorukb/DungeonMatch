@@ -82,8 +82,8 @@ MonoBehaviour:
   playerNameText: {fileID: 1819279568921784064}
   playerHealthBar: {fileID: 5483406914314695723}
   playerHealthText: {fileID: 5891241883517984718}
-  playerShieldBar: {fileID: 0}
-  playerShieldText: {fileID: 0}
+  playerShieldBar: {fileID: 2852955127532252649}
+  playerShieldText: {fileID: 5552303459221371067}
   IsLocalPlayer: 0
 --- !u!1 &3486811652101037563
 GameObject:
