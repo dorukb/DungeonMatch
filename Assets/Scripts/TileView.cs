@@ -24,9 +24,16 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     }
 
     // Called by ClientBoardVisualizer when spawned
-    public void Initialize(TileDefinitionSO definition, Vector2Int gridPos, PlayerInput localPlayerInput)
+    public void Initialize(TileDefinitionSO definition, Vector2Int gridPos, PlayerInput localPlayerInput, bool useAlternativeSprite = false)
     {
-        _image.sprite = definition.tileSprite;
+        if (useAlternativeSprite)
+        {
+            _image.sprite = definition.tileSprite2x;
+        }
+        else
+        {
+            _image.sprite = definition.tileSprite;
+        }
         GridPosition = gridPos;
         _inputManager = localPlayerInput;
     }

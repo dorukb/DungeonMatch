@@ -20,6 +20,7 @@ public class TileDefinitionSO : ScriptableObject
     public Tile type;
     
     public Sprite tileSprite;
+    public Sprite tileSprite2x;
     
     // You can add more static data here later, like:
     // public GameObject popEffectPrefab;

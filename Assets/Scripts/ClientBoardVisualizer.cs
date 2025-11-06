@@ -79,7 +79,8 @@ public class ClientBoardVisualizer : MonoBehaviour
         rt.anchoredPosition = anchoredPos;
         
         TileView tileView = tileGO.GetComponent<TileView>();
-        tileView.Initialize(def, gridPos, playerInput);
+        bool useAlternativeSprite = state.type == Tile.Attack || state.type == Tile.Heal;
+        tileView.Initialize(def, gridPos, playerInput, useAlternativeSprite);
         
         // 5. Add to our dictionary for tracking
         _visualTiles[state.uniqueID] = tileView;

@@ -10,14 +10,16 @@ namespace DorkyProductions
         // TODO: Consider enum types for tiles, also update them on the SO setup.
         public Tile tileType;
         public int matchCount;
+        public bool isDoubleEffect;
         // We store the actual positions for clearing them
         // TODO: maybe make positions HashSet, to prevent duplicate memory usage during find all matches.
         public List<Vector2Int> positions;
 
-        public MatchResult(List<Vector2Int> positions, Tile tileType)
+        public MatchResult(List<Vector2Int> positions, Tile tileType, bool isDoubleEffect)
         {
             this.tileType = tileType;
             this.positions = positions;
+            this.isDoubleEffect = isDoubleEffect;
             this.matchCount = positions.Count;
         }
         public string ToString()

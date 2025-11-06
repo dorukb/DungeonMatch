@@ -81,20 +81,29 @@ public class GameBoard
         int randomIndex = Random.Range(0, availableTypes.Count);
         Tile randomType = availableTypes[randomIndex];
 
-        return new TileState
+        bool isDoubleEffect = false;
+        if (randomType == Tile.Attack || randomType == Tile.Heal)
         {
-            uniqueID = _nextTileID++,
-            type = randomType
-        };
+            // %20 double effect
+            isDoubleEffect = Random.value > 0.8f;
+        }
+        return new TileState(_nextTileID++, randomType, isDoubleEffect);
     }
     
     private TileState GenerateNewTile()
     {
-        return new TileState
+        // 1st Tile type is UNKNOWN, exclude it.
+        // TODO: WTF is this code?
+        // fix this random type based on allDefnCount, looks stupid.
+        Tile randomType = (Tile)Random.Range(1, GameMaster.Instance.TileDatabase.allTileDefinitions.Count);
+        
+        bool isDoubleEffect = false;
+        if (randomType == Tile.Attack || randomType == Tile.Heal)
         {
-            uniqueID = _nextTileID++,
-            type = (Tile) UnityEngine.Random.Range(1, GameMaster.Instance.TileDatabase.allTileDefinitions.Count)
-        };
+            // %20 double effect
+            isDoubleEffect = Random.value > 0.8f;
+        }
+        return new TileState(_nextTileID++, randomType, isDoubleEffect);
     }
     
     public bool ProcessSwapMove(Vector2Int posA, Vector2Int posB, NetworkIdentity performingPlayer, List<GameEventBase> eventBatch)

@@ -13,33 +13,45 @@ public static class MatchAlgorithm
     {
         List<Vector2Int> candidateTiles = new List<Vector2Int>();
         Tile currentType = board.GetTileAt(startPos).type;
-    
+        
         candidateTiles.Add(startPos);
+        
+        bool includesDoubleEffectTile = board.GetTileAt(startPos).isDoubleEffect;
         // 2 units to the pos dir, 2 units to the neg.
         // no need to check 3 units away, as that would lead to a match BEFORE This.
         for (int i = 1; i <= 2; i++)
         {
             Vector2Int pos = startPos + direction * i;
-            if (!IsPosInBounds(pos) || board.GetTileAt(pos).type != currentType)
+            var currTile = board.GetTileAt(pos);
+            if (!IsPosInBounds(pos) || currTile.type != currentType)
             {
                 break; // End of line or type mismatch
             }
             candidateTiles.Add(pos);
+            if (currTile.isDoubleEffect)
+            {
+                includesDoubleEffectTile = true;
+            }
         }
         // check the negative direction (left or down)
         for (int i = 1; i <= 2; i++)
         {
             Vector2Int pos = startPos - direction * i;
-            if (!IsPosInBounds(pos) || board.GetTileAt(pos).type != currentType)
+            var currTile = board.GetTileAt(pos);
+            if (!IsPosInBounds(pos) || currTile.type != currentType)
             {
                 break; // End of line or type mismatch
             }
             candidateTiles.Add(pos);
+            if (currTile.isDoubleEffect)
+            {
+                includesDoubleEffectTile = true;
+            }
         }
 
         if (candidateTiles.Count >= 3)
         {
-            return new MatchResult(candidateTiles, currentType);
+            return new MatchResult(candidateTiles, currentType, includesDoubleEffectTile);
         }
         else return null;
     }
@@ -136,6 +148,7 @@ public static class MatchAlgorithm
                     continue;
                 }
                 
+                bool isHorzDoubleEffect = currentTile.isDoubleEffect;
                 List<Vector2Int> horizontalMatch = new List<Vector2Int> { currentPos };
                 for (int i = x + 1; i < GameBoard.BoardWidth; i++)
                 {
@@ -148,11 +161,16 @@ public static class MatchAlgorithm
                         break;
                     }
                     
-                    // Add the valid matching tile
+                    // Add the valid matching 
+                    if (nextTile.isDoubleEffect)
+                    {
+                        isHorzDoubleEffect = true;
+                    }
                     horizontalMatch.Add(new Vector2Int(i, y));
                 }
 
                 // --- 4. Check for VERTICAL match starting from currentPos (moving up) ---
+                bool isVertDoubleEffect = currentTile.isDoubleEffect;
                 List<Vector2Int> verticalMatch = new List<Vector2Int> { currentPos };
                 for (int j = y + 1; j < GameBoard.BoardHeight; j++)
                 {
@@ -167,23 +185,29 @@ public static class MatchAlgorithm
 
                     // Add the valid matching tile
                     verticalMatch.Add(new Vector2Int(x, j));
+                    // Add the valid matching 
+                    if (nextTile.isDoubleEffect)
+                    {
+                        isVertDoubleEffect = true;
+                    }
                 }
 
+                
+                // TODO: This shares the current Tile with both Horz and Vert match groups.
+                // choose largest one.
                 if (horizontalMatch.Count >= 3)
                 {
-                    allMatches.Add(new MatchResult(horizontalMatch, currentTile.type));
+                    allMatches.Add(new MatchResult(horizontalMatch, currentTile.type, isHorzDoubleEffect));
                     // "Claim" all tiles in this match so they can't start a new (sub) match
                     foreach (Vector2Int pos in horizontalMatch)
                     {
                         claimedTiles.Add(pos);
                     }
                 }
-
-                // If we found a vertical match of 3 or more...
-                if (verticalMatch.Count >= 3)
+                else if (verticalMatch.Count >= 3)
                 {
                     // Add it to our main list (this handles T/L shapes)
-                    allMatches.Add(new MatchResult(verticalMatch, currentTile.type));
+                    allMatches.Add(new MatchResult(verticalMatch, currentTile.type, isVertDoubleEffect));
                     
                     // "Claim" all tiles. The HashSet gracefully handles
                     // duplicates (the intersection tile in a T/L shape).
