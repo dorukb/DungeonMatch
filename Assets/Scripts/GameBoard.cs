@@ -22,7 +22,7 @@ public class GameBoard
     private readonly List<Tile> _allTileTypes = new List<Tile> 
     { 
         Tile.Attack, Tile.Shield, Tile.Cross, 
-        Tile.Potion, Tile.Chest 
+        Tile.Heal, Tile.Chest 
     };
     // 2. A single, reusable list to hold available types for each tile.
     private readonly List<Tile> _availableTypes = new List<Tile>();
@@ -185,33 +185,16 @@ public class GameBoard
                     Debug.LogError($"Unknown tiles matched. Shouldn't happen : {match.tileType}");
                     break;
                 case Tile.Attack:
-                    // TODO: set isPowerful to true for x2 effect.
-                    int dmgAmount = AttackEffect.GetDamage(match.matchCount);
-                    if (!opponent.HasShield())
-                    {
-                        opponent.TakeDamage(dmgAmount);
-                        eventBatch.Add(EventPool.Get<AttackEvent>().Setup(opponent.GetCurrentHealth(), opponent.netId, false));
-                        if (opponent.GetCurrentHealth() == 0)
-                        {
-                            GameMaster.Instance.EndGame(activePlayer);
-                        }
-                    }
-                    else // the Shield has blocked the attack.
-                    {
-                        opponent.DeactivateShield();
-                        // Send "AttackNegatedByActiveShield" event.
-                        eventBatch.Add(EventPool.Get<NegateAttackByShieldEvent>().Setup(activePlayer.netId));
-                    }
+                    ApplyAttackEffect(eventBatch, match, opponent, activePlayer);
                     break;
                 case Tile.Shield:
-                    activePlayer.ActivateShield();
+                    ApplyShieldEffect(activePlayer, match);
                     break;
                 case Tile.Cross:
+                    ApplyCrossEffect(activePlayer);
                     break;
-                case Tile.Potion:
-                    int healAmount = PotionEffect.GetHeal(match.matchCount);
-                    activePlayer.Heal(healAmount);
-                    eventBatch.Add(EventPool.Get<HealEvent>().Setup(activePlayer.GetCurrentHealth(), activePlayer.netId, false));
+                case Tile.Heal:
+                    ApplyHealEffect(eventBatch, match, activePlayer);
                     break;
                 case Tile.Chest:
                     // TODO: OpenChest();
@@ -226,6 +209,55 @@ public class GameBoard
         }
 
         return false;
+    }
+
+    private void ApplyCrossEffect(NetworkPlayer activePlayer)
+    {
+        
+    }
+
+    private static void ApplyHealEffect(List<GameEventBase> eventBatch, MatchResult match, NetworkPlayer activePlayer)
+    {
+        int healAmount = BasicCardEffects.GetHeal(match.matchCount);
+        activePlayer.Heal(healAmount);
+        eventBatch.Add(EventPool.Get<HealEvent>().Setup(activePlayer.GetCurrentHealth(), activePlayer.netId, false));
+    }
+
+    private static void ApplyShieldEffect(NetworkPlayer activePlayer, MatchResult match)
+    {
+        int shieldAmount = ShieldEffect.GetShield(match.matchCount);
+        activePlayer.GainShield(shieldAmount);
+    }
+
+    private static void ApplyAttackEffect(List<GameEventBase> eventBatch, MatchResult match, NetworkPlayer opponent,
+        NetworkPlayer activePlayer)
+    {
+        // TODO: set isPowerful to true for x2 effect.
+        int dmgAmount = AttackEffect.GetDamage(match.matchCount);
+        int opponentShieldAmount = opponent.GetShield();
+
+        int absorbedAmount = 0;
+        if (opponentShieldAmount < dmgAmount)
+        {
+            absorbedAmount = opponentShieldAmount;
+        }
+        else
+        {
+            absorbedAmount = dmgAmount;
+        }
+
+        int remainingDmg = dmgAmount - absorbedAmount;
+        opponent.LoseShield(absorbedAmount);
+        opponent.TakeDamage(remainingDmg);
+
+        var attackEvent = EventPool.Get<AttackEvent>();
+        attackEvent.Setup( opponent.GetCurrentHealth(), opponent.GetShield(), opponent.netId, false, absorbedAmount, remainingDmg);
+        eventBatch.Add(attackEvent);
+        
+        if (opponent.GetCurrentHealth() == 0)
+        {
+            GameMaster.Instance.EndGame(activePlayer);
+        }
     }
 
     private void SimulateTileFall( List<GameEventBase> eventBatch)

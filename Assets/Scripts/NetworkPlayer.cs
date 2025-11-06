@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Mirror;
 
@@ -11,8 +12,7 @@ namespace DorkyProductions
 
         public static readonly int PLAYER_STARTING_HEALTH = 20;
         private int health = PLAYER_STARTING_HEALTH; // server only.
-        private bool _hasShield = false;
-        
+        private int shield = 0;
         public override void OnStartServer()
         {
             // When the player object is spawned on the server, register it
@@ -49,22 +49,39 @@ namespace DorkyProductions
             
         }
 
-
         [Server]
-        public ushort GetCurrentHealth()
+        public int GetCurrentHealth()
         {
-            return (ushort)health;
+            return health;
         }
         [Server]
         public void TakeDamage(int damage)
         {
-            health =  Mathf.Clamp(health - damage, 0, PLAYER_STARTING_HEALTH);
+            if (health - damage < 0)
+            {
+                health = 0;
+            }
+            else
+            {
+                health -= damage;
+            }
         }
-
+        [Server]
+        public void ConsumeShield(int amount)
+        {
+            shield -= amount;
+        }
         [Server]
         public void Heal(int heal)
         {
-            health = Mathf.Clamp(health + heal, health, PLAYER_STARTING_HEALTH);
+            if (health + heal > PLAYER_STARTING_HEALTH)
+            {
+                health = PLAYER_STARTING_HEALTH;
+            }
+            else
+            {
+                health += heal;
+            }
         }
         
         public void EnableControls()
@@ -101,17 +118,22 @@ namespace DorkyProductions
 
         public bool HasShield()
         {
-            return _hasShield;
+            return shield > 0;
         }
 
-        public void DeactivateShield()
+        public void LoseShield(int amount)
         {
-            _hasShield = false;
+            shield -= amount;
         }
 
-        public void ActivateShield()
+        public void GainShield(int amount)
         {
-            _hasShield = true;
+            shield += amount;
+        }
+
+        public int GetShield()
+        {
+            return shield;
         }
     }
 }

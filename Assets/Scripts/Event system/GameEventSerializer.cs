@@ -40,8 +40,11 @@ namespace DorkyProductions
                 case AttackEvent e:
                     writer.Write((byte)EventType.Attack);
                     writer.Write(e.targetsUpdatedHealth);
+                    writer.Write(e.targetsUpdatedShield);
                     writer.Write(e.isPowerful);
                     writer.Write(e.targetPlayerID);
+                    writer.Write(e.absorbedByShieldAmount);
+                    writer.Write(e.sufferedDamage);
                     break;
                 case HealEvent e:
                     writer.Write((byte)EventType.Heal);
@@ -52,10 +55,6 @@ namespace DorkyProductions
                 case ShieldEvent e:
                     writer.Write((byte)EventType.Shield);
                     writer.Write(e.targetPlayerID);
-                    break;
-                case NegateAttackByShieldEvent e:
-                    writer.Write((byte)EventType.NegateAttackByShield);
-                    writer.Write(e.attackerPlayerID);
                     break;
                 case TurnStartedEvent e:
                     writer.Write((byte)EventType.TurnStarted);
@@ -112,22 +111,21 @@ namespace DorkyProductions
                     break;
                 case EventType.Attack:
                     var attackEvent = (AttackEvent)ev;
-                    attackEvent.targetsUpdatedHealth = reader.Read<ushort>();
+                    attackEvent.targetsUpdatedHealth = reader.Read<int>();
+                    attackEvent.targetsUpdatedShield = reader.Read<int>();
                     attackEvent.isPowerful = reader.Read<bool>();
                     attackEvent.targetPlayerID = reader.Read<uint>();
+                    attackEvent.absorbedByShieldAmount = reader.Read<int>();
+                    attackEvent.sufferedDamage = reader.Read<int>();
                     break;
                 case EventType.Heal:
                     var potionEvent = (HealEvent)ev;
-                    potionEvent.targetsUpdatedHealth = reader.Read<ushort>();
+                    potionEvent.targetsUpdatedHealth = reader.Read<int>();
                     potionEvent.isPowerful = reader.Read<bool>();
                     potionEvent.targetPlayerID = reader.Read<uint>();
                     break;
                 case EventType.Shield:
                     ((ShieldEvent)ev).targetPlayerID = reader.Read<uint>();
-                    break;
-                case EventType.NegateAttackByShield:
-                    var negateEvent = (NegateAttackByShieldEvent)ev;
-                    negateEvent.attackerPlayerID = reader.Read<uint>();
                     break;
                 case EventType.TurnStarted:
                     ((TurnStartedEvent)ev).playerNetId = reader.Read<uint>();

@@ -219,20 +219,6 @@ namespace DorkyProductions
             // Add shield visualization logic
             return null;
         }
-
-        public Tween Handle(NegateAttackByShieldEvent e)
-        {
-            Debug.Log($"Shield event received.");
-            if (_localPlayer != null && e.attackerPlayerID == _localPlayer.netId)
-            {
-                Debug.Log("We attacked, but opponent negated the attack by shield.");
-            }
-            else
-            {
-                Debug.Log("Got attacked, but we negated the attack by shield!");
-            }
-            return null;
-        }
         #endregion
 
         #region Immediate Handlers

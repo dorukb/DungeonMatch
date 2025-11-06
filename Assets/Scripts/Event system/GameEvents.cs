@@ -81,15 +81,21 @@ namespace DorkyProductions
     {
         public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.Attack;
-        public ushort targetsUpdatedHealth;
-        public bool isPowerful;
         public uint targetPlayerID;
+        public int targetsUpdatedHealth;
+        public int absorbedByShieldAmount;
+        public int sufferedDamage;
+        public int targetsUpdatedShield;
+        public bool isPowerful;
         
-        public AttackEvent Setup(ushort health, uint target, bool powerful)
+        public AttackEvent Setup(int health, int remainingShield, uint target, bool powerful, int absorbedAmount, int sufferedDamageAmount)
         {
             targetsUpdatedHealth = health;
+            targetsUpdatedShield = remainingShield;
             isPowerful = powerful;
             targetPlayerID = target;
+            absorbedByShieldAmount = absorbedAmount;
+            sufferedDamage = sufferedDamageAmount;
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
@@ -100,11 +106,11 @@ namespace DorkyProductions
     {
         public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.Heal;
-        public ushort targetsUpdatedHealth;
+        public int targetsUpdatedHealth;
         public bool isPowerful;
         public uint targetPlayerID;
         
-        public HealEvent Setup(ushort health, uint targetId, bool powerful)
+        public HealEvent Setup(int health, uint targetId, bool powerful)
         {
             targetsUpdatedHealth = health;
             isPowerful = powerful;
@@ -124,21 +130,6 @@ namespace DorkyProductions
         public ShieldEvent Setup(uint target) { targetPlayerID = target; return this; }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
         public override void Reset() => targetPlayerID = 0;
-    }
-
-    public class NegateAttackByShieldEvent : GameEventBase
-    {
-        public override SyncType SyncType => SyncType.Blocking;
-        public override EventType EventType => EventType.NegateAttackByShield;
-        public uint attackerPlayerID;
-        
-        public NegateAttackByShieldEvent Setup(uint attacker)
-        {
-            attackerPlayerID = attacker;
-            return this;
-        }
-        public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
-        public override void Reset() { attackerPlayerID = 0; }
     }
 
     // --- Immediate Events ---

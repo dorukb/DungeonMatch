@@ -9,7 +9,7 @@ public enum Tile
     Attack,
     Shield,
     Cross,
-    Potion,
+    Heal,
     Chest,
 }
 [CreateAssetMenu(fileName = "Tile_", menuName = "DungeonMatch/Tile")]

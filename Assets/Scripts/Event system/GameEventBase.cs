@@ -68,8 +68,6 @@ namespace DorkyProductions
         Tween Handle(AttackEvent e);
         Tween Handle(HealEvent e);
         Tween Handle(ShieldEvent e);
-        Tween Handle(NegateAttackByShieldEvent e);
-
         // Immediate
         Tween Handle(TurnStartedEvent e);
         Tween Handle(TurnEndedEvent e);

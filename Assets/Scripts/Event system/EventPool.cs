@@ -50,7 +50,6 @@ namespace DorkyProductions
                 case EventType.Attack: return Get<AttackEvent>();
                 case EventType.Heal: return Get<HealEvent>();
                 case EventType.Shield: return Get<ShieldEvent>();
-                case EventType.NegateAttackByShield: return Get<NegateAttackByShieldEvent>();
                 
                 // Immediate
                 case EventType.TurnStarted: return Get<TurnStartedEvent>();
