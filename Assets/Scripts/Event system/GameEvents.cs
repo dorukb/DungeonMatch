@@ -130,8 +130,9 @@ namespace DorkyProductions
 
         public ShieldEvent Setup(uint target, int updatedShieldAmount)
         {
-            targetPlayerID = target; return this;
+            targetPlayerID = target; 
             targetsUpdatedShield = updatedShieldAmount;
+            return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
         public override void Reset() => targetPlayerID = 0;

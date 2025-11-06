@@ -227,9 +227,7 @@ public class GameBoard
     {
         activePlayer.GainShield(ShieldEffect.GetShield(match.matchCount));
         ShieldEvent shieldEvent = EventPool.Get<ShieldEvent>();
-        shieldEvent.Setup(activePlayer.netId, activePlayer.GetShield());
-        
-        eventBatch.Add(shieldEvent);
+        eventBatch.Add(shieldEvent.Setup(activePlayer.netId, activePlayer.GetShield()));
     }
 
     private static void ApplyAttackEffect(List<GameEventBase> eventBatch, MatchResult match, NetworkPlayer opponent,
