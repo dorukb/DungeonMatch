@@ -33,40 +33,36 @@ namespace DorkyProductions
             return new T();
         }
 
-        /// <summary>
         /// Gets a recycled event object by its EventType enum.
         /// Used by the deserializer.
-        /// </summary>
         public static GameEventBase Get(EventType type)
         {
-            switch (type)
+            // This is now an expression, so we return its result directly.
+            return type switch
             {
                 // Blocking
-                case EventType.GameStarted: return Get<GameStartedEvent>();
-                case EventType.GameEnded: return Get<GameEndedEvent>();
-                case EventType.MatchedTiles: return Get<MatchedTilesEvent>();
-                case EventType.SwappedTiles: return Get<SwappedTilesEvent>();
-                case EventType.SwapDenied: return Get<SwapDeniedEvent>();
-                case EventType.Attack: return Get<AttackEvent>();
-                case EventType.Heal: return Get<HealEvent>();
-                case EventType.Shield: return Get<ShieldEvent>();
-                
-                // Immediate
-                case EventType.TurnStarted: return Get<TurnStartedEvent>();
-                case EventType.TurnEnded: return Get<TurnEndedEvent>();
-                
-                // Parallel
-                case EventType.TileMoved: return Get<TileMovedEvent>();
-                case EventType.TileSpawned: return Get<TileSpawnedEvent>();
-                
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), $"No event class registered for type: {type}");
-            }
-        }
+                EventType.GameStarted => Get<GameStartedEvent>(),
+                EventType.GameEnded => Get<GameEndedEvent>(),
+                EventType.MatchedTiles => Get<MatchedTilesEvent>(),
+                EventType.SwappedTiles => Get<SwappedTilesEvent>(),
+                EventType.SwapDenied => Get<SwapDeniedEvent>(),
+                EventType.Attack => Get<AttackEvent>(),
+                EventType.Heal => Get<HealEvent>(),
+                EventType.Shield => Get<ShieldEvent>(),
+                EventType.CrossMatched => Get<CrossMatchedEvent>(),
+                EventType.CrossConsumed => Get<CrossConsumedEvent>(),
 
-        /// <summary>
+                // Immediate
+                EventType.TurnStarted => Get<TurnStartedEvent>(),
+                EventType.TurnEnded => Get<TurnEndedEvent>(),
+
+                // Parallel
+                EventType.TileMoved => Get<TileMovedEvent>(),
+                EventType.TileSpawned => Get<TileSpawnedEvent>(),
+            };
+        }
+        
         /// Resets an event object and returns it to the pool for re-use.
-        /// </summary>
         public static void Release(GameEventBase ev)
         {
             if (ev == null) return;

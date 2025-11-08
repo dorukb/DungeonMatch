@@ -22,7 +22,7 @@ namespace DorkyProductions
             this.isDoubleEffect = isDoubleEffect;
             this.matchCount = positions.Count;
         }
-        public string ToString()
+        public string DisplayMatchType()
         {
             return tileType.ToString();
         }
@@ -41,7 +41,7 @@ namespace DorkyProductions
             }
 
             // Uses this.ToString() to get the friendly type name and adds the count/positions
-            return $"MatchData(Type: {this.ToString()}, Count: {matchCount}, Positions: {positionsStr})";
+            return $"MatchData(Type: {this.DisplayMatchType()}, Count: {matchCount}, Positions: {positionsStr})";
         }
     }
 }

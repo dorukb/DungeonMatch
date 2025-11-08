@@ -1,4 +1,5 @@
 using DG.Tweening;
+using Mirror;
 
 namespace DorkyProductions
 {
@@ -52,7 +53,8 @@ namespace DorkyProductions
         /// The "Accept" method for the Visitor pattern.
         /// </summary>
         public abstract Tween Accept(IGameEventHandler handler);
-        
+        public abstract void Serialize(NetworkWriter writer);
+        public abstract void Deserialize(NetworkReader reader);
         /// <summary>
         /// Resets the event's data to its default state when
         /// it is returned to the object pool.

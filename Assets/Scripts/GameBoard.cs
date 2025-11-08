@@ -178,7 +178,7 @@ public class GameBoard
         // This is where Card specific match effect will take place.
         foreach (var match in matchResults)
         {
-            Debug.Log($"Matched: {match.matchCount} of {match.ToString()}");
+            Debug.Log($"Matched: {match.matchCount} of {match.DisplayMatchType()}");
             var ids = new List<ushort>();
             foreach (var pos in match.positions)
             {

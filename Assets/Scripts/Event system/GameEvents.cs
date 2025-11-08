@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using Mirror;
 
 namespace DorkyProductions
 {
@@ -19,6 +20,15 @@ namespace DorkyProductions
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(boardState);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            boardState.AddRange(reader.Read<List<TileState>>());
+        }
         public override void Reset() => boardState.Clear();
     }
 
@@ -30,6 +40,16 @@ namespace DorkyProductions
 
         public GameEndedEvent Setup(uint id) { winnerID = id; return this; }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(winnerID);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            winnerID = reader.Read<uint>();
+        }
+
         public override void Reset() => winnerID = 0;
     }
 
@@ -46,6 +66,16 @@ namespace DorkyProductions
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(matchedTileIDs);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {                    
+            matchedTileIDs.AddRange(reader.Read<List<ushort>>());
+        }
+
         public override void Reset() => matchedTileIDs.Clear();
     }
 
@@ -63,6 +93,18 @@ namespace DorkyProductions
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(firstId);
+            writer.Write(secondId);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            firstId = reader.Read<ushort>();
+            secondId = reader.Read<ushort>();
+        }
+
         public override void Reset() { firstId = 0; secondId = 0; }
     }
 
@@ -74,6 +116,16 @@ namespace DorkyProductions
         
         public SwapDeniedEvent Setup(uint id) { playerNetId = id; return this; }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(playerNetId);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {                    
+            playerNetId = reader.Read<uint>();
+        }
+
         public override void Reset() => playerNetId = 0;
     }
 
@@ -99,6 +151,26 @@ namespace DorkyProductions
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(targetsUpdatedHealth);
+            writer.Write(targetsUpdatedShield);
+            writer.Write(isPowerful);
+            writer.Write(targetPlayerID);
+            writer.Write(absorbedByShieldAmount);
+            writer.Write(sufferedDamage);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {    
+            targetsUpdatedHealth = reader.Read<int>();
+            targetsUpdatedShield = reader.Read<int>();
+            isPowerful = reader.Read<bool>();
+            targetPlayerID = reader.Read<uint>();
+            absorbedByShieldAmount = reader.Read<int>();
+            sufferedDamage = reader.Read<int>();
+        }
+
         public override void Reset() { targetsUpdatedHealth = 0; isPowerful = false; targetPlayerID = 0; }
     }
 
@@ -118,6 +190,20 @@ namespace DorkyProductions
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(targetsUpdatedHealth);
+            writer.Write(isPowerful);
+            writer.Write(targetPlayerID);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {   
+            targetsUpdatedHealth = reader.Read<int>();
+            isPowerful = reader.Read<bool>();
+            targetPlayerID = reader.Read<uint>();
+        }
+
         public override void Reset() { targetsUpdatedHealth = 0; isPowerful = false; targetPlayerID = 0; }
     }
 
@@ -135,6 +221,18 @@ namespace DorkyProductions
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(targetPlayerID);
+            writer.Write(targetsUpdatedShield);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            targetPlayerID = reader.Read<uint>();
+            targetsUpdatedShield = reader.Read<int>();
+        }
+
         public override void Reset() => targetPlayerID = 0;
     }
 
@@ -151,6 +249,17 @@ namespace DorkyProductions
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(targetPlayerID);
+            writer.Write(currentMultiplier);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            targetPlayerID = reader.Read<uint>();
+            currentMultiplier = reader.Read<float>();
+        }
 
         public override void Reset()
         {
@@ -169,11 +278,24 @@ namespace DorkyProductions
         public CrossConsumedEvent Setup(uint targetPlayerId, float multiplier, BlessingType blessingType)
         {
             this.targetPlayerID = targetPlayerId; 
-            this.appliedMultiplier = appliedMultiplier;
+            this.appliedMultiplier = multiplier;
             this.appliedBlessingType = blessingType;
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(targetPlayerID);
+            writer.Write(appliedMultiplier);
+            writer.Write((byte)appliedBlessingType);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            targetPlayerID = reader.Read<uint>();
+            appliedMultiplier = reader.Read<float>();
+            appliedBlessingType = (BlessingType)reader.Read<byte>();
+        }
 
         public override void Reset()
         {
@@ -197,6 +319,18 @@ namespace DorkyProductions
             this.isExtraTurn = isExtraTurn;
             return this; }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(playerNetId);
+            writer.Write(isExtraTurn);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            playerNetId = reader.Read<uint>();
+            isExtraTurn = reader.Read<bool>();
+        }
+
         public override void Reset() => playerNetId = 0;
     }
 
@@ -208,6 +342,16 @@ namespace DorkyProductions
         
         public TurnEndedEvent Setup(uint id) { playerNetId = id; return this; }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(playerNetId);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            playerNetId = reader.Read<uint>();
+        }
+
         public override void Reset() => playerNetId = 0;
     }
 
@@ -227,6 +371,18 @@ namespace DorkyProductions
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(tileId);
+            writer.Write(toGridPos);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        { 
+            tileId = reader.Read<ushort>();
+            toGridPos = reader.Read<Vector2Int>();
+        }
+
         public override void Reset() { tileId = 0; toGridPos = Vector2Int.zero; }
     }
 
@@ -244,6 +400,18 @@ namespace DorkyProductions
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(pos);
+            writer.Write(state);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            pos = reader.Read<Vector2Int>();
+            state = reader.Read<TileState>();
+        }
+
         public override void Reset() { pos = Vector2Int.zero; state = default; }
     }
 }
