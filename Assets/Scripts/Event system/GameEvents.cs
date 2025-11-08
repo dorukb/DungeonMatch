@@ -138,6 +138,50 @@ namespace DorkyProductions
         public override void Reset() => targetPlayerID = 0;
     }
 
+    public class CrossMatchedEvent : GameEventBase
+    {
+        public override SyncType SyncType => SyncType.Blocking;
+        public override EventType EventType => EventType.CrossMatched;
+        public uint targetPlayerID;
+        public float currentMultiplier;
+        public CrossMatchedEvent Setup(uint targetPlayerId, float currentMultiplier)
+        {
+            this.targetPlayerID = targetPlayerId; 
+            this.currentMultiplier = currentMultiplier;
+            return this;
+        }
+        public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+
+        public override void Reset()
+        {
+            targetPlayerID = 0;
+            currentMultiplier = 1;
+        }
+
+    }
+    public class CrossConsumedEvent : GameEventBase
+    {
+        public override SyncType SyncType => SyncType.Blocking;
+        public override EventType EventType => EventType.CrossConsumed;
+        public uint targetPlayerID;
+        public float appliedMultiplier;
+        public BlessingType appliedBlessingType;
+        public CrossConsumedEvent Setup(uint targetPlayerId, float multiplier, BlessingType blessingType)
+        {
+            this.targetPlayerID = targetPlayerId; 
+            this.appliedMultiplier = appliedMultiplier;
+            this.appliedBlessingType = blessingType;
+            return this;
+        }
+        public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+
+        public override void Reset()
+        {
+            targetPlayerID = 0;
+            appliedMultiplier = 1;
+        }
+
+    }
     // --- Immediate Events ---
 
     public class TurnStartedEvent : GameEventBase
@@ -145,8 +189,13 @@ namespace DorkyProductions
         public override SyncType SyncType => SyncType.Immediate;
         public override EventType EventType => EventType.TurnStarted;
         public uint playerNetId;
+        public bool isExtraTurn;
         
-        public TurnStartedEvent Setup(uint id) { playerNetId = id; return this; }
+        public TurnStartedEvent Setup(uint nextPlayerId, bool isExtraTurn) 
+        {
+            playerNetId = nextPlayerId;
+            this.isExtraTurn = isExtraTurn;
+            return this; }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
         public override void Reset() => playerNetId = 0;
     }

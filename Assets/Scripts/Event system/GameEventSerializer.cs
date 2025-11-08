@@ -57,6 +57,17 @@ namespace DorkyProductions
                     writer.Write(e.targetPlayerID);
                     writer.Write(e.targetsUpdatedShield);
                     break;
+                case CrossMatchedEvent e:
+                    writer.Write((byte)EventType.Shield);
+                    writer.Write(e.targetPlayerID);
+                    writer.Write(e.currentMultiplier);
+                    break;
+                case CrossConsumedEvent e:
+                    writer.Write((byte)EventType.CrossConsumed);
+                    writer.Write(e.targetPlayerID);
+                    writer.Write(e.appliedMultiplier);
+                    writer.Write((byte)e.appliedBlessingType);
+                    break;
                 case TurnStartedEvent e:
                     writer.Write((byte)EventType.TurnStarted);
                     writer.Write(e.playerNetId);
@@ -129,6 +140,17 @@ namespace DorkyProductions
                     var shieldEvent = (ShieldEvent)ev;
                     shieldEvent.targetPlayerID = reader.Read<uint>();
                     shieldEvent.targetsUpdatedShield = reader.Read<int>();
+                    break;
+                case EventType.CrossMatched:
+                    var crossMatchedEvent = (CrossMatchedEvent)ev;
+                    crossMatchedEvent.targetPlayerID = reader.Read<uint>();
+                    crossMatchedEvent.currentMultiplier = reader.Read<float>();
+                    break;
+                case EventType.CrossConsumed:
+                    var crossConsumedEvent = (CrossConsumedEvent)ev;
+                    crossConsumedEvent.targetPlayerID = reader.Read<uint>();
+                    crossConsumedEvent.appliedMultiplier = reader.Read<float>();
+                    crossConsumedEvent.appliedBlessingType = (BlessingType)reader.Read<byte>();
                     break;
                 case EventType.TurnStarted:
                     ((TurnStartedEvent)ev).playerNetId = reader.Read<uint>();

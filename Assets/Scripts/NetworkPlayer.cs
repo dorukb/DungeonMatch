@@ -13,6 +13,7 @@ namespace DorkyProductions
         public static readonly int PLAYER_STARTING_HEALTH = 20;
         private int health = PLAYER_STARTING_HEALTH; // server only.
         private int shield = 0;
+        private float currentCrossMultiplier = 1;
         public override void OnStartServer()
         {
             // When the player object is spawned on the server, register it
@@ -67,11 +68,6 @@ namespace DorkyProductions
             }
         }
         [Server]
-        public void ConsumeShield(int amount)
-        {
-            shield -= amount;
-        }
-        [Server]
         public void Heal(int heal)
         {
             if (health + heal > PLAYER_STARTING_HEALTH)
@@ -83,18 +79,54 @@ namespace DorkyProductions
                 health += heal;
             }
         }
-        
+        [Server]
+        public void LoseShield(int amount)
+        {
+            shield -= amount;
+        }
+
+        [Server]
+        public void GainShield(int amount)
+        {
+            shield += amount;
+        }
+
+        [Server]
+        public int GetShield()
+        {
+            return shield;
+        }
+
+        [Server]
+        public void GainMultiplier(float multiplier)
+        {
+            currentCrossMultiplier += multiplier;
+        }
+
+        [Server]
+        public float GetMultiplier()
+        {
+            return currentCrossMultiplier;
+        }
+        [Server]
+        public void ResetMultiplier()
+        {
+            currentCrossMultiplier = 1.0f;
+        }
+        [Client]
         public void EnableControls()
         {
             _playerInput.EnableControls();
         }
 
+        [Client]
         public void DisableControls()
         {
             _playerInput.DisableControls();
         }
 
         // This is called by the local PlayerInput script.
+        [Client]
         public void RequestSwap(Vector2Int posA, Vector2Int posB)
         {
             if (!isLocalPlayer) return; // Should never happen, but good check
@@ -114,26 +146,6 @@ namespace DorkyProductions
             
             Debug.Log($"[Server] Received swap request: {posA} <-> {posB}");
             GameMaster.Instance.ProcessPlayerSwap(connectionToClient, posA, posB);
-        }
-
-        public bool HasShield()
-        {
-            return shield > 0;
-        }
-
-        public void LoseShield(int amount)
-        {
-            shield -= amount;
-        }
-
-        public void GainShield(int amount)
-        {
-            shield += amount;
-        }
-
-        public int GetShield()
-        {
-            return shield;
         }
     }
 }

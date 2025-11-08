@@ -39,6 +39,7 @@ public class GameMaster : NetworkBehaviour
     
     private GameBoard _gameBoard; 
     private ClientEventHandler _clientEventHandler;
+    private bool _isActivePlayerEarnedExtraTurn = false;
     void Awake()
     {
         if (Instance == null)
@@ -108,7 +109,7 @@ public class GameMaster : NetworkBehaviour
         var boardState = _gameBoard.FillBoardWithNoMatches();
         
         eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState));
-        eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId));
+        eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, false));
 
         // Add to history and send to clients
         SendEventBatch(eventBatch);
@@ -185,12 +186,24 @@ public class GameMaster : NetworkBehaviour
     [Server]
     public void EndTurnAndStartNext(List<GameEventBase> eventBatch)
     {
-        // 1. End current player's turn
-        eventBatch.Add(EventPool.Get<TurnEndedEvent>().Setup(activePlayer.netId));
-        
-        activePlayerIndex = (activePlayerIndex + 1) % players.Count;
-        activePlayer = players[activePlayerIndex]; // SyncVar update
-        eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId));
+        if (_isActivePlayerEarnedExtraTurn)
+        {
+            // active player does not change.
+            Debug.Log("[Server] Not changing the active player at the end of the turn due to Extra Turn.");
+            // TODO: Do we need to send TurnEnded nonetheless? 
+            // seems unnecessary for now, probably become clear once we have all the animations.
+            _isActivePlayerEarnedExtraTurn = false;
+            eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, true));
+        }
+        else //regular behavior, go to Next player.
+        {
+            // 1. End current player's turn
+            eventBatch.Add(EventPool.Get<TurnEndedEvent>().Setup(activePlayer.netId));
+            
+            activePlayerIndex = (activePlayerIndex + 1) % players.Count;
+            activePlayer = players[activePlayerIndex];
+            eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, false));
+        }
     }
 
     [Server]
@@ -237,6 +250,12 @@ public class GameMaster : NetworkBehaviour
         }
         _clientEventHandler.EnqueueEventBatch(eventBatch);
     }
-    
+
+    [Server]
+    public void GrantExtraTurnToCurrentPlayer()
+    {
+        Debug.Log($"[Server] Active player: {activePlayer.netId} has been granted an extra turn.");
+        _isActivePlayerEarnedExtraTurn = true;
+    }
 }
 }

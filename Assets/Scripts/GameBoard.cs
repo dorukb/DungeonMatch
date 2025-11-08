@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
+using Unity.Mathematics;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -184,6 +185,7 @@ public class GameBoard
                 ids.Add(GetTileAt(pos).uniqueID);
             }
             eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(ids));
+            
 
             var activePlayer = GameMaster.Instance.activePlayer;
             var opponent = GameMaster.Instance.GetInactivePlayer();
@@ -194,16 +196,16 @@ public class GameBoard
                     Debug.LogError($"Unknown tiles matched. Shouldn't happen : {match.tileType}");
                     break;
                 case Tile.Attack:
-                    ApplyAttackEffect(eventBatch, match, opponent, activePlayer, match.isDoubleEffect);
+                    ApplyAttackEffect(eventBatch, activePlayer, match, opponent);
                     break;
                 case Tile.Shield:
                     ApplyShieldEffect(eventBatch, activePlayer, match);
                     break;
                 case Tile.Cross:
-                    ApplyCrossEffect(activePlayer);
+                    ApplyCrossEffect(eventBatch, activePlayer, match, GameMaster.Instance);
                     break;
                 case Tile.Heal:
-                    ApplyHealEffect(eventBatch, match, activePlayer, match.isDoubleEffect);
+                    ApplyHealEffect(eventBatch, activePlayer, match);
                     break;
                 case Tile.Chest:
                     // TODO: OpenChest();
@@ -220,37 +222,70 @@ public class GameBoard
         return false;
     }
 
-    private void ApplyCrossEffect(NetworkPlayer activePlayer)
+    private void ApplyCrossEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, GameMaster gm)
     {
-        
+        // Cross grants extra turn and multiplies the effect of next attack/heal.
+        // can stack.
+        // What's the diff between matching 3-4-5 cross?
+        // => 1.75, 2.0, 2.5x multiplier.
+        float gainedMultiplier = BasicCardEffects.GetCrossMultiplier(match.matchCount);
+        activePlayer.GainMultiplier(gainedMultiplier);
+        eventBatch.Add(EventPool.Get<CrossMatchedEvent>().Setup(activePlayer.netId, activePlayer.GetMultiplier()));
+        gm.GrantExtraTurnToCurrentPlayer();
     }
 
-    private static void ApplyHealEffect(List<GameEventBase> eventBatch, MatchResult match, NetworkPlayer activePlayer, bool isDoubleEffect)
+    private static void ApplyHealEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match)
     {
         int healAmount = BasicCardEffects.GetHeal(match.matchCount);
-        if (isDoubleEffect)
+        if (match.isDoubleEffect)
         {
             healAmount *= 2;
         }
+        
+        // Consume Cross Multiplier, if any.
+        if (activePlayer.GetMultiplier() > 1 + Mathf.Epsilon)
+        {
+            healAmount = (int)(healAmount * activePlayer.GetMultiplier());
+            eventBatch.Add(EventPool.Get<CrossConsumedEvent>().Setup(activePlayer.netId, activePlayer.GetMultiplier(), BlessingType.Healing));
+            activePlayer.ResetMultiplier();
+        }
+        
         activePlayer.Heal(healAmount);
-        eventBatch.Add(EventPool.Get<HealEvent>().Setup(activePlayer.GetCurrentHealth(), activePlayer.netId, powerful: isDoubleEffect));
+        eventBatch.Add(EventPool.Get<HealEvent>().Setup(activePlayer.GetCurrentHealth(), activePlayer.netId, powerful: match.isDoubleEffect));
     }
 
     private static void ApplyShieldEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match)
     {
-        activePlayer.GainShield(ShieldEffect.GetShield(match.matchCount));
+        int shieldAmount = BasicCardEffects.GetShield(match.matchCount);
+        
+        // Consume Cross Multiplier, if any.
+        if (activePlayer.GetMultiplier() > 1 + Mathf.Epsilon)
+        {
+            shieldAmount = (int)(shieldAmount * activePlayer.GetMultiplier());
+            eventBatch.Add(EventPool.Get<CrossConsumedEvent>().Setup(activePlayer.netId, activePlayer.GetMultiplier(), BlessingType.Shield));
+            activePlayer.ResetMultiplier();
+        }
+        
+        activePlayer.GainShield(shieldAmount);
         ShieldEvent shieldEvent = EventPool.Get<ShieldEvent>();
         eventBatch.Add(shieldEvent.Setup(activePlayer.netId, activePlayer.GetShield()));
     }
 
-    private static void ApplyAttackEffect(List<GameEventBase> eventBatch, MatchResult match, NetworkPlayer opponent,
-        NetworkPlayer activePlayer, bool isDoubleEffect)
+    private static void ApplyAttackEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, NetworkPlayer opponent)
     {
-        int dmgAmount = AttackEffect.GetDamage(match.matchCount);
-        if (isDoubleEffect)
+        int dmgAmount = BasicCardEffects.GetDamage(match.matchCount);
+        if (match.isDoubleEffect)
         {
             dmgAmount *= 2;
         }
+        // Consume Cross Multiplier, if any.
+        if (activePlayer.GetMultiplier() > 1 + Mathf.Epsilon)
+        {
+            dmgAmount = (int)(dmgAmount * activePlayer.GetMultiplier());
+            eventBatch.Add(EventPool.Get<CrossConsumedEvent>().Setup(activePlayer.netId, activePlayer.GetMultiplier(), BlessingType.Sword));
+            activePlayer.ResetMultiplier();
+        }
+        
         int opponentShieldAmount = opponent.GetShield();
 
         int absorbedAmount = 0;
@@ -278,7 +313,7 @@ public class GameBoard
         }
     }
 
-    private void SimulateTileFall( List<GameEventBase> eventBatch)
+    private void SimulateTileFall(List<GameEventBase> eventBatch)
     {
         for (int x = 0; x < BoardWidth; x++)
         {

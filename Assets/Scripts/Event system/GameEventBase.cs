@@ -12,7 +12,8 @@ namespace DorkyProductions
         Attack,
         Heal,
         Shield,
-        NegateAttackByShield,
+        CrossMatched,
+        CrossConsumed,
 
         // Parallel
         TileMoved,
@@ -32,6 +33,12 @@ namespace DorkyProductions
         Parallel
     }
 
+    public enum BlessingType
+    {
+        Sword,
+        Healing,
+        Shield
+    }
     /// <summary>
     /// The abstract base class for all game events.
     /// Used for object pooling.
@@ -68,6 +75,8 @@ namespace DorkyProductions
         Tween Handle(AttackEvent e);
         Tween Handle(HealEvent e);
         Tween Handle(ShieldEvent e);
+        Tween Handle(CrossMatchedEvent e);
+        Tween Handle(CrossConsumedEvent e);
         // Immediate
         Tween Handle(TurnStartedEvent e);
         Tween Handle(TurnEndedEvent e);

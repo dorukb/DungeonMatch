@@ -229,16 +229,38 @@ namespace DorkyProductions
             }
             return null;
         }
+
+        public Tween Handle(CrossMatchedEvent e)
+        {
+            Debug.Log($"Player {e.targetPlayerID} matched Crosses. Got multiplier: {e.currentMultiplier}");
+            // TODO: Implement Cross multiplayer View. anim sfc etc.
+            return null;
+        } 
+        public Tween Handle(CrossConsumedEvent e)
+        {
+            Debug.Log($"Player {e.targetPlayerID} CONSUMED cross multiplier. Used multiplier: {e.appliedMultiplier}");
+            // TODO: Implement Cross using, Bless like animation on the Sword, Shield??
+            return null;
+        }
         #endregion
 
         #region Immediate Handlers
         public Tween Handle(TurnStartedEvent e)
         {
-            if (_localPlayer != null && e.playerNetId == _localPlayer.netId)
+            if (_localPlayer == null)
+            {
+                Debug.LogError($"LocalPlayer is null.");
+                return null;
+            }
+            
+            if (e.playerNetId == _localPlayer.netId)
             {
                 Debug.Log("My Turn Started");
-                Debug.Log($"HasShield: {_localPlayer.HasShield()}");
                 _localPlayer.EnableControls();
+            }
+            else
+            {
+                _localPlayer.DisableControls();
             }
             return null;
         }
