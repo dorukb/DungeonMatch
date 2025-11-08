@@ -79,7 +79,7 @@ public class ClientBoardVisualizer : MonoBehaviour
         rt.anchoredPosition = anchoredPos;
         
         TileView tileView = tileGO.GetComponent<TileView>();
-        bool useAlternativeSprite = state.type == Tile.Attack || state.type == Tile.Heal;
+        bool useAlternativeSprite = state.isDoubleEffect && (state.type == Tile.Attack || state.type == Tile.Heal);
         tileView.Initialize(def, gridPos, playerInput, useAlternativeSprite);
         
         // 5. Add to our dictionary for tracking

@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinitionSO
   type: 4
   tileSprite: {fileID: 21300000, guid: 05ecbd8ddec5acf44a1704bc119e9af0, type: 3}
+  tileSprite2x: {fileID: 21300000, guid: a46c83f28e5732447b1b39adec21d7cf, type: 3}
