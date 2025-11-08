@@ -246,10 +246,12 @@ namespace DorkyProductions
             if (e.playerNetId == _localPlayer.netId)
             {
                 Debug.Log("My Turn Started");
+                UIMediator.OnPlayerTurnStarted(PlayerType.Local, e.isExtraTurn);
                 _localPlayer.EnableControls();
             }
             else
             {
+                UIMediator.OnPlayerTurnStarted(PlayerType.Opponent, e.isExtraTurn);
                 _localPlayer.DisableControls();
             }
             return null;
