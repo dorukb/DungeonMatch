@@ -22,10 +22,15 @@ public static class MatchAlgorithm
         for (int i = 1; i <= 2; i++)
         {
             Vector2Int pos = startPos + direction * i;
-            var currTile = board.GetTileAt(pos);
-            if (!IsPosInBounds(pos) || currTile.type != currentType)
+            if (!IsPosInBounds(pos))
             {
-                break; // End of line or type mismatch
+                break; // invalid tile
+            }
+            
+            var currTile = board.GetTileAt(pos);
+            if (currTile.type != currentType)
+            {
+                break; //type mismatch
             }
             candidateTiles.Add(pos);
             if (currTile.isDoubleEffect)
@@ -37,8 +42,12 @@ public static class MatchAlgorithm
         for (int i = 1; i <= 2; i++)
         {
             Vector2Int pos = startPos - direction * i;
+            if (!IsPosInBounds(pos))
+            {
+                break; // invalid tile
+            }
             var currTile = board.GetTileAt(pos);
-            if (!IsPosInBounds(pos) || currTile.type != currentType)
+            if (currTile.type != currentType)
             {
                 break; // End of line or type mismatch
             }
