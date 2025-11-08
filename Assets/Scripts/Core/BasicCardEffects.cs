@@ -25,15 +25,15 @@ namespace DorkyProductions
         {
             if (matchedTileCount == 3)
             {
-                return 3;
+                return 2;
             }
             else if (matchedTileCount == 4)
             {
-                return 5;
+                return 3;
             }
             else if (matchedTileCount == 5)
             {
-                return 8;
+                return 5;
             }
             Debug.LogError($"Matched tile count is incorrect: {matchedTileCount}");
             return 3;
@@ -42,15 +42,15 @@ namespace DorkyProductions
         {
             if (matchedTileCount == 3)
             {
-                return 3;
+                return 2;
             }
             else if (matchedTileCount == 4)
             {
-                return 5;
+                return 3;
             }
             else if (matchedTileCount == 5)
             {
-                return 8;
+                return 5;
             }
             Debug.LogError($"Matched tile count is incorrect: {matchedTileCount}");
             return 3;
@@ -59,18 +59,18 @@ namespace DorkyProductions
         {
             if (matchedTileCount == 3)
             {
-                return 1.75f;
+                return 2f;
             }
             else if (matchedTileCount == 4)
             {
-                return 2.0f;
+                return 2.25f;
             }
             else if (matchedTileCount == 5)
             {
                 return 2.5f;
             }
             Debug.LogError($"Matched tile count is not in [3-5]: {matchedTileCount}");
-            return 1.75f;
+            return 2f;
         }
     }
 }

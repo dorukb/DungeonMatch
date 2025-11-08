@@ -118,8 +118,6 @@ public class GameMaster : NetworkBehaviour
     [Server]
     public void EndGame(NetworkPlayer winner)
     {
-        //TODO: End game is not implemented yet.
-        
         if (gameState == GameState.GameEnded) return;
 
         Debug.Log($"[SERVER] Ending game. Winner: {winner.netId}");
@@ -135,8 +133,6 @@ public class GameMaster : NetworkBehaviour
         }
         
         SendEventBatch(eventBatch);
-        
-        // TODO : You might want to disconnect players or reset the server here
     }
 
     // This is the main "transaction" method called by a Player [Command].
@@ -144,6 +140,12 @@ public class GameMaster : NetworkBehaviour
     [Server]
     public void ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA, Vector2Int posB)
     {
+        if (gameState == GameState.GameEnded)
+        {
+            Debug.Log("[Server] Game has already, Swap request has no effect at this point.");
+            return;
+        }
+        
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         bool canMakeMove = (gameState == GameState.Playing) && (sender.identity == activePlayer.netIdentity);
         bool isValidMove = canMakeMove && _gameBoard.IsValidSwap(posA, posB);
@@ -157,15 +159,7 @@ public class GameMaster : NetworkBehaviour
         }
 
         // Core algorithm.
-        bool didMatchOccur = _gameBoard.ProcessSwapMove(posA, posB, sender.identity, eventBatch);
-        if (didMatchOccur)
-        {
-            // Debug.Log($"[Server] Swap {posA} <-> {posB} successful. Board processed.");
-        }
-        else
-        {
-            // Debug.Log($"[Server] Swap {posA} <-> {posB} resulted in no match. This is totally fine.");
-        }
+        _gameBoard.ProcessSwapMove(posA, posB, sender.identity, eventBatch);
 
         EndTurnAndStartNext(eventBatch);
         SendEventBatch(eventBatch);
@@ -220,10 +214,7 @@ public class GameMaster : NetworkBehaviour
         // Use a PooledWriter for efficiency
         using (NetworkWriterPooled writer = NetworkWriterPool.Get())
         {
-            // First, write the number of events
             writer.Write((ushort)batch.Count);
-
-            // Loop and write each event using our custom serializer
             foreach (GameEventBase ev in batch)
             {
                 writer.WriteGameEvent(ev);
@@ -233,7 +224,6 @@ public class GameMaster : NetworkBehaviour
             RpcReceiveEventBatch(writer.ToArraySegment());
         }
 
-        // --- CRITICAL ---
         // Release all events back to the pool after sending
         foreach (GameEventBase ev in batch)
         {
