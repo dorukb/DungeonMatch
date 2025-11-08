@@ -38,8 +38,6 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         _inputManager = localPlayerInput;
     }
 
-    // --- Input Event Implementations ---
-
     public void OnPointerDown(PointerEventData eventData)
     {
         if (_inputManager != null)
@@ -68,16 +66,6 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
             }
         }
     }
-    
-    // This handles the "drag-to-swap"
-    // public void OnPointerEnter(PointerEventData eventData)
-    // {
-    //     if (_inputManager != null)
-    //     {
-    //         _inputManager.OnTilePointerEnter(this);
-    //     }
-    // }
-    // --- Animation Methods ---
 
 }
 }

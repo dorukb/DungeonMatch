@@ -29,7 +29,7 @@ public class ClientBoardVisualizer : MonoBehaviour
     public const float SWAP_DURATION = 0.3f;
     public const float FALL_DURATION = 0.5f;
     public const float REMOVE_DURATION = 0.5f;
-    public const float SPAWN_DURATION = 0.5f;
+    public const float SPAWN_DURATION = 0.25f;
     
     // This is our client-side lookup to connect a logical tile (by ID)
     // to its visual GameObject.
@@ -85,7 +85,7 @@ public class ClientBoardVisualizer : MonoBehaviour
         // 5. Add to our dictionary for tracking
         _visualTiles[state.uniqueID] = tileView;
         
-        var spawnAnim = tileGO.transform.DOScale(1f, SPAWN_DURATION).SetEase(Ease.InQuint);
+        var spawnAnim = tileGO.transform.DOScale(1f, SPAWN_DURATION).SetEase(Ease.OutBack);
         return spawnAnim;
     }
     

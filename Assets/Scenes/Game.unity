@@ -650,7 +650,7 @@ MonoBehaviour:
   tileViewPrefab: {fileID: 6552938585266915852, guid: 426f9812f6894e247ab46d68703b8a72, type: 3}
   playerInput: {fileID: 144706341}
   boardContainer: {fileID: 2028735000}
-  tileViewSize: {x: 125, y: 125}
+  tileViewSize: {x: 150, y: 150}
   tileSpacing: {x: 15, y: 15}
 --- !u!4 &1605994704
 Transform:
