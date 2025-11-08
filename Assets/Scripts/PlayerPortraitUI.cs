@@ -1,4 +1,3 @@
-using System;
 using DorkyProductions.UI;
 using UnityEngine;
 using TMPro;
@@ -76,7 +75,7 @@ public class PlayerPortraitUI : MonoBehaviour
         if (player != displayForPlayer) return;
 
         multiplierText.text = $"{currMultiplier:0.##}x";
-        bool hasMultiplier = currMultiplier > (1.0f + Mathf.Epsilon);
+        bool hasMultiplier = currMultiplier > Mathf.Epsilon;
         crossDisplay.SetActive(hasMultiplier);
   }
     

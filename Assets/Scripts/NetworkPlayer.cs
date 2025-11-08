@@ -13,7 +13,7 @@ namespace DorkyProductions
         public static readonly int PLAYER_STARTING_HEALTH = 20;
         private int health = PLAYER_STARTING_HEALTH; // server only.
         private int shield = 0;
-        private float currentCrossMultiplier = 1;
+        private float currentCrossMultiplier = 0f;
         public override void OnStartServer()
         {
             // When the player object is spawned on the server, register it
@@ -111,7 +111,7 @@ namespace DorkyProductions
         [Server]
         public void ResetMultiplier()
         {
-            currentCrossMultiplier = 1.0f;
+            currentCrossMultiplier = 0f;
         }
         [Client]
         public void EnableControls()

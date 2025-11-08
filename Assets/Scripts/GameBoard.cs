@@ -243,7 +243,7 @@ public class GameBoard
         }
         
         // Consume Cross Multiplier, if any.
-        if (activePlayer.GetMultiplier() > 1 + Mathf.Epsilon)
+        if (activePlayer.GetMultiplier() > Mathf.Epsilon)
         {
             healAmount = (int)(healAmount * activePlayer.GetMultiplier());
             eventBatch.Add(EventPool.Get<CrossConsumedEvent>().Setup(activePlayer.netId, activePlayer.GetMultiplier(), BlessingType.Healing));
@@ -259,7 +259,7 @@ public class GameBoard
         int shieldAmount = BasicCardEffects.GetShield(match.matchCount);
         
         // Consume Cross Multiplier, if any.
-        if (activePlayer.GetMultiplier() > 1 + Mathf.Epsilon)
+        if (activePlayer.GetMultiplier() > Mathf.Epsilon)
         {
             shieldAmount = (int)(shieldAmount * activePlayer.GetMultiplier());
             eventBatch.Add(EventPool.Get<CrossConsumedEvent>().Setup(activePlayer.netId, activePlayer.GetMultiplier(), BlessingType.Shield));
@@ -279,7 +279,7 @@ public class GameBoard
             dmgAmount *= 2;
         }
         // Consume Cross Multiplier, if any.
-        if (activePlayer.GetMultiplier() > 1 + Mathf.Epsilon)
+        if (activePlayer.GetMultiplier() > Mathf.Epsilon)
         {
             dmgAmount = (int)(dmgAmount * activePlayer.GetMultiplier());
             eventBatch.Add(EventPool.Get<CrossConsumedEvent>().Setup(activePlayer.netId, activePlayer.GetMultiplier(), BlessingType.Sword));

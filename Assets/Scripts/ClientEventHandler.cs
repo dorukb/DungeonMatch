@@ -226,10 +226,10 @@ namespace DorkyProductions
         public Tween Handle(CrossConsumedEvent e)
         {
             Debug.Log($"Player {e.targetPlayerID} CONSUMED cross multiplier. Used multiplier: {e.appliedMultiplier}");
+            // TODO: Implement Cross using, Bless like animation on the Sword, Shield??
             
             var targetPlayer = GetPlayerType(e.targetPlayerID);
-            UIMediator.OnPlayersCrossMultiplierUpdated?.Invoke(targetPlayer, e.appliedMultiplier);
-            // TODO: Implement Cross using, Bless like animation on the Sword, Shield??
+            UIMediator.OnPlayersCrossMultiplierUpdated?.Invoke(targetPlayer, 0f);
             return null;
         }
         #endregion
