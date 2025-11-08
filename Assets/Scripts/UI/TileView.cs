@@ -60,10 +60,7 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
                 endTile = eventData.pointerCurrentRaycast.gameObject.GetComponent<TileView>();
             }
 
-            if (endTile != null)
-            {
-                _inputManager.OnTilePointerUp(endTile);
-            }
+            _inputManager.OnTilePointerUp(endTile);
         }
     }
 

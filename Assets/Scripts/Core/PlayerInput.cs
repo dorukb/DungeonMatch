@@ -43,8 +43,6 @@ public class PlayerInput : MonoBehaviour
     {
         if (!isEnabled) return;
         
-        if (!enabled || _isDragging) return; // Ignore if not our turn or already dragging
-        
         _startTile = tile;
         _isDragging = true;
     }
@@ -52,8 +50,13 @@ public class PlayerInput : MonoBehaviour
     public void OnTilePointerUp(TileView tile)
     {
         if (!isEnabled || !_isDragging || _startTile == null) return;
-        
+
         _isDragging = false;
+        if (tile == null)
+        {
+            _startTile = null;
+            return;
+        }
         
         // Check if we released on the same tile
         if (tile == _startTile)
