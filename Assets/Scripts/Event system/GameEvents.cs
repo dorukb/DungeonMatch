@@ -359,7 +359,7 @@ namespace DorkyProductions
 
     public class TileMovedEvent : GameEventBase
     {
-        public override SyncType SyncType => SyncType.Blocking;
+        public override SyncType SyncType => SyncType.Parallel;
         public override EventType EventType => EventType.TileMoved;
         public ushort tileId;
         public Vector2Int toGridPos;

@@ -186,6 +186,12 @@ public class GameMaster : NetworkBehaviour
     [Server]
     public void EndTurnAndStartNext(List<GameEventBase> eventBatch)
     {
+        if (gameState == GameState.GameEnded)
+        {
+            Debug.Log("[Server] Game has already, End Turn will have no effect at this point.");
+            return;
+        }
+        
         if (_isActivePlayerEarnedExtraTurn)
         {
             // active player does not change.
