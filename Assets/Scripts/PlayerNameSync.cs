@@ -1,3 +1,4 @@
+using DorkyProductions.UI;
 using Mirror;
 using UnityEngine;
 
@@ -20,7 +21,7 @@ public class PlayerNameSync : NetworkBehaviour
         {
             for (int i = 0; i < playerPortraitUIs.Length; i++)
             {
-                if (playerPortraitUIs[i].IsLocalPlayer)
+                if (playerPortraitUIs[i].displayForPlayer == PlayerType.Local)
                 {
                     _localPlayerPortraitUI = playerPortraitUIs[i];
                 }

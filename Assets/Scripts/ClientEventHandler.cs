@@ -188,57 +188,47 @@ namespace DorkyProductions
         public Tween Handle(AttackEvent e)
         {
             Debug.Log($"Attack event received.");
-            if (_localPlayer != null && e.targetPlayerID == _localPlayer.netId)
-            {
-                // we are being attacked.
-                UIMediator.OnLocalPlayerHealthUpdated?.Invoke(e.targetsUpdatedHealth);
-                UIMediator.OnLocalPlayerShieldUpdated?.Invoke(e.targetsUpdatedShield);
-            }
-            else
-            {
-                UIMediator.OnOpponentPlayerHealthUpdated?.Invoke(e.targetsUpdatedHealth);
-                UIMediator.OnOpponentPlayerShieldUpdated?.Invoke(e.targetsUpdatedShield);
-            }
+            // TODO: Create & Return the Attack anim tween.
+
+            var targetPlayer = GetPlayerType(e.targetPlayerID);
+            UIMediator.OnPlayerHealthUpdated?.Invoke(targetPlayer, e.targetsUpdatedHealth);
+            UIMediator.OnPlayerShieldUpdated?.Invoke(targetPlayer, e.targetsUpdatedShield);
             return null;
         }
 
         public Tween Handle(HealEvent e)
         {
+            // TODO: Create & Return the Heal anim tween.
             Debug.Log($"Heal player {e.targetPlayerID}");
-            if (_localPlayer != null && e.targetPlayerID == _localPlayer.netId)
-            {
-                UIMediator.OnLocalPlayerHealthUpdated?.Invoke(e.targetsUpdatedHealth);
-            }
-            else
-            {
-                UIMediator.OnOpponentPlayerHealthUpdated?.Invoke(e.targetsUpdatedHealth);
-            }
+            
+            var targetPlayer = GetPlayerType(e.targetPlayerID);
+            UIMediator.OnPlayerHealthUpdated?.Invoke(targetPlayer, e.targetsUpdatedHealth);
             return null;
         }
 
         public Tween Handle(ShieldEvent e)
         {
             Debug.Log($"Player {e.targetPlayerID} gained some shield.");
-            if (_localPlayer != null && e.targetPlayerID == _localPlayer.netId)
-            {
-                UIMediator.OnLocalPlayerShieldUpdated?.Invoke(e.targetsUpdatedShield);
-            }
-            else
-            {
-                UIMediator.OnOpponentPlayerShieldUpdated?.Invoke(e.targetsUpdatedShield);
-            }
+            var targetPlayer = GetPlayerType(e.targetPlayerID);
+            UIMediator.OnPlayerShieldUpdated?.Invoke(targetPlayer, e.targetsUpdatedShield);
             return null;
         }
 
         public Tween Handle(CrossMatchedEvent e)
         {
             Debug.Log($"Player {e.targetPlayerID} matched Crosses. Got multiplier: {e.currentMultiplier}");
+            var targetPlayer = GetPlayerType(e.targetPlayerID);
+            UIMediator.OnPlayersCrossMultiplierUpdated?.Invoke(targetPlayer, e.currentMultiplier);
+            
             // TODO: Implement Cross multiplayer View. anim sfc etc.
             return null;
         } 
         public Tween Handle(CrossConsumedEvent e)
         {
             Debug.Log($"Player {e.targetPlayerID} CONSUMED cross multiplier. Used multiplier: {e.appliedMultiplier}");
+            
+            var targetPlayer = GetPlayerType(e.targetPlayerID);
+            UIMediator.OnPlayersCrossMultiplierUpdated?.Invoke(targetPlayer, e.appliedMultiplier);
             // TODO: Implement Cross using, Bless like animation on the Sword, Shield??
             return null;
         }
@@ -285,6 +275,15 @@ namespace DorkyProductions
         public Tween Handle(TileSpawnedEvent e)
         {
             return Visualizer.SpawnVisualTile(e.state, e.pos);
+        }
+
+        public PlayerType GetPlayerType(uint playerNetId)
+        {
+            if (_localPlayer != null && playerNetId == _localPlayer.netId)
+            {
+                return PlayerType.Local;
+            }
+            return PlayerType.Opponent;
         }
         #endregion
     }

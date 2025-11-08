@@ -1,3 +1,4 @@
+using System;
 using DorkyProductions.UI;
 using UnityEngine;
 using TMPro;
@@ -18,58 +19,66 @@ public class PlayerPortraitUI : MonoBehaviour
     private Image playerShieldBar;
     [SerializeField]
     private TextMeshProUGUI playerShieldText;
+
+    [SerializeField] private GameObject crossDisplay;
+    [SerializeField] private TextMeshProUGUI multiplierText;
     
-    
-    public bool IsLocalPlayer;
+    [Tooltip("Which player does this UI portrait represent?")]
+    [SerializeField]
+    public PlayerType displayForPlayer;
     
     // TODO: move this to a central constant file.
-
+    // NO MORE duplicated code!
     private void OnEnable()
     {
-        if (IsLocalPlayer)
-        {
-            UIMediator.OnLocalPlayerHealthUpdated += UpdatePlayerHealth;
-            UIMediator.OnLocalPlayerShieldUpdated += UpdatePlayerShield;
-        }
-        else
-        {
-            UIMediator.OnOpponentPlayerHealthUpdated += UpdatePlayerHealth;
-            UIMediator.OnOpponentPlayerShieldUpdated += UpdatePlayerShield;
-        }
+        UIMediator.OnPlayerHealthUpdated += UpdatePlayerHealth;
+        UIMediator.OnPlayerShieldUpdated += UpdatePlayerShield;
+        UIMediator.OnPlayersCrossMultiplierUpdated += UpdateCrossMultiplier;
     }
 
     private void OnDisable()
     {
-        if (IsLocalPlayer)
-        {
-            UIMediator.OnLocalPlayerHealthUpdated -= UpdatePlayerHealth;
-            UIMediator.OnLocalPlayerShieldUpdated -= UpdatePlayerShield;
-        }
-        else
-        {
-            UIMediator.OnOpponentPlayerHealthUpdated -= UpdatePlayerHealth;
-            UIMediator.OnOpponentPlayerShieldUpdated -= UpdatePlayerShield;
-        }
+        UIMediator.OnPlayerHealthUpdated -= UpdatePlayerHealth;
+        UIMediator.OnPlayerShieldUpdated -= UpdatePlayerShield;
+        UIMediator.OnPlayersCrossMultiplierUpdated -= UpdateCrossMultiplier;
+    }
+
+    private void Start()
+    {
+        crossDisplay.SetActive(false);
     }
 
     public void SetPlayerNameText(string text)
     {
         playerNameText.text = text;
     }
-    private void UpdatePlayerHealth(int currentHealth)
+    private void UpdatePlayerHealth(PlayerType player, int currentHealth)
     {
+        if (player != displayForPlayer) return; 
+        
         float fillAmount = (float)currentHealth / (float) NetworkPlayer.PLAYER_STARTING_HEALTH;
         playerHealthBar.fillAmount = fillAmount;
         playerHealthText.text = currentHealth.ToString();
     }
     
-    private void UpdatePlayerShield(int currentShield)
+    private void UpdatePlayerShield(PlayerType player, int currentShield)
     {
+        if (player != displayForPlayer) return; 
+        
         float fillAmount = (float)currentShield / (float) NetworkPlayer.PLAYER_STARTING_HEALTH;
         fillAmount = Mathf.Max(0.1f, fillAmount);
         playerShieldBar.fillAmount = fillAmount;
         playerShieldText.text = currentShield.ToString();
     }
+
+    private void UpdateCrossMultiplier(PlayerType player, float currMultiplier)
+    {
+        if (player != displayForPlayer) return;
+
+        multiplierText.text = $"{currMultiplier:0.##}x";
+        bool hasMultiplier = currMultiplier > (1.0f + Mathf.Epsilon);
+        crossDisplay.SetActive(hasMultiplier);
+  }
     
 }
 

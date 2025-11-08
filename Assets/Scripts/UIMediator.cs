@@ -3,16 +3,21 @@ using UnityEngine;
 
 namespace DorkyProductions.UI
 {
-    
+public enum PlayerType
+{
+    Local,
+    Opponent
+}
 public class UIMediator : MonoBehaviour
 {
-    // params: <CurrentHealth>
-    public static Action<int> OnLocalPlayerHealthUpdated;
-    public static Action<int> OnOpponentPlayerHealthUpdated;
+    // params: <Player, CurrentHealth>
+    public static Action<PlayerType, int> OnPlayerHealthUpdated;
     
-    // params: <CurrentShield>
-    public static Action<int> OnLocalPlayerShieldUpdated;
-    public static Action<int> OnOpponentPlayerShieldUpdated;
+    // params: <Player, CurrentShield>
+    public static Action<PlayerType, int> OnPlayerShieldUpdated;
+        
+    // params: <Player, CurrentMultiplier>
+    public static Action<PlayerType, float> OnPlayersCrossMultiplierUpdated;
 }
 
 }
