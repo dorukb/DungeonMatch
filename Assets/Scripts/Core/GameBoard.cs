@@ -309,7 +309,7 @@ public class GameBoard
         
         if (opponent.GetCurrentHealth() == 0)
         {
-            GameMaster.Instance.EndGame(activePlayer);
+            GameMaster.Instance.TriggerEndGame(activePlayer, eventBatch);
         }
     }
 

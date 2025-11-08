@@ -116,23 +116,13 @@ public class GameMaster : NetworkBehaviour
     }
 
     [Server]
-    public void EndGame(NetworkPlayer winner)
+    public void TriggerEndGame(NetworkPlayer winner, List<GameEventBase> eventBatch)
     {
         if (gameState == GameState.GameEnded) return;
 
-        Debug.Log($"[SERVER] Ending game. Winner: {winner.netId}");
         gameState = GameState.GameEnded;
-        activePlayer = null;
-
-        List<GameEventBase> eventBatch = new List<GameEventBase>();
-        
-        // We check for null winner in case both disconnected at once
-        if (winner != null)
-        {
-            eventBatch.Add(EventPool.Get<GameEndedEvent>().Setup(winner.netId));
-        }
-        
-        SendEventBatch(eventBatch);
+        eventBatch.Add(EventPool.Get<GameEndedEvent>().Setup(winner.netId));
+        Debug.Log($"[Server] Game over. Winner: {winner.netId}");
     }
 
     // This is the main "transaction" method called by a Player [Command].
