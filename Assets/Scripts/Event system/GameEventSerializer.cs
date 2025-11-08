@@ -58,7 +58,7 @@ namespace DorkyProductions
                     writer.Write(e.targetsUpdatedShield);
                     break;
                 case CrossMatchedEvent e:
-                    writer.Write((byte)EventType.Shield);
+                    writer.Write((byte)EventType.CrossMatched);
                     writer.Write(e.targetPlayerID);
                     writer.Write(e.currentMultiplier);
                     break;
