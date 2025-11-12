@@ -93,26 +93,28 @@ namespace UI
     
             // 1. Calculate Total Counts
             int totalTiles = _currentTileCounts.Values.Sum();
-            if (totalTiles == 0)
+            if (totalTiles == 0 || _currentTileCounts[type] == 0)
             {
-                // If the board is empty, use the base weight directly (no balancing needed yet)
+                // If the board is empty or there is no tile for given type yet
+                // use the base weight directly (no balancing needed yet)
                 return baseWeight;
             }
             
             // The target probability/density (P_target)
             double targetDensity = _targetPercentages[type];
+            Debug.Log($"target density: {targetDensity}");
     
             // The current actual probability/density (P_current)
             double currentDensity = (double)_currentTileCounts[type] / totalTiles; 
-    
+            Debug.Log($"current density: {currentDensity}");
             // 3. Calculate Adjustment Factor (A)
             // If currentDensity > targetDensity, this factor will be less than 1 (weight reduced).
             // If currentDensity < targetDensity, this factor will be greater than 1 (weight increased).
             double adjustmentFactor = targetDensity / currentDensity;
-    
+            Debug.Log($"adjustment factor: {adjustmentFactor}");
             // 4. Calculate Dynamic Weight (W_dynamic)
             double dynamicWeight = baseWeight * adjustmentFactor;
-    
+            Debug.Log("dynamic weight: " + dynamicWeight);
             // Ensure the weight is not negative (though highly unlikely with a small K_FACTOR)
             return Math.Max(0.001f, dynamicWeight); 
         }
