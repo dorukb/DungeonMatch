@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
+using UI;
 using Unity.Mathematics;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -61,13 +62,19 @@ public class GameBoard
                     _availableTypes.Remove(down1ID);
                 }
             }
-            boardState.Add(GenerateNewTile(_availableTypes));
+            
+            Dictionary<Tile, double> dynamicWeights = TileDistribution.GetDynamicWeightsForAllowedTypes(_availableTypes);
+            Tile newType = TileDistribution.SelectTileFromWeights(dynamicWeights);
+            TileState newTile = GenerateNewTile(newType);
+            boardState.Add(newTile);
+            TileDistribution.TileAdded(newType);
+            //boardState.Add(GenerateNewTile(_availableTypes));
         }
 
         return boardState;
     }
     // Overload: Generates a random tile from a specific list of allowed types.
-    private TileState GenerateNewTile(List<Tile> availableTypes)
+    /*private TileState GenerateNewTile(List<Tile> availableTypes)
     {
         if (availableTypes.Count == 0)
         {
@@ -89,9 +96,19 @@ public class GameBoard
             isDoubleEffect = Random.value > 0.8f;
         }
         return new TileState(_nextTileID++, randomType, isDoubleEffect);
+    }*/
+
+    private TileState GenerateNewTile(Tile type)
+    {
+        bool isDoubleEffect = false;
+        if (type == Tile.Attack || type == Tile.Heal)
+        {
+            // %20 double effect
+            isDoubleEffect = Random.value > 0.8f;
+        }
+        return new TileState(_nextTileID++, type, isDoubleEffect);
     }
-    
-    private TileState GenerateNewTile()
+    /*private TileState GenerateNewTile()
     {
         // 1st Tile type is UNKNOWN, exclude it.
         // TODO: WTF is this code?
@@ -105,7 +122,46 @@ public class GameBoard
             isDoubleEffect = Random.value > 0.8f;
         }
         return new TileState(_nextTileID++, randomType, isDoubleEffect);
+    }*/
+
+    private TileState GenerateNewTile(Dictionary<Tile, double> dynamicWeights)
+    {
+        double totalWeight = dynamicWeights.Values.Sum();
+
+        if (totalWeight <= 0)
+        {
+            //TODO: decide what to do here
+            //Debug.Log(); // no tile can be dropped
+        }
+
+        double randomTarget = Random.value * totalWeight;
+            
+        double currentCumulativeWeight = 0;
+
+        foreach (var kvp in dynamicWeights)
+        {
+            Tile tileType = kvp.Key;
+            double weight = kvp.Value;
+            
+            currentCumulativeWeight += weight;
+
+            // Check if the random target falls within this tile's weight segment
+            if (randomTarget < currentCumulativeWeight)
+            {
+                // This tile is selected!
+                bool isDoubleEffect = false;
+                if (tileType == Tile.Attack || tileType == Tile.Heal)
+                {
+                    // %20 double effect
+                    isDoubleEffect = Random.value > 0.8f;
+                }
+                return new TileState(_nextTileID++, tileType, isDoubleEffect);
+            }
+        }
+
+        return default;
     }
+    
     
     public bool ProcessSwapMove(Vector2Int posA, Vector2Int posB, NetworkIdentity performingPlayer, List<GameEventBase> eventBatch)
     {
@@ -166,6 +222,7 @@ public class GameBoard
         {
             foreach (var pos in match.positions)
             {
+                TileDistribution.TileRemoved(boardState[GetIndex(pos)].type);
                 boardState[GetIndex(pos)] = TileState.Empty;
             }
         }
@@ -364,10 +421,13 @@ public class GameBoard
                 if (GetTileAt(gridPros).IsEmpty())
                 {
                     // TODO: Spawn considering if we restrict combo-matches.
-                    
-                    TileState fillingTile = GenerateNewTile();
+
+                    var dynamicWeights = TileDistribution.CalculateDynamicWeights();
+                    TileState fillingTile = GenerateNewTile(dynamicWeights);
+                    //TileState fillingTile = GenerateNewTile();
                     int spawnIdx = GetIndex(x, y);
                     boardState[spawnIdx] = fillingTile;
+                    TileDistribution.TileAdded(fillingTile.type);
                     
                     eventBatch.Add(EventPool.Get<TileSpawnedEvent>().Setup(fillingTile, gridPros));
                     Debug.Log($"[Server] Draw new tile to pos: ({x},{y})");
