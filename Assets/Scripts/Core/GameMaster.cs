@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Mirror;
 using System.Collections.Generic;
+using UI;
 
 namespace  DorkyProductions
 {
@@ -110,7 +111,7 @@ public class GameMaster : NetworkBehaviour
         
         eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState));
         eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, false));
-
+        TileDistribution.CheckBoardDensity();
         // Add to history and send to clients
         SendEventBatch(eventBatch);
     }

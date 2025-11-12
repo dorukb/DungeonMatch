@@ -162,10 +162,19 @@ namespace UI
         /// <summary>
         /// Calculates the current density (D_i) for a specific tile type.
         /// </summary>
-        private float GetCurrentDensity(Tile type)
+        private static float GetCurrentDensity(Tile type)
         {
             _currentTileCounts.TryGetValue(type, out int count);
             return (float)count / _boardSize;
+        }
+
+        public static void CheckBoardDensity()
+        {
+            foreach (Tile t in  Enum.GetValues(typeof(Tile)))
+            {
+                var density = GetCurrentDensity(t);
+                Debug.Log($"{t} density is:  {density}");
+            }
         }
     }
 }
