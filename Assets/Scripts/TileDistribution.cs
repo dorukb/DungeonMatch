@@ -77,6 +77,7 @@ namespace UI
                 // Use the existing logic to calculate the dynamic weight for this type
                 double weight = GetDynamicWeight(type); 
                 allowedWeights[type] = weight;
+                Debug.Log($"weight: {weight} for allowed type:{type}");
             }
             return allowedWeights;
         }
@@ -85,7 +86,7 @@ namespace UI
         {
             if (!_baseWeights.ContainsKey(type))
             {
-                return 0f; // Tile type not defined
+                Debug.LogError("tile type Not found in baseWeights");
             }
     
             float baseWeight = _baseWeights[type];
@@ -97,15 +98,12 @@ namespace UI
                 // If the board is empty, use the base weight directly (no balancing needed yet)
                 return baseWeight;
             }
-
-            // 2. Calculate Target and Current Densities (Probabilities)
-            float totalBaseWeight = _baseWeights.Values.Sum();
-    
+            
             // The target probability/density (P_target)
             double targetDensity = _targetPercentages[type];
     
             // The current actual probability/density (P_current)
-            float currentDensity = (float)_currentTileCounts[type] / totalTiles; 
+            double currentDensity = (double)_currentTileCounts[type] / totalTiles; 
     
             // 3. Calculate Adjustment Factor (A)
             // If currentDensity > targetDensity, this factor will be less than 1 (weight reduced).
@@ -123,19 +121,23 @@ namespace UI
         public static Tile SelectTileFromWeights(Dictionary<Tile, double> weights)
         {
             double total = weights.Values.Sum();
-            if (total <= 0) return Tile.Attack; // Default or error handling
+            if (total <= 0) Debug.LogError($"weight total is {total}. should be > 0"); // Default or error handling
     
             double random = Rng.NextDouble() * total; // Assuming Rng.NextFloat() or similar
             double cumulativeWeight = 0;
-
+            Debug.Log($"random value is {random}");
+            
             foreach (var kvp in weights)
             {
                 cumulativeWeight += kvp.Value;
+                Debug.Log($"cumWeight value is {cumulativeWeight}");
                 if (random < cumulativeWeight)
                 {
+                    Debug.Log($"tile type will be: {kvp.Key}");
                     return kvp.Key;
                 }
             }
+            Debug.Log("you shouldnt be seeing this");
             return Tile.Attack; // Should not happen
         }
         
