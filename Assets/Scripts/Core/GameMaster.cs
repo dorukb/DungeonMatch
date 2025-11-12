@@ -111,7 +111,7 @@ public class GameMaster : NetworkBehaviour
         
         eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState));
         eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, false));
-        TileDistribution.CheckBoardDensity();
+        TileDistribution.LogBoardDensity();
         // Add to history and send to clients
         SendEventBatch(eventBatch);
     }

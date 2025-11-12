@@ -168,13 +168,13 @@ namespace UI
             return (float)count / _boardSize;
         }
 
-        public static void CheckBoardDensity()
+        public static void LogBoardDensity()
         {
             foreach (Tile t in  Enum.GetValues(typeof(Tile)))
             {
                 var density = GetCurrentDensity(t);
                 Debug.Log($"{t} density is:  {density}");
             }
-        }
+        } 
     }
 }
