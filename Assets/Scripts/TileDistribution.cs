@@ -176,5 +176,16 @@ namespace UI
                 Debug.Log($"{t} density is:  {density}");
             }
         } 
+        
+        public static List<Tile> GetAllPossibleTileTypes()
+        {
+            return Enum.GetValues(typeof(Tile))
+                .Cast<Tile>()
+                // Filter: We convert the enum value to its integer representation (index)
+                // and keep only those whose index is greater than 0.
+                //since type 0 is "unknown"
+                .Where(t => (int)t > 0) 
+                .ToList();
+        }
     }
 }

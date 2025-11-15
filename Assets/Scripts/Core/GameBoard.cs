@@ -404,38 +404,89 @@ public class GameBoard
     
     private void RefillBoard(List<GameEventBase> eventBatch, bool avoidMatches)
     {
-        // TODO: impl. Avoid/prevent Matches while refilling.
-        // we cant directly use the logic from  setupWithoutMatches, as it assumes empty tiles in many places.
-        // current check for match functions are also unusable as-is, as they query the board and check the tile type from there.
-        // sure, we could set the tile and then check for matches, then revert, that would be fine.
-        // but we also dont need all those matchresult allocations, we just want to know whether this would cause ANY MATCH
-        // and we would try it for all types of cards, hopefully finding one that doesn't cause match, and spawn that one.
-        
         Debug.Log("[Server] Refilling board");
         // rules: "bottom to top, then left to right"
         for (int x = 0; x < BoardWidth; x++)
         {
             for (int y = 0; y < BoardHeight; y++)
             {
-                var gridPros = new Vector2Int(x, y);
-                if (GetTileAt(gridPros).IsEmpty())
+                var gridPos = new Vector2Int(x, y);
+                if (GetTileAt(gridPos).IsEmpty())
                 {
-                    // TODO: Spawn considering if we restrict combo-matches.
+                    TileState fillingTile;
 
-                    var dynamicWeights = TileDistribution.CalculateDynamicWeights();
-                    TileState fillingTile = GenerateNewTile(dynamicWeights);
-                    //TileState fillingTile = GenerateNewTile();
+                    if (avoidMatches)
+                    {
+                        // If avoiding matches, actively search for a safe tile type.
+                        var possibleTypes = TileDistribution.GetAllPossibleTileTypes();
+                        fillingTile = TryFindNonMatchingTile(gridPos, possibleTypes);
+                    }
+                    else
+                    {
+                        // Normal refill: generate tile based on weights, no match check.
+                        var dynamicWeights = TileDistribution.CalculateDynamicWeights();
+                        fillingTile = GenerateNewTile(dynamicWeights);
+                    }
+                
+                    // Place the found/generated tile.
                     int spawnIdx = GetIndex(x, y);
                     boardState[spawnIdx] = fillingTile;
                     TileDistribution.TileAdded(fillingTile.type);
-                    
-                    eventBatch.Add(EventPool.Get<TileSpawnedEvent>().Setup(fillingTile, gridPros));
+                
+                    eventBatch.Add(EventPool.Get<TileSpawnedEvent>().Setup(fillingTile, gridPos));
                     Debug.Log($"[Server] Draw new tile to pos: ({x},{y})");
                 }
             }
         }
     }
 
+    /// <summary>
+    /// Iterates through possible tile types and returns the first one that does not cause a match at the given position.
+    /// </summary>
+    private TileState TryFindNonMatchingTile(Vector2Int gridPos, List<Tile> possibleTypes)
+    {
+        // Shuffle the types to ensure a good random distribution of tile types when multiple are safe.
+        // Assuming 'Shuffle' is an extension method for List<T>.
+        possibleTypes.Shuffle();
+
+        // We only need a temporary TileState instance for checking the type.
+        TileState tempTile = new TileState();
+    
+        foreach (var type in possibleTypes)
+        {
+            // Temporarily assign the type for the check.
+            tempTile.type = type; 
+   
+            if (!WouldCauseMatchAt(gridPos, tempTile))
+            {
+                // Found a safe type! Generate the final TileState instance (e.g., with unique ID, etc.)
+                return GenerateNewTile(type); 
+            }
+        }
+
+        // Fallback: If ALL types cause a match (extremely rare in non-full boards),
+        // we must pick one to avoid an infinite loop or null reference. We accept the match here.
+        Debug.LogWarning($"[Server] WARNING: All possible tile types cause a match at {gridPos}. Falling back to random type.");
+        return GenerateNewTile(possibleTypes[0]);
+    }
+
+    private bool WouldCauseMatchAt(Vector2Int gridPos, TileState tempTile)
+    {
+        boardState[GetIndex(gridPos)] = tempTile;
+        var foundMatches = MatchAlgorithm.FindMatchesAt(this, gridPos);
+        
+        //restore the boardstate
+        boardState[GetIndex(gridPos)] = TileState.Empty;
+        
+        if (foundMatches.Count > 0) 
+        {
+            //There are matches if tile were there.
+            return true;
+        }
+
+        return false;
+    }
+    
     public bool CheckForValidSwaps()
     {
         for (int x = 0; x < BoardWidth; x++)
@@ -480,7 +531,7 @@ public class GameBoard
 
         return false;
     }
-    //To-Do & Q: include test swap here? 
+    
     public bool IsValidSwap(Vector2Int posA, Vector2Int posB)
     {
         // Check bounds
