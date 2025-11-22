@@ -235,6 +235,39 @@ namespace DorkyProductions
 
         public override void Reset() => targetPlayerID = 0;
     }
+    
+    public class ChestMatchedEvent : GameEventBase
+    {
+        public override SyncType SyncType => SyncType.Blocking;
+        public override EventType EventType => EventType.ChestMatched;
+        public uint targetPlayerID;
+        public int receivedSkillIndex;
+        public GameEventBase Setup(uint activePlayerNetId, int receivedSkillIdx)
+        {
+            this.targetPlayerID = activePlayerNetId;
+            this.receivedSkillIndex = receivedSkillIdx;
+            return this;
+        }
+        public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(targetPlayerID);
+            writer.Write(receivedSkillIndex);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            targetPlayerID = reader.Read<uint>();
+            receivedSkillIndex = reader.Read<int>();
+        }
+
+        public override void Reset()
+        {
+            targetPlayerID = 0;
+            receivedSkillIndex = 0;
+        }
+
+    }
 
     public class CrossMatchedEvent : GameEventBase
     {
@@ -306,29 +339,36 @@ namespace DorkyProductions
     }
     // --- Immediate Events ---
 
+    public enum TurnStartReason
+    {
+        TurnOrder,  // Default, we were the next player.
+        Cross,      // Extra turn due to a Cross match
+        Chest       // Limited extra turn due to a Chest match, only to open the Chest, not to make another swap!
+    }
     public class TurnStartedEvent : GameEventBase
     {
-        public override SyncType SyncType => SyncType.Immediate;
+        public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.TurnStarted;
         public uint playerNetId;
-        public bool isExtraTurn;
+        public TurnStartReason reason;
         
-        public TurnStartedEvent Setup(uint nextPlayerId, bool isExtraTurn) 
+        public TurnStartedEvent Setup(uint nextPlayerId, TurnStartReason reason) 
         {
-            playerNetId = nextPlayerId;
-            this.isExtraTurn = isExtraTurn;
-            return this; }
+            this.playerNetId = nextPlayerId;
+            this.reason = reason;
+            return this; 
+        }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
         public override void Serialize(NetworkWriter writer)
         {
             writer.Write(playerNetId);
-            writer.Write(isExtraTurn);
+            writer.Write((byte)reason);
         }
 
         public override void Deserialize(NetworkReader reader)
         {
             playerNetId = reader.Read<uint>();
-            isExtraTurn = reader.Read<bool>();
+            reason = (TurnStartReason)reader.Read<byte>();
         }
 
         public override void Reset() => playerNetId = 0;
@@ -336,7 +376,7 @@ namespace DorkyProductions
 
     public class TurnEndedEvent : GameEventBase
     {
-        public override SyncType SyncType => SyncType.Immediate;
+        public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.TurnEnded;
         public uint playerNetId;
         

@@ -92,12 +92,6 @@ namespace DorkyProductions
                     }
                     EventPool.Release(ev); // Release after processing
                 }
-                else if (syncType == SyncType.Immediate)
-                {
-                    // --- IMMEDIATE ---
-                    ev.Accept(this);
-                    EventPool.Release(ev); // Release immediately
-                }
                 else if (syncType == SyncType.Parallel)
                 {
                     // --- PARALLEL ---
@@ -141,13 +135,6 @@ namespace DorkyProductions
             yield return parallelSequence.WaitForCompletion();
             Debug.Log("Parallel batch finished.");
         }
-
-        // =======================================================
-        // --- IGameEventHandler (VISITOR) IMPLEMENTATION ---
-        // =======================================================
-        // This logic is identical to your original, just
-        // separated into type-safe methods.
-        // =======================================================
 
         #region Blocking Handlers
         public Tween Handle(GameStartedEvent e)
@@ -232,9 +219,14 @@ namespace DorkyProductions
             UIMediator.OnPlayersCrossMultiplierUpdated?.Invoke(targetPlayer, 0f);
             return null;
         }
-        #endregion
 
-        #region Immediate Handlers
+        public Tween Handle(ChestMatchedEvent e)
+        {
+            Debug.Log($"Player {e.targetPlayerID} received Chest.");
+            var targetPlayer = GetPlayerType(e.targetPlayerID);
+            UIMediator.OnPlayerChestUpdated?.Invoke(targetPlayer, true);
+            return null;
+        }
         public Tween Handle(TurnStartedEvent e)
         {
             if (_localPlayer == null)
@@ -242,17 +234,34 @@ namespace DorkyProductions
                 Debug.LogError($"LocalPlayer is null.");
                 return null;
             }
+
+            bool isChestOpeningTurn = e.reason == TurnStartReason.Chest;
             
             if (e.playerNetId == _localPlayer.netId)
             {
                 Debug.Log("My Turn Started");
-                UIMediator.OnPlayerTurnStarted(PlayerType.Local, e.isExtraTurn);
-                _localPlayer.EnableControls();
+                UIMediator.OnPlayerTurnStarted(PlayerType.Local, e.reason);
+
+                if (isChestOpeningTurn)
+                {
+                    // Chest should NOT give right to Swap/match again.
+                    // this _extra_ turn is specifically for Opening the Chest.
+                    // Visualizer.OpenChest(e.)
+                }
+                else // Regular, or Extra turn. Allow for Swaps/matches.
+                {
+                    _localPlayer.EnableControls();
+                }
             }
             else
             {
-                UIMediator.OnPlayerTurnStarted(PlayerType.Opponent, e.isExtraTurn);
+                UIMediator.OnPlayerTurnStarted(PlayerType.Opponent, e.reason);
                 _localPlayer.DisableControls();
+
+                if (isChestOpeningTurn)
+                {
+                    Debug.Log("Opponent is Opening a Chest. Hold on...");
+                }
             }
             return null;
         }

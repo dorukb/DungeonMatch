@@ -41,6 +41,7 @@ public class GameMaster : NetworkBehaviour
     private GameBoard _gameBoard; 
     private ClientEventHandler _clientEventHandler;
     private bool _isActivePlayerEarnedExtraTurn = false;
+    private TurnStartReason _extraTurnStartReason;
     void Awake()
     {
         if (Instance == null)
@@ -110,7 +111,7 @@ public class GameMaster : NetworkBehaviour
         var boardState = _gameBoard.FillBoardWithNoMatches();
         
         eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState));
-        eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, false));
+        eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, TurnStartReason.TurnOrder));
         TileDistribution.LogBoardDensity();
         // Add to history and send to clients
         SendEventBatch(eventBatch);
@@ -126,7 +127,7 @@ public class GameMaster : NetworkBehaviour
         Debug.Log($"[Server] Game over. Winner: {winner.netId}");
     }
 
-    // This is the main "transaction" method called by a Player [Command].
+    // This is the main "transaction" method called by a Player via [Command].
     // It processes the move and generates all resulting events.
     [Server]
     public void ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA, Vector2Int posB)
@@ -169,7 +170,14 @@ public class GameMaster : NetworkBehaviour
     }
     
     [Server]
-    public void EndTurnAndStartNext(List<GameEventBase> eventBatch)
+    public void GrantExtraTurnToCurrentPlayer(TurnStartReason reason)
+    {
+        Debug.Log($"[Server] Active player: {activePlayer.netId} has been granted an extra turn.");
+        _isActivePlayerEarnedExtraTurn = true;
+    }
+    
+    [Server]
+    private void EndTurnAndStartNext(List<GameEventBase> eventBatch)
     {
         if (gameState == GameState.GameEnded)
         {
@@ -179,12 +187,14 @@ public class GameMaster : NetworkBehaviour
         
         if (_isActivePlayerEarnedExtraTurn)
         {
+            // TODO: Does this also work with Chest?
+            // player should not be able to make another swap, only wait for Chest to open.
             // active player does not change.
             Debug.Log("[Server] Not changing the active player at the end of the turn due to Extra Turn.");
             // TODO: Do we need to send TurnEnded nonetheless? 
             // seems unnecessary for now, probably become clear once we have all the animations.
             _isActivePlayerEarnedExtraTurn = false;
-            eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, true));
+            eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, _extraTurnStartReason));
         }
         else //regular behavior, go to Next player.
         {
@@ -193,7 +203,7 @@ public class GameMaster : NetworkBehaviour
             
             activePlayerIndex = (activePlayerIndex + 1) % players.Count;
             activePlayer = players[activePlayerIndex];
-            eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, false));
+            eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, TurnStartReason.TurnOrder));
         }
     }
 
@@ -224,7 +234,7 @@ public class GameMaster : NetworkBehaviour
     }
     
     [ClientRpc]
-    void RpcReceiveEventBatch(ArraySegment<byte> eventBatch)
+    private void RpcReceiveEventBatch(ArraySegment<byte> eventBatch)
     {
         if (_clientEventHandler == null)
         {
@@ -238,11 +248,5 @@ public class GameMaster : NetworkBehaviour
         _clientEventHandler.EnqueueEventBatch(eventBatch);
     }
 
-    [Server]
-    public void GrantExtraTurnToCurrentPlayer()
-    {
-        Debug.Log($"[Server] Active player: {activePlayer.netId} has been granted an extra turn.");
-        _isActivePlayerEarnedExtraTurn = true;
-    }
 }
 }

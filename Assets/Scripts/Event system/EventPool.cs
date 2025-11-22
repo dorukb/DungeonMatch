@@ -51,6 +51,7 @@ namespace DorkyProductions
                 EventType.Shield => Get<ShieldEvent>(),
                 EventType.CrossMatched => Get<CrossMatchedEvent>(),
                 EventType.CrossConsumed => Get<CrossConsumedEvent>(),
+                EventType.ChestMatched => Get<ChestMatchedEvent>(),
 
                 // Immediate
                 EventType.TurnStarted => Get<TurnStartedEvent>(),

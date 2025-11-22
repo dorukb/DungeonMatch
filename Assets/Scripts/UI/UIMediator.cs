@@ -19,7 +19,11 @@ public class UIMediator : MonoBehaviour
     // params: <Player, CurrentMultiplier>
     public static Action<PlayerType, float> OnPlayersCrossMultiplierUpdated;
 
-    public static Action<PlayerType, bool> OnPlayerTurnStarted;
+    // params: <Player, TurnStartReason>
+    public static Action<PlayerType, TurnStartReason> OnPlayerTurnStarted;
+    
+    // params: <Player, HasChest>
+    public static Action<PlayerType, bool> OnPlayerChestUpdated;
 }
 
 }

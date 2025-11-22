@@ -21,6 +21,8 @@ public class PlayerPortraitUI : MonoBehaviour
 
     [SerializeField] private GameObject crossDisplay;
     [SerializeField] private TextMeshProUGUI multiplierText;
+
+    [SerializeField] private GameObject chestDisplay;
     
     [Tooltip("Which player does this UI portrait represent?")]
     [SerializeField]
@@ -33,6 +35,7 @@ public class PlayerPortraitUI : MonoBehaviour
         UIMediator.OnPlayerHealthUpdated += UpdatePlayerHealth;
         UIMediator.OnPlayerShieldUpdated += UpdatePlayerShield;
         UIMediator.OnPlayersCrossMultiplierUpdated += UpdateCrossMultiplier;
+        UIMediator.OnPlayerChestUpdated += UpdateChestDisplay;
     }
 
     private void OnDisable()
@@ -77,7 +80,15 @@ public class PlayerPortraitUI : MonoBehaviour
         multiplierText.text = $"{currMultiplier:0.##}x";
         bool hasMultiplier = currMultiplier > Mathf.Epsilon;
         crossDisplay.SetActive(hasMultiplier);
-  }
+    }
+    
+    private void UpdateChestDisplay(PlayerType player, bool hasChest)
+    {
+        if (player != displayForPlayer) return;
+        
+        chestDisplay.SetActive(hasChest);
+    }
+
     
 }
 

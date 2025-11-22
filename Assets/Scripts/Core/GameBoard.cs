@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
 using UI;
-using Unity.Mathematics;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -163,26 +161,24 @@ public class GameBoard
     }
     
     
-    public bool ProcessSwapMove(Vector2Int posA, Vector2Int posB, NetworkIdentity performingPlayer, List<GameEventBase> eventBatch)
+    public void ProcessSwapMove(Vector2Int posA, Vector2Int posB, NetworkIdentity performingPlayer, List<GameEventBase> eventBatch)
     {
-        // --- 1. Perform the swap ---
+        // Perform the swap ---
         int indexA = GetIndex(posA);
         int indexB = GetIndex(posB);
         TileState stateA = boardState[indexA];
         TileState stateB = boardState[indexB];
-
         boardState[indexA] = stateB;
         boardState[indexB] = stateA;
-        // RpcAnimateSwap(stateA.uniqueID, stateB.uniqueID);
+        
         eventBatch.Add(EventPool.Get<SwappedTilesEvent>().Setup(stateA.uniqueID, stateB.uniqueID));
         
-        // Check if this swap caused a match
-        // We only need to check the rows/cols of the two tiles we moved
+        // Check the rows/cols of the two tiles we moved for a Match
         var matchesToProcess = MatchAlgorithm.FindMatchesAfterSwap(this, posA, posB);
         if (matchesToProcess.Count == 0)
         {
-            // TODO: Move didnt yield a Match, maybe do not allow and rollback the move.
-            return false;
+            // Non-match yielding moves are accepted, player turn ends here.
+            return;
         }
 
         // This 'master' loop handles all chain reactions (cascades AND refills).
@@ -199,6 +195,9 @@ public class GameBoard
             // Idea chest:
             // finish this loop, stabilize the board, then DO NOT END the turn, send open chest to clients, wait for the result, client should send "chest open"
             // we execute that effect, then again run StabilizeBoard.
+            
+            // up to this point, there was no "wait for sth from a player" except SWAP action.
+            // we could model this as another such Transaction, but its sent AUTOMATICALLY by the client-side code.
             bool shouldOpenChest = ApplyMatchEffects(matchesToProcess, eventBatch);
             RemoveMatchedTiles(matchesToProcess);
             SimulateTileFall(eventBatch);
@@ -213,7 +212,7 @@ public class GameBoard
                 matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
             }
         }
-        return true; // A match occurred
+        return;
     }
 
     private void RemoveMatchedTiles(List<MatchResult> matchResults)
@@ -265,10 +264,7 @@ public class GameBoard
                     ApplyHealEffect(eventBatch, activePlayer, match);
                     break;
                 case Tile.Chest:
-                    // TODO: OpenChest();
-                    // This could trigger another skill, which might
-                    // modify the board again. Be careful of recursive loops!
-                    // For now, let's keep it simple.
+                    ApplyChestEffect(eventBatch, activePlayer, match, GameMaster.Instance);
                     break;
                 default:
                     Debug.LogError($"Sth is wrong. what is this tile type?? : {match.tileType}");
@@ -277,6 +273,15 @@ public class GameBoard
         }
 
         return false;
+    }
+
+    private void ApplyChestEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, GameMaster gm)
+    {
+        // TODO: Use a distribution controlled via ScriptableObject here for the various chest effects & their drop changes.
+        int chestSkillIdx = Random.Range(0, 6);
+        
+        eventBatch.Add(EventPool.Get<ChestMatchedEvent>().Setup(activePlayer.netId, chestSkillIdx));
+        gm.GrantExtraTurnToCurrentPlayer(TurnStartReason.Chest);
     }
 
     private void ApplyCrossEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, GameMaster gm)
@@ -288,7 +293,7 @@ public class GameBoard
         float gainedMultiplier = BasicCardEffects.GetCrossMultiplier(match.matchCount);
         activePlayer.GainMultiplier(gainedMultiplier);
         eventBatch.Add(EventPool.Get<CrossMatchedEvent>().Setup(activePlayer.netId, activePlayer.GetMultiplier()));
-        gm.GrantExtraTurnToCurrentPlayer();
+        gm.GrantExtraTurnToCurrentPlayer(TurnStartReason.Cross);
     }
 
     private static void ApplyHealEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match)

@@ -15,6 +15,7 @@ namespace DorkyProductions
         Shield,
         CrossMatched,
         CrossConsumed,
+        ChestMatched,
 
         // Parallel
         TileMoved,
@@ -30,7 +31,6 @@ namespace DorkyProductions
     public enum SyncType
     {
         Blocking,
-        Immediate,
         Parallel
     }
 
@@ -79,6 +79,8 @@ namespace DorkyProductions
         Tween Handle(ShieldEvent e);
         Tween Handle(CrossMatchedEvent e);
         Tween Handle(CrossConsumedEvent e);
+        Tween Handle(ChestMatchedEvent e);
+        
         // Immediate
         Tween Handle(TurnStartedEvent e);
         Tween Handle(TurnEndedEvent e);
