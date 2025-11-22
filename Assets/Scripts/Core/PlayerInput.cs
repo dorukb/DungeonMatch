@@ -11,17 +11,9 @@ public class PlayerInput : MonoBehaviour
     private bool _isDragging = false;
     private bool isEnabled = false;
 
-    private void Start()
+    private void Awake()
     {
         isEnabled = false;
-    }
-
-    void Update()
-    {
-        if (LocalPlayerController != null)
-        {
-            isEnabled = true;
-        }
     }
 
     public void DisableControls()
