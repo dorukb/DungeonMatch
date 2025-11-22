@@ -1,18 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DorkyProductions;
 using UnityEngine;
 using Random = System.Random;
 
-namespace UI
+namespace DorkyProductions.UI
 {
     public class TileDistribution
     {
         //Scaling constant
         private static int _k = 50;
-        
-        private static int _boardSize = 25;
 
         private static readonly Dictionary<Tile, int> _baseWeights = new Dictionary<Tile, int>
         {
@@ -35,6 +32,8 @@ namespace UI
         {
             var dynamicWeights = new Dictionary<Tile, double>();
 
+            int boardSize = GameBoard.BoardWidth * GameBoard.BoardHeight;
+            
             foreach (var tile in _baseWeights)
             {
                 Tile tileType = tile.Key;
@@ -43,7 +42,7 @@ namespace UI
 
                 if (!_targetPercentages.TryGetValue(tileType, out double t_i))
                 {
-                    Debug.LogError("tiletype exists but there is no target percentage for it!");
+                    Debug.LogError("Tile type exists but there is no target percentage for it!");
                     t_i = 0.0;
                 }
 
@@ -53,7 +52,7 @@ namespace UI
                 }
                 
                 //current density d_i = c_i/boardSize
-                double d_i = (double)c_i / _boardSize;
+                double d_i = (double)c_i / boardSize;
                 
                 //calculate delta based on board state i.e. current tile densities
                 //Delta = k * (t_i - d_i)
@@ -77,7 +76,7 @@ namespace UI
                 // Use the existing logic to calculate the dynamic weight for this type
                 double weight = GetDynamicWeight(type); 
                 allowedWeights[type] = weight;
-                Debug.Log($"weight: {weight} for allowed type:{type}");
+                // Debug.Log($"weight: {weight} for allowed type:{type}");
             }
             return allowedWeights;
         }
@@ -102,44 +101,38 @@ namespace UI
             
             // The target probability/density (P_target)
             double targetDensity = _targetPercentages[type];
-            Debug.Log($"target density: {targetDensity}");
     
             // The current actual probability/density (P_current)
             double currentDensity = (double)_currentTileCounts[type] / totalTiles; 
-            Debug.Log($"current density: {currentDensity}");
             // 3. Calculate Adjustment Factor (A)
             // If currentDensity > targetDensity, this factor will be less than 1 (weight reduced).
             // If currentDensity < targetDensity, this factor will be greater than 1 (weight increased).
             double adjustmentFactor = targetDensity / currentDensity;
-            Debug.Log($"adjustment factor: {adjustmentFactor}");
-            // 4. Calculate Dynamic Weight (W_dynamic)
             double dynamicWeight = baseWeight * adjustmentFactor;
-            Debug.Log("dynamic weight: " + dynamicWeight);
             // Ensure the weight is not negative (though highly unlikely with a small K_FACTOR)
             return Math.Max(0.001f, dynamicWeight); 
         }
 
-        // And a method to select the tile based on these weights:
         public static Tile SelectTileFromWeights(Dictionary<Tile, double> weights)
         {
             double total = weights.Values.Sum();
-            if (total <= 0) Debug.LogError($"weight total is {total}. should be > 0"); // Default or error handling
+            if (total <= 0) 
+            {
+                Debug.LogError($"weight total is {total}. should be > 0");
+            }
     
             double random = Rng.NextDouble() * total; // Assuming Rng.NextFloat() or similar
             double cumulativeWeight = 0;
-            Debug.Log($"random value is {random}");
             
             foreach (var kvp in weights)
             {
                 cumulativeWeight += kvp.Value;
-                Debug.Log($"cumWeight value is {cumulativeWeight}");
                 if (random < cumulativeWeight)
                 {
-                    Debug.Log($"tile type will be: {kvp.Key}");
                     return kvp.Key;
                 }
             }
-            Debug.Log("you shouldnt be seeing this");
+            Debug.LogWarning("Cumulative weighting did not work, selecting Attack Tile as fallback option.");
             return Tile.Attack; // Should not happen
         }
         
@@ -165,7 +158,8 @@ namespace UI
         private static float GetCurrentDensity(Tile type)
         {
             _currentTileCounts.TryGetValue(type, out int count);
-            return (float)count / _boardSize;
+            int boardSize = GameBoard.BoardWidth * GameBoard.BoardHeight;
+            return (float)count / boardSize;
         }
 
         public static void LogBoardDensity()

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using Mirror;
 using System.Collections.Generic;
-using UI;
+using DorkyProductions.UI;
 
 namespace  DorkyProductions
 {

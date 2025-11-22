@@ -48,6 +48,7 @@ public class PlayerPortraitUI : MonoBehaviour
     private void Start()
     {
         crossDisplay.SetActive(false);
+        chestDisplay.SetActive(false);
     }
 
     public void SetPlayerNameText(string text)
