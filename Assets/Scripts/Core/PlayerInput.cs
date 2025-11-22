@@ -26,11 +26,13 @@ public class PlayerInput : MonoBehaviour
 
     public void DisableControls()
     {
+        Debug.Log("Disabling controls");
         isEnabled = false;
     }
 
     public void EnableControls()
     {
+        Debug.Log("Enabling controls");
         isEnabled = true;
     }
 

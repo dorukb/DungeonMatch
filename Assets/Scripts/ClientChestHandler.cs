@@ -30,8 +30,11 @@ public class ClientChestHandler : MonoBehaviour
 
     private void UseButtonCallback()
     {
-        // this should reach back to NetworkPlayer and trigger a Command
+        chestUIController.gameObject.SetActive(false);
+        // this reaches back to NetworkPlayer and trigger a Command
         // to execute this "skill effect" on the server side.
+        // TODO: It should actually start a "new input sequence" based on the Skill effect.
+        // i.e, Select A row, Select a tile to remove and so on.
         _localPlayer.AttemptSkillUse(rewardIdToReceive);
     }
     

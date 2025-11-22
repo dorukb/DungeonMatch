@@ -139,10 +139,12 @@ public class GameMaster : NetworkBehaviour
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         bool canMakeMove = (gameState == GameState.Playing) && (sender.identity == activePlayer.netIdentity);
         // TODO: Validate the player actually has this skill/received the chest?
-        
-        
-        // TODO: actually apply the skill effect ,whatever it is.
-        // _gameBoard.ProcessSkillEffect(skillId, sender.identity, eventBatch);
+        if (canMakeMove)
+        {
+            Debug.Log($"[Server] Dummy execute Chest Skill Effect #{skillId}");
+            // TODO: actually apply the skill effect ,whatever it is.
+            // _gameBoard.ProcessSkillEffect(skillId, sender.identity, eventBatch);
+        }
 
         Debug.Log($"[Server] Dummy execute Chest Skill Effect #{skillId}");
         EndTurnAndStartNext(eventBatch);
