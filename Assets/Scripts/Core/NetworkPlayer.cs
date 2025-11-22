@@ -147,5 +147,27 @@ namespace DorkyProductions
             Debug.Log($"[Server] Received swap request: {posA} <-> {posB}");
             GameMaster.Instance.ProcessPlayerSwap(connectionToClient, posA, posB);
         }
+
+        [Client]
+        public void AttemptSkillUse(int rewardId)
+        {
+            if (!isLocalPlayer) return; // Should never happen, but good check
+            Debug.Log($"[Local Client] Requesting Skill Use: {rewardId}");
+            DisableControls();
+            CmdAttemptChestSkillEffect(rewardId);
+        } 
+        
+        [Command]
+        private void CmdAttemptChestSkillEffect(int effectId)
+        {
+            if (GameMaster.Instance == null)
+            {
+                Debug.LogError("Command failed: GameMaster not found on server.");
+                return;
+            }
+            
+            Debug.Log($"[Server] Received Skill Use request: {effectId}");
+            GameMaster.Instance.ProcessPlayerSkillUse(connectionToClient, effectId);
+        }
     }
 }

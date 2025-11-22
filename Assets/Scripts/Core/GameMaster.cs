@@ -127,6 +127,27 @@ public class GameMaster : NetworkBehaviour
         Debug.Log($"[Server] Game over. Winner: {winner.netId}");
     }
 
+    [Server]
+    public void ProcessPlayerSkillUse(NetworkConnectionToClient sender, int skillId)
+    {
+        if (gameState == GameState.GameEnded)
+        {
+            Debug.Log("[Server] Game has ended already, Skill Use request has no effect at this point.");
+            return;
+        }
+        
+        List<GameEventBase> eventBatch = new List<GameEventBase>();
+        bool canMakeMove = (gameState == GameState.Playing) && (sender.identity == activePlayer.netIdentity);
+        // TODO: Validate the player actually has this skill/received the chest?
+        
+        
+        // TODO: actually apply the skill effect ,whatever it is.
+        // _gameBoard.ProcessSkillEffect(skillId, sender.identity, eventBatch);
+
+        Debug.Log($"[Server] Dummy execute Chest Skill Effect #{skillId}");
+        EndTurnAndStartNext(eventBatch);
+        SendEventBatch(eventBatch);
+    }
     // This is the main "transaction" method called by a Player via [Command].
     // It processes the move and generates all resulting events.
     [Server]
@@ -134,27 +155,29 @@ public class GameMaster : NetworkBehaviour
     {
         if (gameState == GameState.GameEnded)
         {
-            Debug.Log("[Server] Game has already, Swap request has no effect at this point.");
+            Debug.Log("[Server] Game has ended already, Swap request has no effect at this point.");
             return;
         }
         
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         bool canMakeMove = (gameState == GameState.Playing) && (sender.identity == activePlayer.netIdentity);
         bool isValidMove = canMakeMove && _gameBoard.IsValidSwap(posA, posB);
-        if (!isValidMove)
+        if (isValidMove)
+        {
+            // Core algorithm.
+            _gameBoard.ProcessSwapMove(posA, posB, sender.identity, eventBatch);
+
+            EndTurnAndStartNext(eventBatch);
+            SendEventBatch(eventBatch);
+        }
+        else
         {
             Debug.LogWarning($"Player {sender.identity.netId} tried to move out of turn or the swap was not valid.");
             eventBatch.Add(EventPool.Get<SwapDeniedEvent>().Setup(activePlayer.netId));
-            // we send this to both players, is that a problem?
+            
+            // Note: we do NOT end the turn here, just let the player make another move.
             SendEventBatch(eventBatch);
-            return;
         }
-
-        // Core algorithm.
-        _gameBoard.ProcessSwapMove(posA, posB, sender.identity, eventBatch);
-
-        EndTurnAndStartNext(eventBatch);
-        SendEventBatch(eventBatch);
     }
 
     
@@ -172,8 +195,11 @@ public class GameMaster : NetworkBehaviour
     [Server]
     public void GrantExtraTurnToCurrentPlayer(TurnStartReason reason)
     {
+        // TODO: This breaks when we match Chest & Cross in the same turn!
+        // the latest match overwrites the prev reason.
         Debug.Log($"[Server] Active player: {activePlayer.netId} has been granted an extra turn.");
         _isActivePlayerEarnedExtraTurn = true;
+        _extraTurnStartReason = reason;
     }
     
     [Server]

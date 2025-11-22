@@ -241,30 +241,30 @@ namespace DorkyProductions
         public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.ChestMatched;
         public uint targetPlayerID;
-        public int receivedSkillIndex;
-        public GameEventBase Setup(uint activePlayerNetId, int receivedSkillIdx)
+        public int receivedRewardId;
+        public GameEventBase Setup(uint activePlayerNetId, int rewardId)
         {
             this.targetPlayerID = activePlayerNetId;
-            this.receivedSkillIndex = receivedSkillIdx;
+            this.receivedRewardId = rewardId;
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
         public override void Serialize(NetworkWriter writer)
         {
             writer.Write(targetPlayerID);
-            writer.Write(receivedSkillIndex);
+            writer.Write(receivedRewardId);
         }
 
         public override void Deserialize(NetworkReader reader)
         {
             targetPlayerID = reader.Read<uint>();
-            receivedSkillIndex = reader.Read<int>();
+            receivedRewardId = reader.Read<int>();
         }
 
         public override void Reset()
         {
             targetPlayerID = 0;
-            receivedSkillIndex = 0;
+            receivedRewardId = 0;
         }
 
     }

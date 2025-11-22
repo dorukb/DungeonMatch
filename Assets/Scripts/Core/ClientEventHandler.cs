@@ -11,15 +11,18 @@ namespace DorkyProductions
 {
     public class ClientEventHandler : MonoBehaviour, IGameEventHandler
     {
-        public ClientBoardVisualizer Visualizer;
-
+        [SerializeField]
+        private ClientBoardVisualizer _visualizer;
+        [SerializeField]
+        private UIMediator _mediator;
+        [SerializeField] 
+        private ClientChestHandler _chestHandler;
+        
         // private List<GameEvent> gameHistory = new List<GameEvent>();
         private Queue<GameEventBase> eventQueue = new Queue<GameEventBase>();
         private bool isProcessingEvents = false;
         private NetworkPlayer _localPlayer;
     
-        [SerializeField]
-        private UIMediator _mediator;
         private void OnDisable()
         {
             if (eventQueue.Count > 0)
@@ -140,7 +143,7 @@ namespace DorkyProductions
         public Tween Handle(GameStartedEvent e)
         {
             Debug.Log("Game started, setup the local board");
-            return Visualizer.InitBoard(e.boardState);
+            return _visualizer.InitBoard(e.boardState);
         }
 
         public Tween Handle(GameEndedEvent e)
@@ -153,13 +156,13 @@ namespace DorkyProductions
         public Tween Handle(MatchedTilesEvent e)
         {
             Debug.Log($"MatchOccurred/RemoveTiles for: {e.matchedTileIDs}");
-            return Visualizer.AnimatePop(e.matchedTileIDs);
+            return _visualizer.AnimatePop(e.matchedTileIDs);
         }
 
         public Tween Handle(SwappedTilesEvent e)
         {
             Debug.Log($"Swap tiles: {e.firstId}, {e.secondId}");
-            return Visualizer.AnimateSwap(e.firstId, e.secondId);
+            return _visualizer.AnimateSwap(e.firstId, e.secondId);
         }
 
         public Tween Handle(SwapDeniedEvent e)
@@ -225,6 +228,11 @@ namespace DorkyProductions
             Debug.Log($"Player {e.targetPlayerID} received Chest.");
             var targetPlayer = GetPlayerType(e.targetPlayerID);
             UIMediator.OnPlayerChestUpdated?.Invoke(targetPlayer, true);
+
+            if (targetPlayer == PlayerType.Local)
+            {
+                _chestHandler.SaveReceivedChest(e.receivedRewardId, _localPlayer);
+            }
             return null;
         }
         public Tween Handle(TurnStartedEvent e)
@@ -247,6 +255,11 @@ namespace DorkyProductions
                     // Chest should NOT give right to Swap/match again.
                     // this _extra_ turn is specifically for Opening the Chest.
                     // Visualizer.OpenChest(e.)
+                    _localPlayer.DisableControls();
+                    _chestHandler.OpenChest();
+                    
+                    var targetPlayer = GetPlayerType(e.playerNetId);
+                    UIMediator.OnPlayerChestUpdated?.Invoke(targetPlayer, false);
                 }
                 else // Regular, or Extra turn. Allow for Swaps/matches.
                 {
@@ -280,12 +293,12 @@ namespace DorkyProductions
         #region Parallel Handlers
         public Tween Handle(TileMovedEvent e)
         {
-            return Visualizer.AnimateFall(e.tileId, e.toGridPos);
+            return _visualizer.AnimateFall(e.tileId, e.toGridPos);
         }
 
         public Tween Handle(TileSpawnedEvent e)
         {
-            return Visualizer.SpawnVisualTile(e.state, e.pos);
+            return _visualizer.SpawnVisualTile(e.state, e.pos);
         }
 
         public PlayerType GetPlayerType(uint playerNetId)
