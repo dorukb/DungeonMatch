@@ -66,101 +66,11 @@ public class GameBoard
             TileState newTile = GenerateNewTile(newType);
             boardState.Add(newTile);
             TileDistribution.TileAdded(newType);
-            //boardState.Add(GenerateNewTile(_availableTypes));
         }
 
         return boardState;
     }
-    // Overload: Generates a random tile from a specific list of allowed types.
-    /*private TileState GenerateNewTile(List<Tile> availableTypes)
-    {
-        if (availableTypes.Count == 0)
-        {
-            // This is a safety net. It's very rare but could happen
-            // if both horizontal and vertical checks removed the same, last-available type.
-            // In this case, just pick any random one.
-            Debug.LogError("Ran out of available types. Picking a random one.");
-            return GenerateNewTile();
-        }
-    
-        // Pick a random ID from the *allowed* list
-        int randomIndex = Random.Range(0, availableTypes.Count);
-        Tile randomType = availableTypes[randomIndex];
 
-        bool isDoubleEffect = false;
-        if (randomType == Tile.Attack || randomType == Tile.Heal)
-        {
-            // %20 double effect
-            isDoubleEffect = Random.value > 0.8f;
-        }
-        return new TileState(_nextTileID++, randomType, isDoubleEffect);
-    }*/
-
-    private TileState GenerateNewTile(Tile type)
-    {
-        bool isDoubleEffect = false;
-        if (type == Tile.Attack || type == Tile.Heal)
-        {
-            // %20 double effect
-            isDoubleEffect = Random.value > 0.8f;
-        }
-        return new TileState(_nextTileID++, type, isDoubleEffect);
-    }
-    /*private TileState GenerateNewTile()
-    {
-        // 1st Tile type is UNKNOWN, exclude it.
-        // TODO: WTF is this code?
-        // fix this random type based on allDefnCount, looks stupid.
-        Tile randomType = (Tile)Random.Range(1, GameMaster.Instance.TileDatabase.allTileDefinitions.Count);
-        
-        bool isDoubleEffect = false;
-        if (randomType == Tile.Attack || randomType == Tile.Heal)
-        {
-            // %20 double effect
-            isDoubleEffect = Random.value > 0.8f;
-        }
-        return new TileState(_nextTileID++, randomType, isDoubleEffect);
-    }*/
-
-    private TileState GenerateNewTile(Dictionary<Tile, double> dynamicWeights)
-    {
-        double totalWeight = dynamicWeights.Values.Sum();
-
-        if (totalWeight <= 0)
-        {
-            //TODO: decide what to do here
-            //Debug.Log(); // no tile can be dropped
-        }
-
-        double randomTarget = Random.value * totalWeight;
-            
-        double currentCumulativeWeight = 0;
-
-        foreach (var kvp in dynamicWeights)
-        {
-            Tile tileType = kvp.Key;
-            double weight = kvp.Value;
-            
-            currentCumulativeWeight += weight;
-
-            // Check if the random target falls within this tile's weight segment
-            if (randomTarget < currentCumulativeWeight)
-            {
-                // This tile is selected!
-                bool isDoubleEffect = false;
-                if (tileType == Tile.Attack || tileType == Tile.Heal)
-                {
-                    // %20 double effect
-                    isDoubleEffect = Random.value > 0.8f;
-                }
-                return new TileState(_nextTileID++, tileType, isDoubleEffect);
-            }
-        }
-
-        return default;
-    }
-    
-    
     public void ProcessSwapMove(Vector2Int posA, Vector2Int posB, NetworkIdentity performingPlayer, List<GameEventBase> eventBatch)
     {
         // Perform the swap ---
@@ -191,14 +101,8 @@ public class GameBoard
             {
                 Debug.Log(res.Debug());
             }
-            // TODO: Handle chest open case that breaks/pauses the chain events.
-            // Idea chest:
-            // finish this loop, stabilize the board, then DO NOT END the turn, send open chest to clients, wait for the result, client should send "chest open"
-            // we execute that effect, then again run StabilizeBoard.
-            
-            // up to this point, there was no "wait for sth from a player" except SWAP action.
-            // we could model this as another such Transaction, but its sent AUTOMATICALLY by the client-side code.
-            bool shouldOpenChest = ApplyMatchEffects(matchesToProcess, eventBatch);
+        
+            ApplyMatchEffects(matchesToProcess, eventBatch);
             RemoveMatchedTiles(matchesToProcess);
             SimulateTileFall(eventBatch);
             matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
@@ -215,6 +119,43 @@ public class GameBoard
         return;
     }
 
+    public bool IsValidSwap(Vector2Int posA, Vector2Int posB)
+    {
+        // Check bounds
+        if (posA.x < 0 || posA.x >= BoardWidth || posA.y < 0 || posA.y >= BoardHeight ||
+            posB.x < 0 || posB.x >= BoardWidth || posB.y < 0 || posB.y >= BoardHeight)
+        {
+            return false;
+        }
+
+        // Tiles must be different type, otherwise no effect.
+        // Prevents accidental no-effect swaps. 
+        if (GetTileAt(posA).type == GetTileAt(posB).type)
+        {
+            Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. Tiles are same type.");
+            return false;
+        }
+
+        if (GetTileAt(posA).type == Tile.Unknown|| GetTileAt(posB).type == Tile.Unknown)
+        {
+            Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. at least one of the tiles is Empty.");
+            // dont allow swapping with Empty tiles.
+            return false;
+        }
+        
+        // Check for adjacency (Manhattan distance == 1)
+        int dist = Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
+        return dist == 1;
+    }
+    
+    public TileState GetTileAt(Vector2Int pos) => boardState[GetIndex(pos)];
+    public static Vector2Int GetGridPos(int idx)
+    {
+        int y = idx % BoardWidth;
+        int x = idx / BoardHeight;
+        return new Vector2Int(x, y);
+    }
+
     private void RemoveMatchedTiles(List<MatchResult> matchResults)
     {
         foreach (var match in matchResults)
@@ -229,7 +170,7 @@ public class GameBoard
     // --- BOARD PROCESSING HELPERS ---
 
     // returns: Whether this match should stop the Chain events immediately: i.e, shouldOpenChest
-    private bool ApplyMatchEffects(List<MatchResult> matchResults, List<GameEventBase> eventBatch)
+    private void ApplyMatchEffects(List<MatchResult> matchResults, List<GameEventBase> eventBatch)
     {
         // This is where Card specific match effect will take place.
         foreach (var match in matchResults)
@@ -272,7 +213,7 @@ public class GameBoard
             }
         }
 
-        return false;
+        return;
     }
 
     private void ApplyChestEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, GameMaster gm)
@@ -445,9 +386,6 @@ public class GameBoard
         }
     }
 
-    /// <summary>
-    /// Iterates through possible tile types and returns the first one that does not cause a match at the given position.
-    /// </summary>
     private TileState TryFindNonMatchingTile(Vector2Int gridPos, List<Tile> possibleTypes)
     {
         // Shuffle the types to ensure a good random distribution of tile types when multiple are safe.
@@ -491,93 +429,56 @@ public class GameBoard
 
         return false;
     }
-    
-    public bool CheckForValidSwaps()
+    private TileState GenerateNewTile(Tile type)
     {
-        for (int x = 0; x < BoardWidth; x++)
+        bool isDoubleEffect = false;
+        if (type == Tile.Attack || type == Tile.Heal)
         {
-            for (int y = 0; y < BoardHeight; y++)
-            {
-                // 1. Check a swap with the right neighbor
-                if (y < BoardHeight - 1)
-                {
-                    if (TestSwap(new Vector2Int(x, y), new Vector2Int(x, y + 1))) 
-                    {
-                        return true; // Found a valid move!
-                    }
-                }
+            // %20 double effect
+            isDoubleEffect = Random.value > 0.8f;
+        }
+        return new TileState(_nextTileID++, type, isDoubleEffect);
+    }
 
-                // 2. Check a swap with the bottom neighbor
-                if (x < BoardWidth - 1)
+    private TileState GenerateNewTile(Dictionary<Tile, double> dynamicWeights)
+    {
+        double totalWeight = dynamicWeights.Values.Sum();
+
+        if (totalWeight <= 0)
+        {
+            //TODO: decide what to do here
+            //Debug.Log(); // no tile can be dropped
+        }
+
+        double randomTarget = Random.value * totalWeight;
+            
+        double currentCumulativeWeight = 0;
+
+        foreach (var kvp in dynamicWeights)
+        {
+            Tile tileType = kvp.Key;
+            double weight = kvp.Value;
+            
+            currentCumulativeWeight += weight;
+
+            // Check if the random target falls within this tile's weight segment
+            if (randomTarget < currentCumulativeWeight)
+            {
+                // This tile is selected!
+                bool isDoubleEffect = false;
+                if (tileType == Tile.Attack || tileType == Tile.Heal)
                 {
-                    if (TestSwap(new Vector2Int(x, y), new Vector2Int(x + 1, y)))
-                    {
-                        return true; // Found a valid move!
-                    }
+                    // %20 double effect
+                    isDoubleEffect = Random.value > 0.8f;
                 }
+                return new TileState(_nextTileID++, tileType, isDoubleEffect);
             }
         }
 
-        return false; // No valid moves found after checking all possibilities
+        return default;
     }
-    
-    public bool TestSwap(Vector2Int pos1, Vector2Int pos2)
-    {
-        TileState tmp = boardState[GetIndex(pos1)];
-        boardState[GetIndex(pos1)] = boardState[GetIndex(pos2)];
-        boardState[GetIndex(pos2)] = tmp;
-
-        List<MatchResult> matchResults = MatchAlgorithm.FindMatchesAfterSwap(this, pos1, pos2);
-
-        if (matchResults.Count > 0)
-        {
-            return true;
-        }
-
-        return false;
-    }
-    
-    public bool IsValidSwap(Vector2Int posA, Vector2Int posB)
-    {
-        // Check bounds
-        if (posA.x < 0 || posA.x >= BoardWidth || posA.y < 0 || posA.y >= BoardHeight ||
-            posB.x < 0 || posB.x >= BoardWidth || posB.y < 0 || posB.y >= BoardHeight)
-        {
-            return false;
-        }
-
-        // Tiles must be different type, otherwise no effect.
-        // Prevents accidental no-effect swaps. 
-        if (GetTileAt(posA).type == GetTileAt(posB).type)
-        {
-            Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. Tiles are same type.");
-            return false;
-        }
-
-        if (GetTileAt(posA).type == Tile.Unknown|| GetTileAt(posB).type == Tile.Unknown)
-        {
-            Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. at least one of the tiles is Empty.");
-            // dont allow swapping with Empty tiles.
-            return false;
-        }
-        
-        // Check for adjacency (Manhattan distance == 1)
-        int dist = Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
-        return dist == 1;
-    }
-    public static Vector2Int GetGridPos(int idx)
-    {
-        // idx = 8 , 9th tile
-        // (x,y)
-        // (1,3)
-        int y = idx % BoardWidth;
-        int x = idx / BoardHeight;
-        return new Vector2Int(x, y);
-    }
-    public int GetIndex(Vector2Int pos) =>  GetIndex(pos.x, pos.y);
+    private int GetIndex(Vector2Int pos) =>  GetIndex(pos.x, pos.y);
     private int GetIndex(int x, int y) => (x * BoardHeight) + y;
-    public TileState GetTileAt(Vector2Int pos) => boardState[GetIndex(pos)];
-
     private TileState GetTileSafe(int x, int y)
     {
         // Check bounds
@@ -597,21 +498,6 @@ public class GameBoard
     
         return boardState[index];
     }
-
-    public TileState GetTile(ushort id)
-    {
-        // Use FindIndex, which is safe
-        int index = boardState.FindIndex(t => t.uniqueID == id);
-
-        if (index == -1)
-        {
-            // Not found, so return your safe "Empty" struct
-            Debug.LogError($"Tile with id: {id} not found. wtf?");
-            return TileState.Empty;
-        }
-        return boardState[index];
-    }
-    // ... Server logic for checking matches, etc., goes here ...
 }
 
 }

@@ -16,16 +16,14 @@ namespace DorkyProductions
         CrossMatched,
         CrossConsumed,
         ChestMatched,
-
-        // Parallel
-        TileMoved,
-        TileSpawned,
-
-        // Immediate
         TurnStarted,
         TurnEnded,
         GameStarted,
         GameEnded,
+        
+        // Parallel
+        TileMoved,
+        TileSpawned,
     }
 
     public enum SyncType
@@ -40,10 +38,7 @@ namespace DorkyProductions
         Healing,
         Shield
     }
-    /// <summary>
-    /// The abstract base class for all game events.
-    /// Used for object pooling.
-    /// </summary>
+
     public abstract class GameEventBase
     {
         public abstract SyncType SyncType { get; }

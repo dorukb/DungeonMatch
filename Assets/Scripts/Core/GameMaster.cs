@@ -145,8 +145,6 @@ public class GameMaster : NetworkBehaviour
             // TODO: actually apply the skill effect ,whatever it is.
             // _gameBoard.ProcessSkillEffect(skillId, sender.identity, eventBatch);
         }
-
-        Debug.Log($"[Server] Dummy execute Chest Skill Effect #{skillId}");
         EndTurnAndStartNext(eventBatch);
         SendEventBatch(eventBatch);
     }
@@ -215,12 +213,7 @@ public class GameMaster : NetworkBehaviour
         
         if (_isActivePlayerEarnedExtraTurn)
         {
-            // TODO: Does this also work with Chest?
-            // player should not be able to make another swap, only wait for Chest to open.
-            // active player does not change.
             Debug.Log("[Server] Not changing the active player at the end of the turn due to Extra Turn.");
-            // TODO: Do we need to send TurnEnded nonetheless? 
-            // seems unnecessary for now, probably become clear once we have all the animations.
             _isActivePlayerEarnedExtraTurn = false;
             eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, _extraTurnStartReason));
         }
