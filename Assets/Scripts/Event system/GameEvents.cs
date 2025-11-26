@@ -79,6 +79,28 @@ namespace DorkyProductions
         public override void Reset() => matchedTileIDs.Clear();
     }
 
+    public class TileRemovedEvent : GameEventBase
+    {
+        public override SyncType SyncType => SyncType.Blocking;
+        public override EventType EventType => EventType.TileRemoved;
+        public ushort removedTileID;
+        public TileRemovedEvent Setup(ushort id) { removedTileID = id; return this; }
+        public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(removedTileID);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            this.removedTileID = reader.Read<ushort>();
+        }
+
+        public override void Reset()
+        {
+            removedTileID = 9999;
+        }
+    }
     public class SwappedTilesEvent : GameEventBase
     {
         public override SyncType SyncType => SyncType.Blocking;

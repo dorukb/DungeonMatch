@@ -20,6 +20,7 @@ namespace DorkyProductions
         TurnEnded,
         GameStarted,
         GameEnded,
+        TileRemoved,
         
         // Parallel
         TileMoved,
@@ -75,10 +76,9 @@ namespace DorkyProductions
         Tween Handle(CrossMatchedEvent e);
         Tween Handle(CrossConsumedEvent e);
         Tween Handle(ChestMatchedEvent e);
-        
-        // Immediate
         Tween Handle(TurnStartedEvent e);
         Tween Handle(TurnEndedEvent e);
+        Tween Handle(TileRemovedEvent e);
 
         // Parallel
         Tween Handle(TileMovedEvent e);

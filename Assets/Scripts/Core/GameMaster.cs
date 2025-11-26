@@ -128,7 +128,7 @@ public class GameMaster : NetworkBehaviour
     }
 
     [Server]
-    public void ProcessPlayerSkillUse(NetworkConnectionToClient sender, int skillId)
+    public void ProcessPlayerLightningSkillUse(NetworkConnectionToClient sender, Vector2Int tilePos)
     {
         if (gameState == GameState.GameEnded)
         {
@@ -139,11 +139,14 @@ public class GameMaster : NetworkBehaviour
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         bool canMakeMove = (gameState == GameState.Playing) && (sender.identity == activePlayer.netIdentity);
         // TODO: Validate the player actually has this skill/received the chest?
+        // maybe dont even accept skillId as param, server should already know.
         if (canMakeMove)
         {
-            Debug.Log($"[Server] Dummy execute Chest Skill Effect #{skillId}");
-            // TODO: actually apply the skill effect ,whatever it is.
-            // _gameBoard.ProcessSkillEffect(skillId, sender.identity, eventBatch);
+            _gameBoard.ProcessLightningEffect(tilePos, sender.identity, eventBatch);
+        }
+        else
+        {
+            Debug.LogError("[Server] Couldn t use Lightning skill. ending turn.");
         }
         EndTurnAndStartNext(eventBatch);
         SendEventBatch(eventBatch);

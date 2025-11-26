@@ -91,6 +91,26 @@ public class GameBoard
             return;
         }
 
+        StabilizeBoard(eventBatch, matchesToProcess);
+    }
+
+
+    // Removes the tile at TilePos. runs the usual procedure.
+    public void ProcessLightningEffect(Vector2Int tilePos, NetworkIdentity senderIdentity, List<GameEventBase> eventBatch)
+    {
+        TileState tileToRemove = boardState[GetIndex(tilePos)];
+        TileDistribution.TileRemoved(tileToRemove.type);
+        eventBatch.Add(EventPool.Get<TileRemovedEvent>().Setup(tileToRemove.uniqueID));
+        boardState[GetIndex(tilePos)] = TileState.Empty;
+        
+        SimulateTileFall(eventBatch);
+        var matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
+        
+        StabilizeBoard(eventBatch, matchesToProcess);
+    }
+    
+    private void StabilizeBoard(List<GameEventBase> eventBatch, List<MatchResult> matchesToProcess)
+    {
         // This 'master' loop handles all chain reactions (cascades AND refills).
         // StabilizeBoard procedure
         int refillCnt = 0;
@@ -116,9 +136,7 @@ public class GameBoard
                 matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
             }
         }
-        return;
     }
-
     public bool IsValidSwap(Vector2Int posA, Vector2Int posB)
     {
         // Check bounds
@@ -498,6 +516,7 @@ public class GameBoard
     
         return boardState[index];
     }
+
 }
 
 }

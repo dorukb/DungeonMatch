@@ -22,20 +22,19 @@ public class ClientChestHandler : MonoBehaviour
     {
         chestUIController.gameObject.SetActive(true);
         chestUIController.useButton.onClick.RemoveAllListeners();
-        chestUIController.useButton.onClick.AddListener(UseButtonCallback);
+        chestUIController.useButton.onClick.AddListener(UseSkill);
         
         // TODO: Actually use the reward index to get the determined Reward.
         chestUIController.Setup("Chest Skill #1", rewardIcon);
     }
 
-    private void UseButtonCallback()
+    private void UseSkill()
     {
         chestUIController.gameObject.SetActive(false);
+        
         // this reaches back to NetworkPlayer and trigger a Command
         // to execute this "skill effect" on the server side.
-        // TODO: It should actually start a "new input sequence" based on the Skill effect.
-        // i.e, Select A row, Select a tile to remove and so on.
-        _localPlayer.AttemptSkillUse(rewardIdToReceive);
+        _localPlayer.ActivateLightningInput();
     }
     
 }

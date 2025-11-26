@@ -7,26 +7,31 @@ namespace DorkyProductions
 public class TileDatabase : ScriptableObject
 {
     public List<TileDefinitionSO> allTileDefinitions;
+    public List<ChestRewardDefinitionSO> allChestRewards;
 
     // A dictionary for fast lookups on the client
-    private Dictionary<Tile, TileDefinitionSO> _lookup;
+    private Dictionary<Tile, TileDefinitionSO> _tileLookup;
 
     public void Initialize()
     {
-        _lookup = new Dictionary<Tile, TileDefinitionSO>();
+        _tileLookup = new Dictionary<Tile, TileDefinitionSO>();
         foreach (var tile in allTileDefinitions)
         {
-            _lookup[tile.type] = tile;
+            _tileLookup[tile.type] = tile;
         }
     }
 
     // Get the static tile data from its ID
     public TileDefinitionSO GetTileByType(Tile type)
     {
-        _lookup.TryGetValue(type, out TileDefinitionSO def);
+        _tileLookup.TryGetValue(type, out TileDefinitionSO def);
         return def;
     }
 
+    public ChestRewardDefinitionSO GetChestReward(int id)
+    {
+        return allChestRewards.Find(t => t.id == id);
+    }
     // Get a random tile type ID for the server to use
     public Tile GetRandomTileTypeID()
     {

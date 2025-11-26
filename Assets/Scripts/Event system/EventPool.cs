@@ -52,10 +52,9 @@ namespace DorkyProductions
                 EventType.CrossMatched => Get<CrossMatchedEvent>(),
                 EventType.CrossConsumed => Get<CrossConsumedEvent>(),
                 EventType.ChestMatched => Get<ChestMatchedEvent>(),
-
-                // Immediate
                 EventType.TurnStarted => Get<TurnStartedEvent>(),
                 EventType.TurnEnded => Get<TurnEndedEvent>(),
+                EventType.TileRemoved => Get<TileRemovedEvent>(),
 
                 // Parallel
                 EventType.TileMoved => Get<TileMovedEvent>(),

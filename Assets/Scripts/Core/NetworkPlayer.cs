@@ -149,16 +149,16 @@ namespace DorkyProductions
         }
 
         [Client]
-        public void AttemptSkillUse(int rewardId)
+        public void AttemptLightningSkillUse(Vector2Int targetTilePos)
         {
             if (!isLocalPlayer) return; // Should never happen, but good check
-            Debug.Log($"[Local Client] Requesting Skill Use: {rewardId}");
+            Debug.Log($"[Local Client] Requesting Lightning Skill Use");
             DisableControls();
-            CmdAttemptChestSkillEffect(rewardId);
+            CmdAttemptLightningSkill(targetTilePos);
         } 
         
         [Command]
-        private void CmdAttemptChestSkillEffect(int effectId)
+        private void CmdAttemptLightningSkill(Vector2Int targetTilePos)
         {
             if (GameMaster.Instance == null)
             {
@@ -166,8 +166,19 @@ namespace DorkyProductions
                 return;
             }
             
-            Debug.Log($"[Server] Received Skill Use request: {effectId}");
-            GameMaster.Instance.ProcessPlayerSkillUse(connectionToClient, effectId);
+            Debug.Log($"[Server] Received Lightning Skill Use request");
+            GameMaster.Instance.ProcessPlayerLightningSkillUse(connectionToClient, targetTilePos);
+        }
+
+        public void ActivateLightningInput()
+        {
+            _playerInput.ActivateLightningInput();
+        }
+
+        public void OnTileSelectedForLightning(Vector2Int targetTilePos)
+        {
+            AttemptLightningSkillUse(targetTilePos);
+            _playerInput.DisableLightningInput();
         }
     }
 }

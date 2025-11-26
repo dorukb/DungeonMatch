@@ -301,6 +301,11 @@ namespace DorkyProductions
             return _visualizer.SpawnVisualTile(e.state, e.pos);
         }
 
+        public Tween Handle(TileRemovedEvent e)
+        {
+            var popList = new List<ushort>(1) { e.removedTileID };
+            return _visualizer.AnimatePop(popList);
+        }
         public PlayerType GetPlayerType(uint playerNetId)
         {
             if (_localPlayer != null && playerNetId == _localPlayer.netId)

@@ -10,10 +10,11 @@ public class PlayerInput : MonoBehaviour
     private TileView _startTile;
     private bool _isDragging = false;
     private bool isEnabled = false;
-
+    private bool isLightningInputActive = false;
     private void Awake()
     {
         isEnabled = false;
+        isLightningInputActive = false;
     }
 
     public void DisableControls()
@@ -43,6 +44,11 @@ public class PlayerInput : MonoBehaviour
 
     public void OnTilePointerUp(TileView tile)
     {
+        if (isLightningInputActive)
+        {
+            LocalPlayerController.OnTileSelectedForLightning(tile.GridPosition);
+        }
+        
         if (!isEnabled || !_isDragging || _startTile == null) return;
 
         _isDragging = false;
@@ -73,6 +79,15 @@ public class PlayerInput : MonoBehaviour
         }
         
         _startTile = null;
+    }
+
+    public void ActivateLightningInput()
+    {
+        isLightningInputActive = true;
+    }
+    public void DisableLightningInput()
+    {
+        isLightningInputActive = false;
     }
 }
 }
