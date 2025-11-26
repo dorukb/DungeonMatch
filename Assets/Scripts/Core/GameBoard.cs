@@ -105,8 +105,17 @@ public class GameBoard
         
         SimulateTileFall(eventBatch);
         var matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
-        
-        StabilizeBoard(eventBatch, matchesToProcess);
+
+        if (matchesToProcess.Count > 0)
+        {
+            StabilizeBoard(eventBatch, matchesToProcess);
+        }
+        else
+        {
+            RefillBoard(eventBatch, true);
+            matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
+            StabilizeBoard(eventBatch, matchesToProcess);
+        }
     }
     
     private void StabilizeBoard(List<GameEventBase> eventBatch, List<MatchResult> matchesToProcess)
