@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ccd5b84b42b4e9d90646dade410b57e, type: 3}
   m_Name: LightningReward
   m_EditorClassIdentifier: Assembly-CSharp::DorkyProductions.ChestRewardDefinitionSO
-  skillName: 
-  description: 
+  skillName: Lightning
+  description: Remove any one card from the board.
   id: 0
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 13ba34da9011744c884f459ce4699444, type: 3}
