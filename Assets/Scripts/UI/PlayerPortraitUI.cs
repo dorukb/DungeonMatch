@@ -43,6 +43,7 @@ public class PlayerPortraitUI : MonoBehaviour
         UIMediator.OnPlayerHealthUpdated -= UpdatePlayerHealth;
         UIMediator.OnPlayerShieldUpdated -= UpdatePlayerShield;
         UIMediator.OnPlayersCrossMultiplierUpdated -= UpdateCrossMultiplier;
+        UIMediator.OnPlayerChestUpdated -= UpdateChestDisplay;
     }
 
     private void Start()
