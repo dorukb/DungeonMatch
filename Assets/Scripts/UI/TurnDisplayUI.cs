@@ -28,6 +28,11 @@ namespace DorkyProductions.UI
                 turnText.text = "Opponent is playing... " + (reason != TurnStartReason.TurnOrder ? "(Extra!)" : "");
             }
         }
+
+        public void OverwriteTurnText(string text)
+        {
+            turnText.text = text;
+        }
     }
 
 }

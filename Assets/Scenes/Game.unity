@@ -399,7 +399,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
   m_AnchoredPosition: {x: 0, y: 275.4}
-  m_SizeDelta: {x: 800, y: 100}
+  m_SizeDelta: {x: 861.58, y: 200}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &667933865
 MonoBehaviour:
@@ -421,7 +421,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: <Placeholder Turn text>
+  m_text: <Turn/skill help text>
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -448,7 +448,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 65.7
+  m_fontSize: 80
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -639,7 +639,7 @@ MonoBehaviour:
   tileViewPrefab: {fileID: 6552938585266915852, guid: 426f9812f6894e247ab46d68703b8a72, type: 3}
   playerInput: {fileID: 144706341}
   boardContainer: {fileID: 2028735000}
-  tileViewSize: {x: 150, y: 150}
+  tileViewSize: {x: 190, y: 190}
   tileSpacing: {x: 15, y: 15}
 --- !u!4 &1605994704
 Transform:
@@ -684,7 +684,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   chestUIController: {fileID: 2316664792534079992}
-  rewardIcon: {fileID: 21300000, guid: 13ba34da9011744c884f459ce4699444, type: 3}
+  turnDisplayUI: {fileID: 1766190145}
+  rewardIcon: {fileID: 21300000, guid: d1d7bb0160f72435f8a5cc8c20de076f, type: 3}
 --- !u!114 &1605994707
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -841,7 +842,7 @@ GameObject:
   - component: {fileID: 1766190146}
   - component: {fileID: 1766190145}
   m_Layer: 0
-  m_Name: temp Turn Display
+  m_Name: Turn Display UI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1400,11 +1401,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3501844719429661536, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 525
+      value: 453.12
       objectReference: {fileID: 0}
     - target: {fileID: 3501844719429661536, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -100
+      objectReference: {fileID: 0}
+    - target: {fileID: 4191414164642178149, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
+      propertyPath: m_Color.a
+      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 5960093047130827481, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchorMax.y
@@ -1416,11 +1421,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5960093047130827481, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 200
+      value: 164.06
       objectReference: {fileID: 0}
     - target: {fileID: 5960093047130827481, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -50
+      value: -17.75
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
