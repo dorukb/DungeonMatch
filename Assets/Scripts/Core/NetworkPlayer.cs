@@ -49,7 +49,8 @@ namespace DorkyProductions
             }
 
             _clientEventHandler.SetLocalPlayer(this);
-            
+
+            _chestSkillHelper = new ChestSkillHelper();
         }
 
         [Server]

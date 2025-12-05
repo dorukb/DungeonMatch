@@ -6,9 +6,8 @@ namespace DorkyProductions.Skills
 {
     public class ChestSkillHelper
     {
-        private List<TileView> selectedTilesForPhantomMatch;
+        private readonly List<TileView> selectedTilesForPhantomMatch = new();
 
-        
         // Returns: True if enough tiles(3) of same type are selected, false otherwise
         public bool OnNewTileSelected(TileView selectedTile)
         {
