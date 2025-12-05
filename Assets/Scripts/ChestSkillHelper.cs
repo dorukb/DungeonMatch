@@ -34,6 +34,11 @@ namespace DorkyProductions.Skills
                 selectedTile.OnSelectedStateChange(true);
                 selectedTilesForPhantomMatch.Add(selectedTile);
             }
+            else  // continue the batch.
+            {
+                selectedTile.OnSelectedStateChange(true);
+                selectedTilesForPhantomMatch.Add(selectedTile);
+            }
             // when 3 are selected. either show OK/submit button, or automatically send the command.
             return selectedTilesForPhantomMatch.Count == 3;
         }
@@ -43,6 +48,11 @@ namespace DorkyProductions.Skills
             return selectedTilesForPhantomMatch
             .Select(tv => tv.GridPosition)
             .ToList();
+        }
+
+        public void ClearSelectedTiles()
+        {
+            selectedTilesForPhantomMatch.Clear();
         }
     }
 }

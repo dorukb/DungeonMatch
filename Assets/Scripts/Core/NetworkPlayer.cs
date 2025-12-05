@@ -216,6 +216,7 @@ namespace DorkyProductions
            {
                _playerInput.ChangePhantomInputState(false);
                AttemptPhantomSkillUse(_chestSkillHelper.GetSelectedTilePositions());
+               _chestSkillHelper.ClearSelectedTiles();
            }
         }
     }
