@@ -526,7 +526,8 @@ public class GameBoard
             }
         }
 
-        return default;
+        // Fallback
+        return new TileState(_nextTileID++, Tile.Shield, false);
     }
     private int GetIndex(Vector2Int pos) =>  GetIndex(pos.x, pos.y);
     private int GetIndex(int x, int y) => (x * BoardHeight) + y;
