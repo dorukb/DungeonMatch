@@ -89,7 +89,8 @@ public class GameMaster : NetworkBehaviour
         // If the game is in progress and a player leaves, end the game
         if (gameState == GameState.Playing && players.Count < requiredPlayers)
         {
-            // EndGame(players.FirstOrDefault()); // The remaining player is the winner
+            // TODO: Handle opponent leaving. the remaining player should win.
+            // EndGame(players.FirstOrDefault());
         }
     }
     

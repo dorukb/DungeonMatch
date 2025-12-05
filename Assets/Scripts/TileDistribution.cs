@@ -10,15 +10,10 @@ namespace DorkyProductions.UI
     {
         //Scaling constant
         private static int _k = 50;
-
-        private static readonly Dictionary<Tile, int> _baseWeights = new Dictionary<Tile, int>
-        {
-            { Tile.Attack, 30 }, { Tile.Heal, 20 }, { Tile.Shield, 25 }, { Tile.Cross, 15 }, { Tile.Chest, 10 }
-        };
         
-        private static readonly Dictionary<Tile, double> _targetPercentages = new Dictionary<Tile, double>
+        private static readonly Dictionary<Tile, float> _targetPercentages = new Dictionary<Tile, float>
         {
-            { Tile.Attack, 0.30 }, { Tile.Heal, 0.20 }, { Tile.Shield, 0.25 }, { Tile.Cross, 0.15 }, { Tile.Chest, 0.10 }
+            { Tile.Attack, 0.30f }, { Tile.Heal, 0.20f }, { Tile.Shield, 0.20f }, { Tile.Cross, 0.15f }, { Tile.Chest, 0.15f }
         };
 
         private static readonly Dictionary<Tile, int> _currentTileCounts = new Dictionary<Tile, int>
@@ -34,16 +29,16 @@ namespace DorkyProductions.UI
 
             int boardSize = GameBoard.BoardWidth * GameBoard.BoardHeight;
             
-            foreach (var tile in _baseWeights)
+            foreach (var tile in _targetPercentages)
             {
                 Tile tileType = tile.Key;
                 
                 double baseWeight = tile.Value;
 
-                if (!_targetPercentages.TryGetValue(tileType, out double t_i))
+                if (!_targetPercentages.TryGetValue(tileType, out float t_i))
                 {
                     Debug.LogError("Tile type exists but there is no target percentage for it!");
-                    t_i = 0.0;
+                    t_i = 0.0f;
                 }
 
                 if (!_currentTileCounts.TryGetValue(tileType, out int c_i))
@@ -83,12 +78,12 @@ namespace DorkyProductions.UI
 
         public static double GetDynamicWeight(Tile type)
         {
-            if (!_baseWeights.ContainsKey(type))
+            if (!_targetPercentages.ContainsKey(type))
             {
                 Debug.LogError("tile type Not found in baseWeights");
             }
     
-            float baseWeight = _baseWeights[type];
+            float baseWeight = _targetPercentages[type];
     
             // 1. Calculate Total Counts
             int totalTiles = _currentTileCounts.Values.Sum();
