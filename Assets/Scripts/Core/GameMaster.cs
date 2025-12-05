@@ -23,9 +23,6 @@ public class GameMaster : NetworkBehaviour
 
     public TileDatabase TileDatabase;
     
-    [Tooltip("The player who is currently allowed to make a move")]
-    public NetworkPlayer activePlayer;
-
     [Header("Game Settings")]
     [Tooltip("The number of players required to start a game")]
     public int requiredPlayers = 2;
@@ -40,10 +37,11 @@ public class GameMaster : NetworkBehaviour
     
     private GameBoard _gameBoard; 
     private ClientEventHandler _clientEventHandler;
-    private bool _isActivePlayerEarnedExtraTurn = false;
-    private TurnStartReason _extraTurnStartReason;
+    public Context Context { get; private set; }
     void Awake()
     {
+        Context = new Context();
+        
         if (Instance == null)
         {
             Instance = this;
@@ -56,7 +54,7 @@ public class GameMaster : NetworkBehaviour
         }
         
         // TODO: Remove.
-        Application.targetFrameRate = 144;
+        Application.targetFrameRate = 60;
         QualitySettings.vSyncCount = 0;
     }
 
@@ -103,18 +101,17 @@ public class GameMaster : NetworkBehaviour
         gameState = GameState.Playing;
 
         activePlayerIndex = 0;
-        activePlayer = players[activePlayerIndex];
-
-        // 2. Create the first event batch
+        Context.Setup(players[activePlayerIndex].netId, 0, 0);
+        
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         
         _gameBoard = new GameBoard();
         var boardState = _gameBoard.FillBoardWithNoMatches();
         
         eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState));
-        eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, TurnStartReason.TurnOrder));
-        TileDistribution.LogBoardDensity();
-        // Add to history and send to clients
+        eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
+        // TileDistribution.LogBoardDensity();
+        // Send to clients
         SendEventBatch(eventBatch);
     }
 
@@ -138,6 +135,7 @@ public class GameMaster : NetworkBehaviour
             Debug.Log("[Server] Game has ended already, Skill Use request has no effect at this point.");
             return;
         }
+        Context.ChestsLeft--;
         // TODO: Validate the player actually has this skill/received the chest?
         // maybe dont even accept skillId as param, server should already know.
         if (canMakeMove)
@@ -146,7 +144,8 @@ public class GameMaster : NetworkBehaviour
         }
         else
         {
-            Debug.LogError("[Server] Couldn t use Lightning skill. ending turn.");
+            // TODO: User currently loses the extra turn, if skill validation fails!
+            Debug.LogError("[Server] Couldnt use Lightning skill. ending turn.");
         }
         EndTurnAndStartNext(eventBatch);
         SendEventBatch(eventBatch);
@@ -158,6 +157,7 @@ public class GameMaster : NetworkBehaviour
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         bool canMakeMove = ValidateUserTurn(sender);   
         
+        Context.ChestsLeft--;
         // TODO: Validate the player actually has this skill/received the chest?
         // maybe dont even accept skillId as param, server should already know.
         // make sure all tiles are of same type.
@@ -191,7 +191,7 @@ public class GameMaster : NetworkBehaviour
         else
         {
             Debug.LogWarning($"Player {sender.identity.netId} tried to move out of turn or the swap was not valid.");
-            eventBatch.Add(EventPool.Get<SwapDeniedEvent>().Setup(activePlayer.netId));
+            eventBatch.Add(EventPool.Get<SwapDeniedEvent>().Setup(Context.ActivePlayerNetId));
             
             // Note: we do NOT end the turn here, just let the player make another move.
             SendEventBatch(eventBatch);
@@ -207,17 +207,24 @@ public class GameMaster : NetworkBehaviour
         {
             Debug.LogError($"GetInactivePlayer assumes there are 2 players. but we have: {players.Count}");
         }
-        return players.Find(t => t.netId != activePlayer.netId);
+        return players.Find(t => t.netId != Context.ActivePlayerNetId);
+    }
+
+    [Server]
+    public NetworkPlayer GetPlayer(uint netID)
+    {
+        return players.Find(t => t.netId == netID);
     }
     
     [Server]
-    public void GrantExtraTurnToCurrentPlayer(TurnStartReason reason)
+    public void GrantExtraTurnToCurrentPlayer(bool isChest)
     {
-        // TODO: This breaks when we match Chest & Cross in the same turn!
-        // the latest match overwrites the prev reason.
-        Debug.Log($"[Server] Active player: {activePlayer.netId} has been granted an extra turn.");
-        _isActivePlayerEarnedExtraTurn = true;
-        _extraTurnStartReason = reason;
+        Debug.Log($"[Server] Active player: {Context.ActivePlayerNetId} has been granted an extra turn.");
+        Context.ExtraTurnsLeft += 1;
+        if (isChest)
+        {
+            Context.ChestsLeft += 1;
+        }
     }
 
     [Server]
@@ -228,7 +235,7 @@ public class GameMaster : NetworkBehaviour
             Debug.Log("[Server] Game has ended already, Swap request has no effect at this point.");
             return false;
         }
-        bool canMakeMove = (gameState == GameState.Playing) && (sender.identity == activePlayer.netIdentity);
+        bool canMakeMove = (gameState == GameState.Playing) && (sender.identity.netId == Context.ActivePlayerNetId);
         return canMakeMove;
     }
     
@@ -241,20 +248,22 @@ public class GameMaster : NetworkBehaviour
             return;
         }
         
-        if (_isActivePlayerEarnedExtraTurn)
+        if (Context.ExtraTurnsLeft > 0)
         {
             Debug.Log("[Server] Not changing the active player at the end of the turn due to Extra Turn.");
-            _isActivePlayerEarnedExtraTurn = false;
-            eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, _extraTurnStartReason));
+            
+            eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
+            Context.ExtraTurnsLeft -= 1;
         }
         else //regular behavior, go to Next player.
         {
             // 1. End current player's turn
-            eventBatch.Add(EventPool.Get<TurnEndedEvent>().Setup(activePlayer.netId));
+            eventBatch.Add(EventPool.Get<TurnEndedEvent>().Setup(Context.ActivePlayerNetId));
             
             activePlayerIndex = (activePlayerIndex + 1) % players.Count;
-            activePlayer = players[activePlayerIndex];
-            eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(activePlayer.netId, TurnStartReason.TurnOrder));
+            var newActivePlayer = players[activePlayerIndex];
+            Context.Setup(newActivePlayer.netId, 0, 0);
+            eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
         }
     }
 

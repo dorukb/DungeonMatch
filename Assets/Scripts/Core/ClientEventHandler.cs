@@ -244,14 +244,16 @@ namespace DorkyProductions
                 return null;
             }
 
-            bool isChestOpeningTurn = e.reason == TurnStartReason.Chest;
             
-            if (e.playerNetId == _localPlayer.netId)
+            // if we have both Chest and Cross.
+            
+            
+            if (e.context.ActivePlayerNetId == _localPlayer.netId)
             {
                 Debug.Log("My Turn Started");
-                UIMediator.OnPlayerTurnStarted(PlayerType.Local, e.reason);
+                UIMediator.OnPlayerTurnStarted(PlayerType.Local, e.context.ExtraTurnsLeft > 0);
 
-                if (isChestOpeningTurn)
+                if (e.context.ChestsLeft > 0)
                 {
                     // Chest should NOT give right to Swap/match again.
                     // this _extra_ turn is specifically for Opening the Chest.
@@ -259,7 +261,7 @@ namespace DorkyProductions
                     _localPlayer.DisableSwapControls();
                     _chestHandler.OpenChest();
                     
-                    var targetPlayer = GetPlayerType(e.playerNetId);
+                    var targetPlayer = GetPlayerType(e.context.ActivePlayerNetId);
                     UIMediator.OnPlayerChestUpdated?.Invoke(targetPlayer, false);
                 }
                 else // Regular, or Extra turn. Allow for Swaps/matches.
@@ -269,10 +271,10 @@ namespace DorkyProductions
             }
             else
             {
-                UIMediator.OnPlayerTurnStarted(PlayerType.Opponent, e.reason);
+                UIMediator.OnPlayerTurnStarted(PlayerType.Opponent, e.context.ExtraTurnsLeft > 0);
                 _localPlayer.DisableSwapControls();
 
-                if (isChestOpeningTurn)
+                if (e.context.ChestsLeft > 0)
                 {
                     Debug.Log("Opponent is Opening a Chest. Hold on...");
                 }

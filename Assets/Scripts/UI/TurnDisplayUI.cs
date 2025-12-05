@@ -17,15 +17,15 @@ namespace DorkyProductions.UI
             UIMediator.OnPlayerTurnStarted -= UpdateTurnText;
         }
 
-        private void UpdateTurnText(PlayerType player, TurnStartReason reason)
+        private void UpdateTurnText(PlayerType player, bool isExtra)
         {
             if (player == PlayerType.Local)
             {
-                turnText.text = "Your Turn " + (reason != TurnStartReason.TurnOrder ? "(Extra!)" : "");
+                turnText.text = "Your Turn " + (isExtra ? "(Extra!)" : "");
             }
             else
             {
-                turnText.text = "Opponent is playing... " + (reason != TurnStartReason.TurnOrder ? "(Extra!)" : "");
+                turnText.text = "Opponent is playing... " + (isExtra ? "(Extra!)" : "");
             }
         }
 

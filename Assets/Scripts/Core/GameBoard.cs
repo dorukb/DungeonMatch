@@ -233,7 +233,9 @@ public class GameBoard
             eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(ids));
             
 
-            var activePlayer = GameMaster.Instance.activePlayer;
+            var activePlayerNetID = GameMaster.Instance.Context.ActivePlayerNetId;
+            var activePlayer = GameMaster.Instance.GetPlayer(activePlayerNetID);
+            
             var opponent = GameMaster.Instance.GetInactivePlayer();
             // Then apply the effect
             switch (match.tileType)
@@ -271,7 +273,7 @@ public class GameBoard
         int chestSkillIdx = Random.Range(0, 2);
         
         eventBatch.Add(EventPool.Get<ChestMatchedEvent>().Setup(activePlayer.netId, chestSkillIdx));
-        gm.GrantExtraTurnToCurrentPlayer(TurnStartReason.Chest);
+        gm.GrantExtraTurnToCurrentPlayer(true);
     }
 
     private void ApplyCrossEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, GameMaster gm)
@@ -283,7 +285,7 @@ public class GameBoard
         float gainedMultiplier = BasicCardEffects.GetCrossMultiplier(match.matchCount);
         activePlayer.GainMultiplier(gainedMultiplier);
         eventBatch.Add(EventPool.Get<CrossMatchedEvent>().Setup(activePlayer.netId, activePlayer.GetMultiplier()));
-        gm.GrantExtraTurnToCurrentPlayer(TurnStartReason.Cross);
+        gm.GrantExtraTurnToCurrentPlayer(false);
     }
 
     private static void ApplyHealEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match)

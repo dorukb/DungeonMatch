@@ -361,39 +361,29 @@ namespace DorkyProductions
     }
     // --- Immediate Events ---
 
-    public enum TurnStartReason
-    {
-        TurnOrder,  // Default, we were the next player.
-        Cross,      // Extra turn due to a Cross match
-        Chest       // Limited extra turn due to a Chest match, only to open the Chest, not to make another swap!
-    }
     public class TurnStartedEvent : GameEventBase
     {
         public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.TurnStarted;
-        public uint playerNetId;
-        public TurnStartReason reason;
+        public Context context;
         
-        public TurnStartedEvent Setup(uint nextPlayerId, TurnStartReason reason) 
+        public TurnStartedEvent Setup(Context turnContext) 
         {
-            this.playerNetId = nextPlayerId;
-            this.reason = reason;
+            this.context = turnContext;
             return this; 
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
         public override void Serialize(NetworkWriter writer)
         {
-            writer.Write(playerNetId);
-            writer.Write((byte)reason);
+            writer.Write(context);
         }
 
         public override void Deserialize(NetworkReader reader)
         {
-            playerNetId = reader.Read<uint>();
-            reason = (TurnStartReason)reader.Read<byte>();
+            context = reader.Read<Context>();
         }
 
-        public override void Reset() => playerNetId = 0;
+        public override void Reset() => context = null;
     }
 
     public class TurnEndedEvent : GameEventBase

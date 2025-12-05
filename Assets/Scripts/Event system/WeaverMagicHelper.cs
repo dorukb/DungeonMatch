@@ -17,6 +17,8 @@ namespace DorkyProductions
         // is forced to generate serializers for them.
         public List<ushort> dummyList1;
         public List<TileState> dummyList2;
+
+        public Context dummyContext;
         // We can also add any other types we need
     }
 }
