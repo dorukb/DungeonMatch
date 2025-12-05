@@ -13,7 +13,7 @@ namespace DorkyProductions.UI
         
         private static readonly Dictionary<Tile, float> _targetPercentages = new Dictionary<Tile, float>
         {
-            { Tile.Attack, 0.10f }, { Tile.Heal, 0.10f }, { Tile.Shield, 0.10f }, { Tile.Cross, 0.35f }, { Tile.Chest, 0.35f }
+            { Tile.Attack, 0.30f }, { Tile.Heal, 0.20f }, { Tile.Shield, 0.20f }, { Tile.Cross, 0.15f }, { Tile.Chest, 0.15f }
         };
 
         private static readonly Dictionary<Tile, int> _currentTileCounts = new Dictionary<Tile, int>
