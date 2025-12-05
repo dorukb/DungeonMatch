@@ -2360,7 +2360,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 5acdcedb5cf41466e983555778d39f71, type: 3}
     - target: {fileID: 7116134184439716449, guid: d62ada3a9fd6f4e05be9b713a792ba6b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7116134184439716449, guid: d62ada3a9fd6f4e05be9b713a792ba6b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
@@ -3159,7 +3159,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: ae34d1ab2b8844fbab56b2d59c712390, type: 3}
     - target: {fileID: 7116134184439716449, guid: 2331a6f82b94145cf999c8a81168dc0b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7116134184439716449, guid: 2331a6f82b94145cf999c8a81168dc0b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
@@ -3411,7 +3411,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 6ac6257bb9d404aba90083a5584c4577, type: 3}
     - target: {fileID: 7116134184439716449, guid: 2281482ef70d3403aa116ae9ac0f3b2e, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7116134184439716449, guid: 2281482ef70d3403aa116ae9ac0f3b2e, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
@@ -3741,6 +3741,10 @@ PrefabInstance:
       propertyPath: m_SortingLayer
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5961602686321426501, guid: cf5fb95458375470397935e501e3bda0, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5961602686321426506, guid: cf5fb95458375470397935e501e3bda0, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -3828,6 +3832,10 @@ PrefabInstance:
     - target: {fileID: 5961602686321426507, guid: cf5fb95458375470397935e501e3bda0, type: 3}
       propertyPath: m_Name
       value: Particle System - Confetti
+      objectReference: {fileID: 0}
+    - target: {fileID: 5961602686321426507, guid: cf5fb95458375470397935e501e3bda0, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
