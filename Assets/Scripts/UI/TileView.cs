@@ -23,7 +23,6 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     
     private void Awake()
     {
-        _image = GetComponent<Image>();
         RectTransform = GetComponent<RectTransform>();
     }
 
