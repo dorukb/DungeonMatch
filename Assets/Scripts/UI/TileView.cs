@@ -24,6 +24,7 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     private void Awake()
     {
         RectTransform = GetComponent<RectTransform>();
+        _selectedFrame.gameObject.SetActive(false);
     }
 
     // Called by ClientBoardVisualizer when spawned
