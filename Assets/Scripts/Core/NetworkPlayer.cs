@@ -10,7 +10,7 @@ namespace DorkyProductions
         private PlayerInput _playerInput;
         private ClientEventHandler _clientEventHandler;
 
-        public static readonly int PLAYER_STARTING_HEALTH = 20;
+        public static readonly int PLAYER_STARTING_HEALTH = 5;
         private int health = PLAYER_STARTING_HEALTH; // server only.
         private int shield = 0;
         private float currentCrossMultiplier = 0f;

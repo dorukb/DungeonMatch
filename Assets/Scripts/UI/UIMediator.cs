@@ -24,6 +24,9 @@ public class UIMediator : MonoBehaviour
     
     // params: <Player, HasChest>
     public static Action<PlayerType, bool> OnPlayerChestUpdated;
+    
+    // params: <Player>
+    public static Action<PlayerType> OnGameEnded;
 }
 
 }
