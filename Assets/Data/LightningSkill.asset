@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ccd5b84b42b4e9d90646dade410b57e, type: 3}
+  m_Name: LightningSkill
+  m_EditorClassIdentifier: Assembly-CSharp::DorkyProductions.ChestRewardDefinitionSO
+  skillType: 0
+  skillName: Lightning
+  description: Remove any one card from the board.
+  callToAction: Select a tile to remove.
+  id: 0
+  icon: {fileID: 21300000, guid: d1d7bb0160f72435f8a5cc8c20de076f, type: 3}

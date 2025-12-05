@@ -256,7 +256,7 @@ namespace DorkyProductions
                     // Chest should NOT give right to Swap/match again.
                     // this _extra_ turn is specifically for Opening the Chest.
                     // Visualizer.OpenChest(e.)
-                    _localPlayer.DisableControls();
+                    _localPlayer.DisableSwapControls();
                     _chestHandler.OpenChest();
                     
                     var targetPlayer = GetPlayerType(e.playerNetId);
@@ -270,7 +270,7 @@ namespace DorkyProductions
             else
             {
                 UIMediator.OnPlayerTurnStarted(PlayerType.Opponent, e.reason);
-                _localPlayer.DisableControls();
+                _localPlayer.DisableSwapControls();
 
                 if (isChestOpeningTurn)
                 {
@@ -285,7 +285,7 @@ namespace DorkyProductions
             if (_localPlayer != null && e.playerNetId == _localPlayer.netId)
             {
                 Debug.Log("My Turn Ended");
-                _localPlayer.DisableControls();
+                _localPlayer.DisableSwapControls();
             }
             return null;
         }

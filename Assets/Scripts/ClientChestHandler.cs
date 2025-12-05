@@ -10,15 +10,21 @@ public class ClientChestHandler : MonoBehaviour
     private ChestOpenerUI chestUIController;
     [SerializeField]
     private TurnDisplayUI turnDisplayUI;
-    
     [SerializeField] private Sprite rewardIcon;
-    private int rewardIdToReceive;
+    
+    [SerializeField]
+    private TileDatabase tileDatabase; 
 
     private NetworkPlayer _localPlayer;
-    public void SaveReceivedChest(int rewardId, NetworkPlayer localPlayer)
+    private SkillDefinitionSO _rewardedSkill;
+    public void SaveReceivedChest(int rewardedSkillID, NetworkPlayer localPlayer)
     {
-        this.rewardIdToReceive = rewardId;
         this._localPlayer = localPlayer;
+        this._rewardedSkill = tileDatabase.GetSkill(rewardedSkillID);
+        if (_rewardedSkill == null)
+        {
+            Debug.LogError($"Could not find reward skill with id: {rewardedSkillID}");
+        }
     }
 
     public void OpenChest()
@@ -27,20 +33,27 @@ public class ClientChestHandler : MonoBehaviour
         chestUIController.useButton.onClick.RemoveAllListeners();
         chestUIController.useButton.onClick.AddListener(UseSkill);
         
-        // TODO: Actually use the reward index to get the determined Reward.
-        chestUIController.Setup("Lightning", rewardIcon);
+        chestUIController.Setup(_rewardedSkill.skillName, _rewardedSkill.icon);
     }
 
     private void UseSkill()
     {
         chestUIController.gameObject.SetActive(false);
-        
-        // Show Lightning effect related stuff, maybe a call-to-action for now
-        string lightningCallToAction = "Select a tile to remove from the board.";
-        turnDisplayUI?.OverwriteTurnText(lightningCallToAction);
-        // this reaches back to NetworkPlayer and trigger a Command
-        // to execute this "skill effect" on the server side.
-        _localPlayer.ActivateLightningInput();
+
+        // string lightningCallToAction = "Select a tile to remove.";
+        // string phantomCallToActionText = "Select any 3 tiles of same type to match!";
+        turnDisplayUI?.OverwriteTurnText((_rewardedSkill.callToAction));
+
+        // Enable specific input logic that allows the use of the Skill.
+        // NetworkPlayer triggers the command.
+        if (_rewardedSkill.skillType == SkillType.Lightning)
+        {
+            _localPlayer.ActivateLightningInput();
+        }
+        else if (_rewardedSkill.skillType == SkillType.PhantomMatch)
+        {
+            _localPlayer.ActivatePhantomMatchInput();
+        }
     }
     
 }

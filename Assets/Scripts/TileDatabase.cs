@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.Serialization;
 
 namespace DorkyProductions
 {
@@ -7,7 +8,7 @@ namespace DorkyProductions
 public class TileDatabase : ScriptableObject
 {
     public List<TileDefinitionSO> allTileDefinitions;
-    public List<ChestRewardDefinitionSO> allChestRewards;
+    public List<SkillDefinitionSO> allSkills;
 
     // A dictionary for fast lookups on the client
     private Dictionary<Tile, TileDefinitionSO> _tileLookup;
@@ -28,9 +29,9 @@ public class TileDatabase : ScriptableObject
         return def;
     }
 
-    public ChestRewardDefinitionSO GetChestReward(int id)
+    public SkillDefinitionSO GetSkill(int id)
     {
-        return allChestRewards.Find(t => t.id == id);
+        return allSkills.Find(t => t.id == id);
     }
     // Get a random tile type ID for the server to use
     public Tile GetRandomTileTypeID()

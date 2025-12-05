@@ -1,22 +1,26 @@
 using UnityEngine;
 using UnityEngine.UI;
-using DG.Tweening;
 using UnityEngine.EventSystems;
 
 
 namespace DorkyProductions
 {
     
-[RequireComponent(typeof(Image), typeof(RectTransform))]
+[RequireComponent(typeof(RectTransform))]
 public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     [SerializeField]
     private Image _image;
+    
+    [SerializeField]
+    private Image _selectedFrame;
     public RectTransform RectTransform { get; private set; }
     
     // Store our logical position for input reference
     public Vector2Int GridPosition { get; set; }
     private PlayerInput _inputManager;
+    public Tile Type { get; private set; }
+    
     private void Awake()
     {
         _image = GetComponent<Image>();
@@ -36,6 +40,7 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         }
         GridPosition = gridPos;
         _inputManager = localPlayerInput;
+        Type = definition.type;
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -62,6 +67,11 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 
             _inputManager.OnTilePointerUp(endTile);
         }
+    }
+
+    public void OnSelectedStateChange(bool isSelected)
+    {
+        _selectedFrame.gameObject.SetActive(isSelected);
     }
 
 }

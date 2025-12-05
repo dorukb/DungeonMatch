@@ -9,24 +9,26 @@ public class PlayerInput : MonoBehaviour
     public NetworkPlayer LocalPlayerController { get; private set; }
     private TileView _startTile;
     private bool _isDragging = false;
-    private bool isEnabled = false;
+    private bool canSwap = false;
     private bool isLightningInputActive = false;
+    private bool isPhantomInputActive = false;
     private void Awake()
     {
-        isEnabled = false;
+        canSwap = false;
         isLightningInputActive = false;
+        isPhantomInputActive = false;
     }
 
-    public void DisableControls()
+    public void DisableSwapControls()
     {
         Debug.Log("Disabling controls");
-        isEnabled = false;
+        canSwap = false;
     }
 
     public void EnableControls()
     {
         Debug.Log("Enabling controls");
-        isEnabled = true;
+        canSwap = true;
     }
 
     public void SetPlayer(NetworkPlayer localPlayer)
@@ -36,7 +38,7 @@ public class PlayerInput : MonoBehaviour
     
     public void OnTilePointerDown(TileView tile)
     {
-        if (!isEnabled) return;
+        if (!canSwap) return;
         
         _startTile = tile;
         _isDragging = true;
@@ -44,12 +46,18 @@ public class PlayerInput : MonoBehaviour
 
     public void OnTilePointerUp(TileView tile)
     {
+        // This doesn't scale. Needs refactor.
         if (isLightningInputActive)
         {
             LocalPlayerController.OnTileSelectedForLightning(tile.GridPosition);
         }
+
+        if (isPhantomInputActive)
+        {
+            LocalPlayerController.OnTileSelectedForPhantom(tile);
+        }
         
-        if (!isEnabled || !_isDragging || _startTile == null) return;
+        if (!canSwap || !_isDragging || _startTile == null) return;
 
         _isDragging = false;
         if (tile == null)
@@ -88,6 +96,10 @@ public class PlayerInput : MonoBehaviour
     public void DisableLightningInput()
     {
         isLightningInputActive = false;
+    }
+    public void ChangePhantomInputState(bool isActive)
+    {
+        isPhantomInputActive = isActive;
     }
 }
 }

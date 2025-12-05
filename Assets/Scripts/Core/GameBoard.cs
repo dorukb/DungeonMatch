@@ -267,8 +267,11 @@ public class GameBoard
 
     private void ApplyChestEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, GameMaster gm)
     {
-        // TODO: Use a distribution controlled via ScriptableObject here for the various chest effects & their drop changes.
-        int chestSkillIdx = Random.Range(0, 6);
+        // TODO: Use a distribution controlled via ScriptableObject here for the various chest effects & their drop rates.
+        int chestSkillIdx = Random.Range(0, 2);
+        
+        // TODO: Remove, for debug only.
+        chestSkillIdx = 1;
         
         eventBatch.Add(EventPool.Get<ChestMatchedEvent>().Setup(activePlayer.netId, chestSkillIdx));
         gm.GrantExtraTurnToCurrentPlayer(TurnStartReason.Chest);

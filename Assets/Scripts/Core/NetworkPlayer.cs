@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using DorkyProductions.Skills;
 using UnityEngine;
 using Mirror;
 
@@ -10,6 +10,7 @@ namespace DorkyProductions
     {
         private PlayerInput _playerInput;
         private ClientEventHandler _clientEventHandler;
+        private ChestSkillHelper _chestSkillHelper;
 
         public static readonly int PLAYER_STARTING_HEALTH = 5;
         private int health = PLAYER_STARTING_HEALTH; // server only.
@@ -121,9 +122,9 @@ namespace DorkyProductions
         }
 
         [Client]
-        public void DisableControls()
+        public void DisableSwapControls()
         {
-            _playerInput.DisableControls();
+            _playerInput.DisableSwapControls();
         }
 
         // This is called by the local PlayerInput script.
@@ -132,7 +133,7 @@ namespace DorkyProductions
         {
             if (!isLocalPlayer) return; // Should never happen, but good check
             Debug.Log($"[Local Client] Requesting swap: {posA} <-> {posB}");
-            DisableControls();
+            DisableSwapControls();
             CmdAttemptSwap(posA, posB);
         }
 
@@ -150,12 +151,20 @@ namespace DorkyProductions
         }
 
         [Client]
-        public void AttemptLightningSkillUse(Vector2Int targetTilePos)
+        private void AttemptLightningSkillUse(Vector2Int targetTilePos)
         {
             if (!isLocalPlayer) return; // Should never happen, but good check
             Debug.Log($"[Local Client] Requesting Lightning Skill Use");
-            DisableControls();
+            DisableSwapControls();
             CmdAttemptLightningSkill(targetTilePos);
+        } 
+        [Client]
+        private void AttemptPhantomSkillUse(List<Vector2Int> targetTilePos)
+        {
+            if (!isLocalPlayer) return; // Should never happen, but good check
+            Debug.Log($"[Local Client] Requesting Phantom Skill Use");
+            DisableSwapControls();
+            CmdAttemptPhantomMatchSkill(targetTilePos);
         } 
         
         [Command]
@@ -189,10 +198,24 @@ namespace DorkyProductions
             _playerInput.ActivateLightningInput();
         }
 
+        public void ActivatePhantomMatchInput()
+        {
+            _playerInput.ChangePhantomInputState(true);
+        }
         public void OnTileSelectedForLightning(Vector2Int targetTilePos)
         {
             AttemptLightningSkillUse(targetTilePos);
             _playerInput.DisableLightningInput();
+        }
+        public void OnTileSelectedForPhantom(TileView selectedTile)
+        {            
+            // if this tile was already selected, unselect it.
+           bool shouldTriggerSkill = _chestSkillHelper.OnNewTileSelected(selectedTile);
+           if (shouldTriggerSkill)
+           {
+               _playerInput.ChangePhantomInputState(false);
+               AttemptPhantomSkillUse(_chestSkillHelper.GetSelectedTilePositions());
+           }
         }
     }
 }

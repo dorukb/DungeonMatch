@@ -1089,6 +1089,7 @@ MonoBehaviour:
   chestUIController: {fileID: 2316664792534079992}
   turnDisplayUI: {fileID: 1766190145}
   rewardIcon: {fileID: 21300000, guid: d1d7bb0160f72435f8a5cc8c20de076f, type: 3}
+  tileDatabase: {fileID: 11400000, guid: 72dfecc0032c29d47b6a0a41b0573550, type: 2}
 --- !u!114 &1605994707
 MonoBehaviour:
   m_ObjectHideFlags: 0
