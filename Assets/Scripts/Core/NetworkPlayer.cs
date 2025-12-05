@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
 
@@ -168,6 +169,19 @@ namespace DorkyProductions
             
             Debug.Log($"[Server] Received Lightning Skill Use request");
             GameMaster.Instance.ProcessPlayerLightningSkillUse(connectionToClient, targetTilePos);
+        }
+        
+        [Command]
+        private void CmdAttemptPhantomMatchSkill(List<Vector2Int> targetTiles)
+        {
+            if (GameMaster.Instance == null)
+            {
+                Debug.LogError("Command failed: GameMaster not found on server.");
+                return;
+            }
+            
+            Debug.Log($"[Server] Received Phantom Match Skill Use request");
+            GameMaster.Instance.ProcessPlayerPhantomMatchSkill(connectionToClient, targetTiles);
         }
 
         public void ActivateLightningInput()

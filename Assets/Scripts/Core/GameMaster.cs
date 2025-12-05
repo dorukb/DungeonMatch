@@ -130,14 +130,13 @@ public class GameMaster : NetworkBehaviour
     [Server]
     public void ProcessPlayerLightningSkillUse(NetworkConnectionToClient sender, Vector2Int tilePos)
     {
+        List<GameEventBase> eventBatch = new List<GameEventBase>();
+        bool canMakeMove = ValidateUserTurn(sender);
         if (gameState == GameState.GameEnded)
         {
             Debug.Log("[Server] Game has ended already, Skill Use request has no effect at this point.");
             return;
         }
-        
-        List<GameEventBase> eventBatch = new List<GameEventBase>();
-        bool canMakeMove = (gameState == GameState.Playing) && (sender.identity == activePlayer.netIdentity);
         // TODO: Validate the player actually has this skill/received the chest?
         // maybe dont even accept skillId as param, server should already know.
         if (canMakeMove)
@@ -151,19 +150,34 @@ public class GameMaster : NetworkBehaviour
         EndTurnAndStartNext(eventBatch);
         SendEventBatch(eventBatch);
     }
+    
+    public void ProcessPlayerPhantomMatchSkill(NetworkConnectionToClient sender, List<Vector2Int> targetTiles)
+    { 
+        // TODO: refactor using Template Method pattern.
+        List<GameEventBase> eventBatch = new List<GameEventBase>();
+        bool canMakeMove = ValidateUserTurn(sender);   
+        
+        // TODO: Validate the player actually has this skill/received the chest?
+        // maybe dont even accept skillId as param, server should already know.
+        // make sure all tiles are of same type.
+        if (canMakeMove && targetTiles.Count >= 3) 
+        {
+            _gameBoard.ProcessPhantomMatchEffect(targetTiles, sender.identity, eventBatch);
+        }
+        else
+        {
+            Debug.LogError("[Server] Couldnt use Phantom Match skill. ending turn.");
+        }
+        EndTurnAndStartNext(eventBatch);
+        SendEventBatch(eventBatch);
+    }
     // This is the main "transaction" method called by a Player via [Command].
     // It processes the move and generates all resulting events.
     [Server]
     public void ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA, Vector2Int posB)
     {
-        if (gameState == GameState.GameEnded)
-        {
-            Debug.Log("[Server] Game has ended already, Swap request has no effect at this point.");
-            return;
-        }
-        
         List<GameEventBase> eventBatch = new List<GameEventBase>();
-        bool canMakeMove = (gameState == GameState.Playing) && (sender.identity == activePlayer.netIdentity);
+        bool canMakeMove = ValidateUserTurn(sender);
         bool isValidMove = canMakeMove && _gameBoard.IsValidSwap(posA, posB);
         if (isValidMove)
         {
@@ -203,6 +217,18 @@ public class GameMaster : NetworkBehaviour
         Debug.Log($"[Server] Active player: {activePlayer.netId} has been granted an extra turn.");
         _isActivePlayerEarnedExtraTurn = true;
         _extraTurnStartReason = reason;
+    }
+
+    [Server]
+    private bool ValidateUserTurn(NetworkConnectionToClient sender)
+    {
+        if (gameState == GameState.GameEnded)
+        {
+            Debug.Log("[Server] Game has ended already, Swap request has no effect at this point.");
+            return false;
+        }
+        bool canMakeMove = (gameState == GameState.Playing) && (sender.identity == activePlayer.netIdentity);
+        return canMakeMove;
     }
     
     [Server]

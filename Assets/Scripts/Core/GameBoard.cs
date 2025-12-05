@@ -98,6 +98,7 @@ public class GameBoard
     // Removes the tile at TilePos. runs the usual procedure.
     public void ProcessLightningEffect(Vector2Int tilePos, NetworkIdentity senderIdentity, List<GameEventBase> eventBatch)
     {
+        // Remove tile without any Match effects.
         TileState tileToRemove = boardState[GetIndex(tilePos)];
         TileDistribution.TileRemoved(tileToRemove.type);
         eventBatch.Add(EventPool.Get<TileRemovedEvent>().Setup(tileToRemove.uniqueID));
@@ -118,6 +119,27 @@ public class GameBoard
         }
     }
     
+    public void ProcessPhantomMatchEffect(List<Vector2Int> targetTiles, NetworkIdentity senderIdentity, List<GameEventBase> eventBatch)
+    {
+        TileState matchedTile = boardState[GetIndex(targetTiles[0])];
+        
+        bool isDoubleEffect = false;
+        foreach (Vector2Int tilePos in targetTiles)
+        {
+            var state = boardState[GetIndex(tilePos)];
+            if (state.isDoubleEffect)
+            {
+                isDoubleEffect = true;
+                break;
+            }
+        }
+        var matchesToProcess = new List<MatchResult>
+        {
+            new MatchResult(targetTiles, matchedTile.type, isDoubleEffect)
+        };
+        
+        StabilizeBoard(eventBatch, matchesToProcess);
+    }
     private void StabilizeBoard(List<GameEventBase> eventBatch, List<MatchResult> matchesToProcess)
     {
         // This 'master' loop handles all chain reactions (cascades AND refills).
