@@ -74,6 +74,8 @@ namespace Mirror
         public HashSet<NetworkRoomPlayer> roomSlots = new HashSet<NetworkRoomPlayer>();
 
         [SerializeField] private GameObject GameMasterPrefab;
+        [SerializeField] public GameObject botPrefab;
+        public bool isOfflineMode = false;
         public bool allPlayersReady
         {
             get => _allPlayersReady;
@@ -310,7 +312,21 @@ namespace Mirror
                 conn.Disconnect();
             }
         }
+        [Server]
+        private void SpawnBot()
+        {
+            Debug.Log("[NetworkManager] Spawning Bot for Offline Mode...");
+            
+            // Instantiate Bot (Server-side)
+            Transform start = GetStartPosition();
+            GameObject botObj = start != null
+                ? Instantiate(botPrefab, start.position, start.rotation)
+                : Instantiate(botPrefab);
 
+            // Spawn on Network (Server Owned)
+            // This triggers OnStartServer on the Bot, registering it with GameMaster
+            NetworkServer.Spawn(botObj);
+        }
         [Server]
         public void RecalculateRoomPlayerIndices()
         {
@@ -590,6 +606,11 @@ namespace Mirror
         /// <returns>False to not allow this player to replace the room player.</returns>
         public virtual bool OnRoomServerSceneLoadedForPlayer(NetworkConnectionToClient conn, GameObject roomPlayer, GameObject gamePlayer)
         {
+            // If Offline Mode, immediately spawn the Bot
+            if (isOfflineMode && numPlayers == 1)
+            {
+                SpawnBot();
+            }
             return true;
         }
 

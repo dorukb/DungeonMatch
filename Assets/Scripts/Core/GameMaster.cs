@@ -100,7 +100,14 @@ public class GameMaster : NetworkBehaviour
         Debug.Log("Starting game...");
         gameState = GameState.Playing;
 
-        activePlayerIndex = 0;
+        for (int i = 0; i < players.Count; i++)
+        {
+            if (!players[i].IsBot)
+            {
+                activePlayerIndex = i;
+            }
+        }
+        // activePlayerIndex = 0;
         Context.Setup(players[activePlayerIndex].netId, 0, 0);
         
         List<GameEventBase> eventBatch = new List<GameEventBase>();
@@ -110,12 +117,12 @@ public class GameMaster : NetworkBehaviour
         
         eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState));
         eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
-        // Notify Server-side entities (Bots) that the turn has started
-        OnServerTurnStarted?.Invoke(Context, _gameBoard);
-        
         // TileDistribution.LogBoardDensity();
         // Send to clients
         SendEventBatch(eventBatch);
+        
+        // Notify Server-side entities (Bots) that the turn has started
+        OnServerTurnStarted?.Invoke(Context, _gameBoard);
     }
 
     [Server]
@@ -152,6 +159,8 @@ public class GameMaster : NetworkBehaviour
         }
         EndTurnAndStartNext(eventBatch);
         SendEventBatch(eventBatch);
+        // Notify Bot (Same player goes again)
+        OnServerTurnStarted?.Invoke(Context, _gameBoard);
     }
     
     public void ProcessPlayerPhantomMatchSkill(NetworkIdentity sender, List<Vector2Int> targetTiles, float artificialDelay = 0f)
@@ -174,6 +183,8 @@ public class GameMaster : NetworkBehaviour
         }
         EndTurnAndStartNext(eventBatch);
         SendEventBatch(eventBatch);
+        // Notify Bot (Same player goes again)
+        OnServerTurnStarted?.Invoke(Context, _gameBoard);
     }
     // This is the main "transaction" method called by a Player via [Command].
     // It processes the move and generates all resulting events.
@@ -190,6 +201,9 @@ public class GameMaster : NetworkBehaviour
 
             EndTurnAndStartNext(eventBatch);
             SendEventBatch(eventBatch);
+            
+            // Notify Bot (Same player goes again)
+            OnServerTurnStarted?.Invoke(Context, _gameBoard);
         }
         else
         {
@@ -266,8 +280,6 @@ public class GameMaster : NetworkBehaviour
             Context.Setup(newActivePlayer.netId, 0, 0);
         }
         eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
-        // Notify Bot (Same player goes again)
-        OnServerTurnStarted?.Invoke(Context, _gameBoard);
     }
 
     [Server]

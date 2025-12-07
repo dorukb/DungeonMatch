@@ -37,6 +37,8 @@ namespace DorkyProductions.AI
             // If it's not my turn, ignore
             if (netId != context.ActivePlayerNetId) return;
 
+            
+            Debug.Log("Bot is Making a Move.");
             if (context.ChestsLeft > 0)
             {
                 PerformLightningSkill();

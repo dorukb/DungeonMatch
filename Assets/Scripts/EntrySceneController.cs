@@ -65,6 +65,8 @@ public class EntrySceneController : MonoBehaviour
     //when the lobby is successfully created, start the host
     private void OnCreateLobbySuccess(List<Attribute> attributes) {
         _lobbyData = attributes;
+        
+        manager.isOfflineMode = false;
         manager.StartHost();
         
         Debug.Log("[Lobby] Created Lobby. waiting for other player.");
@@ -82,6 +84,7 @@ public class EntrySceneController : MonoBehaviour
             return;
         }
 
+        manager.isOfflineMode = false;
         manager.networkAddress = hostAddressAttribute.Data.Value.Value.AsUtf8;
         manager.StartClient();
         

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DorkyProductions.AI;
 using DorkyProductions.Skills;
@@ -18,11 +19,16 @@ namespace DorkyProductions
         private int shield = 0;
         private float currentCrossMultiplier = 0f;
 
+        public bool IsBot { get; private set; }
+        private void Awake()
+        {
+            var botBrain = GetComponent<BotBrain>();
+            IsBot = botBrain != null;
+        }
 
-        public bool IsBot;
-        private BotBrain aiLogic;
         public override void OnStartServer()
         {
+            Debug.Log($"OnStartServer for id :{netId}");
             // When the player object is spawned on the server, register it
             GameMaster.Instance.RegisterPlayer(this);
         }
