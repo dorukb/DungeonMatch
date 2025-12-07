@@ -527,8 +527,9 @@ public class GameBoard
             }
         }
 
+        var randFallBackTile = (Tile) (Random.Range(1, 6));
         // Fallback
-        return new TileState(_nextTileID++, Tile.Shield, false);
+        return new TileState(_nextTileID++, randFallBackTile, false);
     }
     private int GetIndex(Vector2Int pos) =>  GetIndex(pos.x, pos.y);
     private int GetIndex(int x, int y) => (x * BoardHeight) + y;
