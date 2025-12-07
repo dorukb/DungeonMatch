@@ -87,6 +87,9 @@ namespace DorkyProductions.AI
         [Server]
         private void SaveChestRewardForOpening(Context ctx, int rewardSkillId)
         {
+            // If it's not my turn, ignore
+            if (netId != ctx.ActivePlayerNetId) return;
+            
             skillId = rewardSkillId;
         }
     }
