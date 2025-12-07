@@ -63,8 +63,15 @@ public class LobbyController : MonoBehaviour
     }
     public void RequestLeaveLobby()
     {
-        _eosLobby.LeaveLobby();
-        leaveLobbyButton.interactable = false;
+        if (manager.isOfflineMode)
+        {
+            manager.StopHost();
+        }
+        else
+        {
+            _eosLobby.LeaveLobby();
+            leaveLobbyButton.interactable = false;
+        }
     }
     
     private void HandleClientDisconnect(ProductUserId leavingClientID)
