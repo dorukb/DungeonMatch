@@ -260,6 +260,7 @@ namespace DorkyProductions
     
     public class ChestMatchedEvent : GameEventBase
     {
+        // TODO: Minor bug, If player earns 2 chests back to back, before opening the first one, the second reward overrides the first
         public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.ChestMatched;
         public uint targetPlayerID;

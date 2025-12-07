@@ -225,7 +225,8 @@ namespace DorkyProductions
         }
 
         public Tween Handle(ChestMatchedEvent e)
-        {
+        {        
+            // TODO: Bug, If player earns 2 chests back to back, before opening the first one, the second reward overrides the first
             Debug.Log($"Player {e.targetPlayerID} received Chest.");
             var targetPlayer = GetPlayerType(e.targetPlayerID);
             UIMediator.OnPlayerChestUpdated?.Invoke(targetPlayer, true);

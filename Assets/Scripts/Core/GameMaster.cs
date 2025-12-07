@@ -2,12 +2,12 @@ using System;
 using UnityEngine;
 using Mirror;
 using System.Collections.Generic;
-using DorkyProductions.UI;
 
 namespace  DorkyProductions
 {
     
-// The possible states of the game, synced to all clients
+// The possible Overview states of the game, synced to all clients.
+// granular states are handles by GameEvent's
 public enum GameState
 {
     WaitingForPlayers,
@@ -18,26 +18,26 @@ public enum GameState
 public class GameMaster : NetworkBehaviour
 {
     public static GameMaster Instance { get; private set; }
-
     private GameState gameState = GameState.WaitingForPlayers;
 
-    public TileDatabase TileDatabase;
-    
     [Header("Game Settings")]
     [Tooltip("The number of players required to start a game")]
     public int requiredPlayers = 2;
 
-    // --- Server-Only State ---
-    // List of all connected players (server-side only)
     private List<NetworkPlayer> players = new List<NetworkPlayer>();
-    private List<GameEventBase> serverGameHistory = new List<GameEventBase>();
-    
-    // Server-side index for tracking turns
     private int activePlayerIndex = 0;
     
     private GameBoard _gameBoard; 
     private ClientEventHandler _clientEventHandler;
     public Context Context { get; private set; }
+    
+    // --- Server-Side Events (For Bots/AI) ---
+    // Bots subscribe to these to know when to act, since they don't receive ClientRPCs
+    public event Action<Context, GameBoard> OnServerTurnStarted;
+    
+    // param: <rewardId>
+    public event Action<Context, int> OnServerChestMatched;
+    
     void Awake()
     {
         Context = new Context();
@@ -110,6 +110,9 @@ public class GameMaster : NetworkBehaviour
         
         eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState));
         eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
+        // Notify Server-side entities (Bots) that the turn has started
+        OnServerTurnStarted?.Invoke(Context, _gameBoard);
+        
         // TileDistribution.LogBoardDensity();
         // Send to clients
         SendEventBatch(eventBatch);
@@ -126,7 +129,7 @@ public class GameMaster : NetworkBehaviour
     }
 
     [Server]
-    public void ProcessPlayerLightningSkillUse(NetworkConnectionToClient sender, Vector2Int tilePos)
+    public void ProcessPlayerLightningSkillUse(NetworkIdentity sender, Vector2Int tilePos, float artificialDelay = 0f)
     {
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         bool canMakeMove = ValidateUserTurn(sender);
@@ -140,7 +143,7 @@ public class GameMaster : NetworkBehaviour
         // maybe dont even accept skillId as param, server should already know.
         if (canMakeMove)
         {
-            _gameBoard.ProcessLightningEffect(tilePos, sender.identity, eventBatch);
+            _gameBoard.ProcessLightningEffect(tilePos, sender, eventBatch);
         }
         else
         {
@@ -151,7 +154,7 @@ public class GameMaster : NetworkBehaviour
         SendEventBatch(eventBatch);
     }
     
-    public void ProcessPlayerPhantomMatchSkill(NetworkConnectionToClient sender, List<Vector2Int> targetTiles)
+    public void ProcessPlayerPhantomMatchSkill(NetworkIdentity sender, List<Vector2Int> targetTiles, float artificialDelay = 0f)
     { 
         // TODO: refactor using Template Method pattern.
         List<GameEventBase> eventBatch = new List<GameEventBase>();
@@ -163,7 +166,7 @@ public class GameMaster : NetworkBehaviour
         // make sure all tiles are of same type.
         if (canMakeMove && targetTiles.Count >= 3) 
         {
-            _gameBoard.ProcessPhantomMatchEffect(targetTiles, sender.identity, eventBatch);
+            _gameBoard.ProcessPhantomMatchEffect(targetTiles, sender, eventBatch);
         }
         else
         {
@@ -175,7 +178,7 @@ public class GameMaster : NetworkBehaviour
     // This is the main "transaction" method called by a Player via [Command].
     // It processes the move and generates all resulting events.
     [Server]
-    public void ProcessPlayerSwap(NetworkConnectionToClient sender, Vector2Int posA, Vector2Int posB)
+    public void ProcessPlayerSwap(NetworkIdentity sender, Vector2Int posA, Vector2Int posB, float artificialDelay = 0f)
     {
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         bool canMakeMove = ValidateUserTurn(sender);
@@ -183,14 +186,14 @@ public class GameMaster : NetworkBehaviour
         if (isValidMove)
         {
             // Core algorithm.
-            _gameBoard.ProcessSwapMove(posA, posB, sender.identity, eventBatch);
+            _gameBoard.ProcessSwapMove(posA, posB, sender, eventBatch);
 
             EndTurnAndStartNext(eventBatch);
             SendEventBatch(eventBatch);
         }
         else
         {
-            Debug.LogWarning($"Player {sender.identity.netId} tried to move out of turn or the swap was not valid.");
+            Debug.LogWarning($"Player {sender.netId} tried to move out of turn or the swap was not valid.");
             eventBatch.Add(EventPool.Get<SwapDeniedEvent>().Setup(Context.ActivePlayerNetId));
             
             // Note: we do NOT end the turn here, just let the player make another move.
@@ -228,14 +231,14 @@ public class GameMaster : NetworkBehaviour
     }
 
     [Server]
-    private bool ValidateUserTurn(NetworkConnectionToClient sender)
+    private bool ValidateUserTurn(NetworkIdentity playerIdentity)
     {
         if (gameState == GameState.GameEnded)
         {
             Debug.Log("[Server] Game has ended already, Swap request has no effect at this point.");
             return false;
         }
-        bool canMakeMove = (gameState == GameState.Playing) && (sender.identity.netId == Context.ActivePlayerNetId);
+        bool canMakeMove = (gameState == GameState.Playing) && (playerIdentity.netId == Context.ActivePlayerNetId);
         return canMakeMove;
     }
     
@@ -251,8 +254,6 @@ public class GameMaster : NetworkBehaviour
         if (Context.ExtraTurnsLeft > 0)
         {
             Debug.Log("[Server] Not changing the active player at the end of the turn due to Extra Turn.");
-            
-            eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
             Context.ExtraTurnsLeft -= 1;
         }
         else //regular behavior, go to Next player.
@@ -263,8 +264,10 @@ public class GameMaster : NetworkBehaviour
             activePlayerIndex = (activePlayerIndex + 1) % players.Count;
             var newActivePlayer = players[activePlayerIndex];
             Context.Setup(newActivePlayer.netId, 0, 0);
-            eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
         }
+        eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
+        // Notify Bot (Same player goes again)
+        OnServerTurnStarted?.Invoke(Context, _gameBoard);
     }
 
     [Server]
@@ -308,5 +311,9 @@ public class GameMaster : NetworkBehaviour
         _clientEventHandler.EnqueueEventBatch(eventBatch);
     }
 
+    public void NotifyBotChestMatched(int chestSkillIdx)
+    {
+        OnServerChestMatched?.Invoke(Context, chestSkillIdx);
+    }
 }
 }

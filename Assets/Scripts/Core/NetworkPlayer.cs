@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DorkyProductions.AI;
 using DorkyProductions.Skills;
 using UnityEngine;
 using Mirror;
@@ -16,6 +17,10 @@ namespace DorkyProductions
         private int health = PLAYER_STARTING_HEALTH; // server only.
         private int shield = 0;
         private float currentCrossMultiplier = 0f;
+
+
+        public bool IsBot;
+        private BotBrain aiLogic;
         public override void OnStartServer()
         {
             // When the player object is spawned on the server, register it
@@ -31,6 +36,8 @@ namespace DorkyProductions
 
         public override void OnStartLocalPlayer()
         {
+            // TODO: Verify this is not a problem with Bot/AI Player.
+            Debug.Log($"OnStartLocalPlayer for netId: {netId}");
             base.OnStartLocalPlayer();
             _playerInput = FindAnyObjectByType<PlayerInput>();
             if (_playerInput == null)
@@ -148,7 +155,7 @@ namespace DorkyProductions
             }
             
             Debug.Log($"[Server] Received swap request: {posA} <-> {posB}");
-            GameMaster.Instance.ProcessPlayerSwap(connectionToClient, posA, posB);
+            GameMaster.Instance.ProcessPlayerSwap(connectionToClient.identity, posA, posB);
         }
 
         [Client]
@@ -178,7 +185,7 @@ namespace DorkyProductions
             }
             
             Debug.Log($"[Server] Received Lightning Skill Use request");
-            GameMaster.Instance.ProcessPlayerLightningSkillUse(connectionToClient, targetTilePos);
+            GameMaster.Instance.ProcessPlayerLightningSkillUse(connectionToClient.identity, targetTilePos);
         }
         
         [Command]
@@ -191,7 +198,7 @@ namespace DorkyProductions
             }
             
             Debug.Log($"[Server] Received Phantom Match Skill Use request");
-            GameMaster.Instance.ProcessPlayerPhantomMatchSkill(connectionToClient, targetTiles);
+            GameMaster.Instance.ProcessPlayerPhantomMatchSkill(connectionToClient.identity, targetTiles);
         }
 
         public void ActivateLightningInput()

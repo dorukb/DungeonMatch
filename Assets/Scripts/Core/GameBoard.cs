@@ -273,6 +273,7 @@ public class GameBoard
         int chestSkillIdx = Random.Range(0, 2);
         
         eventBatch.Add(EventPool.Get<ChestMatchedEvent>().Setup(activePlayer.netId, chestSkillIdx));
+        gm.NotifyBotChestMatched(chestSkillIdx);
         gm.GrantExtraTurnToCurrentPlayer(true);
     }
 
