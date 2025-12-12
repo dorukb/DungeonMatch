@@ -441,7 +441,7 @@ namespace DorkyProductions
 
     public class TileSpawnedEvent : GameEventBase
     {
-        public override SyncType SyncType => SyncType.Blocking;
+        public override SyncType SyncType => SyncType.Parallel;
         public override EventType EventType => EventType.TileSpawned;
         public Vector2Int pos;
         public TileState state;

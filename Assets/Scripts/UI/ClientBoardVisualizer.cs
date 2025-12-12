@@ -33,7 +33,7 @@ public class ClientBoardVisualizer : MonoBehaviour
     public const float SWAP_DURATION = 0.3f;
     public const float FALL_DURATION = 0.5f;
     public const float REMOVE_DURATION = 0.5f;
-    public const float SPAWN_DURATION = 0.25f;
+    public const float SPAWN_DURATION = 0.5f;
     
     // This is our client-side lookup to connect a logical tile (by ID)
     // to its visual GameObject.
@@ -46,15 +46,29 @@ public class ClientBoardVisualizer : MonoBehaviour
     public Tween InitBoard(List<TileState> tiles)
     {
         Sequence s = DOTween.Sequence();
+    
+        // Settings for the "Rain" feel
+        float staggerPerTile = 0.05f; // How long to wait between each tile falling
+    
         for (int i = 0; i < tiles.Count; i++)
         {
             var tile = tiles[i];
-            var tween = SpawnVisualTile(tile, GameBoard.GetGridPos(i));
+            Vector2Int gridPos = GameBoard.GetGridPos(i); // Assuming this returns accurate x,y
+        
+            // Option B: "Matrix" style rain (Columns fall together, staggered slightly)
+            // float delay = gridPos.x * 0.1f + gridPos.y * 0.05f;
+
+            // Option C: Diagonal Wave (Bottom-Left to Top-Right) - RECOMMENDED
+            // This prevents upper tiles from visually passing through lower tiles
+            float delay = (gridPos.x + gridPos.y) * staggerPerTile; 
+            var tween = SpawnVisualTile(tile, gridPos);
             if (tween != null)
             {
-                s.Join(tween);
+                // Instead of Join (simultaneous), we Insert at a specific timestamp
+                s.Insert(delay, tween);
             }
         }
+    
         return s;
     }
     public Tween SpawnVisualTile(TileState state, Vector2Int gridPos)
@@ -70,7 +84,7 @@ public class ClientBoardVisualizer : MonoBehaviour
         GameObject tileGO = Instantiate(tileViewPrefab, boardContainer);
         tileGO.name = "Tile"+ state.uniqueID.ToString();
         // 2. Set its starting scale to 0 (so it's invisible)
-        tileGO.transform.localScale = Vector3.zero;
+        // tileGO.transform.localScale = Vector3.zero;
      
         // 2. Setup the RectTransform Spawn Position
         RectTransform rt = tileGO.GetComponent<RectTransform>();
@@ -79,8 +93,11 @@ public class ClientBoardVisualizer : MonoBehaviour
         rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = tileViewSize;
         
-        Vector2 anchoredPos = GetAnchoredPosition(gridPos);
-        rt.anchoredPosition = anchoredPos;
+        Vector2 targetPos = GetAnchoredPosition(gridPos);
+        int dropHeightInRows = GameBoard.BoardHeight + 1; 
+        Vector2Int startGridPos = new Vector2Int(gridPos.x, gridPos.y + dropHeightInRows);
+        Vector2 spawnPos = GetAnchoredPosition(startGridPos);
+        rt.anchoredPosition = spawnPos;
         
         TileView tileView = tileGO.GetComponent<TileView>();
         bool useAlternativeSprite = state.isDoubleEffect && (state.type == Tile.Attack || state.type == Tile.Heal);
@@ -89,7 +106,7 @@ public class ClientBoardVisualizer : MonoBehaviour
         // 5. Add to our dictionary for tracking
         _visualTiles[state.uniqueID] = tileView;
         
-        var spawnAnim = tileGO.transform.DOScale(1f, SPAWN_DURATION).SetEase(Ease.OutBack);
+        var spawnAnim = rt.DOAnchorPos(targetPos, SPAWN_DURATION).SetEase(Ease.OutBack, 0.5f);
         return spawnAnim;
     }
     
@@ -124,9 +141,7 @@ public class ClientBoardVisualizer : MonoBehaviour
     {
         Vector2 newAnchoredPos = GetAnchoredPosition(newGridPos);
         tileToMove.GridPosition = newGridPos;
-        
-        return tileToMove.RectTransform.DOAnchorPos(newAnchoredPos, duration)
-            .SetEase(Ease.OutCubic);
+        return tileToMove.RectTransform.DOAnchorPos(newAnchoredPos, duration).SetEase(Ease.OutBack, 0.5f);
     }
 
     public Tween AnimateFall(ushort tileId, Vector2Int toPos)

@@ -126,12 +126,28 @@ namespace DorkyProductions
             Debug.Log($"Starting a parallel batch of {batch.Count} events of Type: {batch[0].EventType}");
 
             Sequence parallelSequence = DOTween.Sequence();
+            float insertStartTime = 0;
+            float delayBtwEvents = 0.05f;
+            
             foreach (var ev in batch)
             {
                 Tween tileTween = ev.Accept(this);
                 if (tileTween != null)
                 {
-                    parallelSequence.Join(tileTween);
+                    if (ev.EventType == EventType.TileSpawned)
+                    {
+                        parallelSequence.Insert(insertStartTime, tileTween);
+                        insertStartTime += delayBtwEvents;
+                    }
+                    else if (ev.EventType == EventType.TileMoved)
+                    {
+                        parallelSequence.Insert(insertStartTime, tileTween);
+                        insertStartTime += delayBtwEvents;
+                    }
+                    else
+                    {
+                        parallelSequence.Join(tileTween);
+                    }
                 }
             }
 
