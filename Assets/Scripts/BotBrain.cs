@@ -10,7 +10,7 @@ namespace DorkyProductions.AI
     {
         [Header("Bot Settings")]
         [Tooltip("How long the client will see the 'Thinking' state before the move resolves.")]
-        public float VisualThinkingDuration = 1.5f;
+        public float VisualThinkingDuration = 2.5f;
         public int skillId = -1;
         public override void OnStartServer()
         {

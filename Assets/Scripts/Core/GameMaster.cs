@@ -150,6 +150,10 @@ public class GameMaster : NetworkBehaviour
         // maybe dont even accept skillId as param, server should already know.
         if (canMakeMove)
         {
+            if (artificialDelay > 0.1f)
+            {
+                eventBatch.Add(EventPool.Get<AIDelayEvent>().Setup(artificialDelay));
+            }
             _gameBoard.ProcessLightningEffect(tilePos, sender, eventBatch);
         }
         else
@@ -175,6 +179,10 @@ public class GameMaster : NetworkBehaviour
         // make sure all tiles are of same type.
         if (canMakeMove && targetTiles.Count >= 3) 
         {
+            if (artificialDelay > 0.1f)
+            {
+                eventBatch.Add(EventPool.Get<AIDelayEvent>().Setup(artificialDelay));
+            }
             _gameBoard.ProcessPhantomMatchEffect(targetTiles, sender, eventBatch);
         }
         else
@@ -196,6 +204,10 @@ public class GameMaster : NetworkBehaviour
         bool isValidMove = canMakeMove && _gameBoard.IsValidSwap(posA, posB);
         if (isValidMove)
         {
+            if (artificialDelay > 0.1f)
+            {
+                eventBatch.Add(EventPool.Get<AIDelayEvent>().Setup(artificialDelay));
+            }
             // Core algorithm.
             _gameBoard.ProcessSwapMove(posA, posB, sender, eventBatch);
 

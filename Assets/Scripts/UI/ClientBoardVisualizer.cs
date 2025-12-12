@@ -15,6 +15,10 @@ public class ClientBoardVisualizer : MonoBehaviour
     [SerializeField]
     public PlayerInput playerInput;
     
+    [Header("AI Delay Event Fields")]
+    [SerializeField] private CanvasGroup thinkingUI;
+    [SerializeField] private RectTransform thinkingIcon; 
+    
     [Header("UI Layout (Read by Client)")]
     [Tooltip("The RectTransform that holds the 5x5 grid UI.")]
     public RectTransform boardContainer;
@@ -162,6 +166,51 @@ public class ClientBoardVisualizer : MonoBehaviour
                 Destroy(tileView.gameObject);
             }
         };
+        return s;
+    }
+    public Tween AnimateAIDelay(float eDuration)
+    {
+        Sequence s = DOTween.Sequence();
+            
+        // 1. Safety Check
+        if (eDuration < 0.2f) return s.AppendInterval(eDuration);
+
+        float fadeInTime = 0.25f;
+        float fadeOutTime = 0.25f;
+            
+        // 2. Setup
+        s.OnStart(() => {
+            // Ensure the parent handles visibility...
+            thinkingUI.alpha = 0;
+            thinkingUI.gameObject.SetActive(true);
+                
+            // ...and the child is ready to pop up
+            thinkingIcon.localScale = Vector3.one; 
+        });
+
+        // 3. Fade In (Parent) & Pop Up (Child)
+        // Because Icon is a child, it fades in with the parent automatically.
+        s.Append(thinkingUI.DOFade(1f, fadeInTime));
+            
+        // We animate scale on the child ONLY so the bubble background doesn't wobble
+        s.Join(thinkingIcon.DOScale(1.2f, fadeInTime).SetEase(Ease.OutBack));
+
+        // 4. "Breathing" Pulse (Looping on Child)
+        s.Append(thinkingIcon.DOScale(1.0f, 0.5f).SetLoops(5, LoopType.Yoyo));
+
+        // 5. Wait for the core duration
+        s.AppendInterval(eDuration - fadeInTime - fadeOutTime);
+
+        // 6. Fade Out
+        s.AppendCallback(() => thinkingIcon.DOKill()); 
+        s.Append(thinkingUI.DOFade(0f, fadeOutTime));
+        s.Join(thinkingIcon.DOScale(0f, fadeOutTime).SetEase(Ease.InBack));
+
+        // 7. Cleanup
+        s.OnComplete(() => {
+            thinkingUI.gameObject.SetActive(false);
+        });
+
         return s;
     }
 }

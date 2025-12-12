@@ -55,6 +55,7 @@ namespace DorkyProductions
                 EventType.TurnStarted => Get<TurnStartedEvent>(),
                 EventType.TurnEnded => Get<TurnEndedEvent>(),
                 EventType.TileRemoved => Get<TileRemovedEvent>(),
+                EventType.AIDelay => Get<AIDelayEvent>(),
 
                 // Parallel
                 EventType.TileMoved => Get<TileMovedEvent>(),

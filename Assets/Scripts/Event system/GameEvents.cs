@@ -467,4 +467,33 @@ namespace DorkyProductions
 
         public override void Reset() { pos = Vector2Int.zero; state = default; }
     }
+    public class AIDelayEvent : GameEventBase
+    {
+        public float Duration;
+
+        public AIDelayEvent Setup(float duration)
+        {
+            this.Duration = duration;
+            return this;
+        }
+
+        public override SyncType SyncType => SyncType.Blocking;
+        public override EventType EventType => EventType.AIDelay;
+        public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
+
+        public override void Serialize(NetworkWriter writer)
+        {
+            writer.Write(Duration);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            Duration = reader.Read<float>();
+        }
+
+        public override void Reset()
+        {
+            Duration = 0f;
+        }
+    }
 }

@@ -292,6 +292,10 @@ namespace DorkyProductions
             }
             return null;
         }
+        public Tween Handle(AIDelayEvent e)
+        {
+            return _visualizer.AnimateAIDelay(e.Duration);
+        }
         #endregion
 
         #region Parallel Handlers

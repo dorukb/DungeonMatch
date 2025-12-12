@@ -61,6 +61,7 @@ public class PlayerPortraitUI : MonoBehaviour
         if (player != displayForPlayer) return; 
         
         float fillAmount = (float)currentHealth / (float) NetworkPlayer.PLAYER_STARTING_HEALTH;
+        fillAmount = Mathf.Max(0.1f, fillAmount);
         playerHealthBar.fillAmount = fillAmount;
         playerHealthText.text = currentHealth.ToString();
     }

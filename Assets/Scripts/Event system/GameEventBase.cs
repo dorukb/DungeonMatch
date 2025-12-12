@@ -21,6 +21,7 @@ namespace DorkyProductions
         GameStarted,
         GameEnded,
         TileRemoved,
+        AIDelay,
         
         // Parallel
         TileMoved,
@@ -83,5 +84,6 @@ namespace DorkyProductions
         // Parallel
         Tween Handle(TileMovedEvent e);
         Tween Handle(TileSpawnedEvent e);
+        Tween Handle(AIDelayEvent e);
     }
 }
