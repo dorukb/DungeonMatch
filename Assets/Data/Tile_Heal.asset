@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Tile_Heal
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinitionSO
   type: 4
-  tileSprite: {fileID: 566318709186932528, guid: 9faae48fade32964ea125b3c007d400a, type: 3}
-  tileSprite2x: {fileID: 21300000, guid: a46c83f28e5732447b1b39adec21d7cf, type: 3}
+  tileSprite: {fileID: 566318709186932528, guid: 6afbb8b5451a8d44fb8ccb3641d481a3, type: 3}
+  tileSprite2x: {fileID: 3764006315916260215, guid: d709f899b29b2654092a875a3b7e0435, type: 3}

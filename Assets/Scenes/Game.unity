@@ -252,6 +252,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3e71d447a543a84e854895330fcd078, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInput
+  _swipeThresholdInches: 0.5
 --- !u!4 &144706342
 Transform:
   m_ObjectHideFlags: 0
@@ -1993,10 +1994,6 @@ PrefabInstance:
       propertyPath: m_fontSize
       value: 50
       objectReference: {fileID: 0}
-    - target: {fileID: 3294544504334923676, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
-      propertyPath: m_Sprite
-      value: 
-      objectReference: {fileID: -8535741622840600874, guid: 59f8cd1ec7625d448b36a7571e24c2ec, type: 3}
     - target: {fileID: 3728329083249540549, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -2592,7 +2589,7 @@ PrefabInstance:
     - target: {fileID: 3294544504334923676, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: -2781262520247112818, guid: 5c777201ecde919449935bc80362d876, type: 3}
+      objectReference: {fileID: -2781262520247112818, guid: 4d19c8febe9b2bb4baa500e17e0ed244, type: 3}
     - target: {fileID: 3728329083249540549, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0

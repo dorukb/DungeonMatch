@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Tile_Cross
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinitionSO
   type: 3
-  tileSprite: {fileID: 2957189173007414883, guid: f6fc2d8a9af6a6d4daccd2305c3f5f57, type: 3}
-  tileSprite2x: {fileID: 0}
+  tileSprite: {fileID: 2957189173007414883, guid: 8ec8334329beffc4198591a03904b5a7, type: 3}
+  tileSprite2x: {fileID: 2957189173007414883, guid: 8ec8334329beffc4198591a03904b5a7, type: 3}

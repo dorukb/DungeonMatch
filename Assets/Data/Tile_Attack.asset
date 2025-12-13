@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Tile_Attack
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinitionSO
   type: 1
-  tileSprite: {fileID: 1563423571555679134, guid: 6841f341154cd6a4f8e49cb241e848f2, type: 3}
-  tileSprite2x: {fileID: 21300000, guid: dd481c313ba809d4b863cf273017a8a6, type: 3}
+  tileSprite: {fileID: 1563423571555679134, guid: 5768b5c8a8f5ecf469600349aac35147, type: 3}
+  tileSprite2x: {fileID: -3503269340594870493, guid: cbe5f6cd4bf65d44cbd4cdb4892427de, type: 3}
