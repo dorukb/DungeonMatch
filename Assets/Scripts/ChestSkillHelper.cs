@@ -14,12 +14,12 @@ namespace DorkyProductions.Skills
             if (selectedTilesForPhantomMatch.Contains(selectedTile))
             {
                 selectedTilesForPhantomMatch.Remove(selectedTile);
-                selectedTile.OnSelectedStateChange(false);
+                selectedTile.SetSelected(false);
             }    
             else if (selectedTilesForPhantomMatch.Count == 0)
             {
                 // select this one.
-                selectedTile.OnSelectedStateChange(true);
+                selectedTile.SetSelected(true);
                 selectedTilesForPhantomMatch.Add(selectedTile);
             }
             else if (selectedTilesForPhantomMatch.FirstOrDefault().Type != selectedTile.Type)
@@ -27,16 +27,16 @@ namespace DorkyProductions.Skills
                 // if different from previous selected ones, remove the others, start a "new 3" with this.
                 foreach (var tile in selectedTilesForPhantomMatch)
                 {
-                    tile.OnSelectedStateChange(false);
+                    tile.SetSelected(false);
                 }
                 selectedTilesForPhantomMatch.Clear();
                 
-                selectedTile.OnSelectedStateChange(true);
+                selectedTile.SetSelected(true);
                 selectedTilesForPhantomMatch.Add(selectedTile);
             }
             else  // continue the batch.
             {
-                selectedTile.OnSelectedStateChange(true);
+                selectedTile.SetSelected(true);
                 selectedTilesForPhantomMatch.Add(selectedTile);
             }
             // when 3 are selected. either show OK/submit button, or automatically send the command.

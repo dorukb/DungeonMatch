@@ -1,105 +1,265 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 namespace DorkyProductions
 {
-    
-// This is NOT a NetworkBehaviour. It's a simple, local input handler.
 public class HumanPlayerInput : MonoBehaviour
 {
     public NetworkPlayer LocalPlayerController { get; private set; }
-    private TileView _startTile;
-    private bool _isDragging = false;
-    private bool canSwap = false;
-    private bool isLightningInputActive = false;
-    private bool isPhantomInputActive = false;
+
+    [Header("Responsiveness")]
+    [Tooltip("Physical distance (inches) the finger must move to register a swipe.")]
+    [SerializeField] private float _swipeThresholdInches = 0.2f; // Increased slightly for safety
+
+    // State Tracking
+    private TileView _selectedTile;
+    private TileView _pressedTile;
+    private Vector2 _pressPosition;
+    private bool _hasMovedPastThreshold; // Track if we ever dragged far enough
+
+    // Flags
+    private bool _canSwap = false;
+    private bool _isLightningInputActive = false;
+    private bool _isPhantomInputActive = false;
+    private float _dpi;
+
     private void Awake()
     {
-        canSwap = false;
-        isLightningInputActive = false;
-        isPhantomInputActive = false;
+        _canSwap = false;
+        _dpi = Screen.dpi == 0 ? 96 : Screen.dpi;
     }
 
-    public void DisableSwapControls()
+    private void Update()
     {
-        Debug.Log("Disabling controls");
-        canSwap = false;
-    }
+        if (!_canSwap && !_isLightningInputActive && !_isPhantomInputActive) return;
 
-    public void EnableControls()
-    {
-        Debug.Log("Enabling controls");
-        canSwap = true;
-    }
+        // -- 1. Detect Input Source --
+        bool isPressed = false;
+        bool wasPressed = false;
+        bool wasReleased = false;
+        Vector2 position = Vector2.zero;
 
-    public void SetPlayer(NetworkPlayer localPlayer)
-    {
-        LocalPlayerController = localPlayer;
-    }
-    
-    public void OnTilePointerDown(TileView tile)
-    {
-        if (!canSwap) return;
-        
-        _startTile = tile;
-        _isDragging = true;
-    }
-
-    public void OnTilePointerUp(TileView tile)
-    {
-        // This doesn't scale. Needs refactor.
-        if (isLightningInputActive)
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
         {
-            LocalPlayerController.OnTileSelectedForLightning(tile.GridPosition);
+            isPressed = true;
+            wasPressed = Touchscreen.current.primaryTouch.press.wasPressedThisFrame;
+            wasReleased = Touchscreen.current.primaryTouch.press.wasReleasedThisFrame;
+            position = Touchscreen.current.primaryTouch.position.ReadValue();
         }
-
-        if (isPhantomInputActive)
+        else if (Mouse.current != null && Mouse.current.leftButton.isPressed)
         {
-            LocalPlayerController.OnTileSelectedForPhantom(tile);
+            isPressed = true;
+            wasPressed = Mouse.current.leftButton.wasPressedThisFrame;
+            wasReleased = Mouse.current.leftButton.wasReleasedThisFrame;
+            position = Mouse.current.position.ReadValue();
         }
         
-        if (!canSwap || !_isDragging || _startTile == null) return;
-
-        _isDragging = false;
-        if (tile == null)
+        // Handle release frame
+        if (!isPressed)
         {
-            _startTile = null;
+            if (Mouse.current != null && Mouse.current.leftButton.wasReleasedThisFrame)
+            {
+                wasReleased = true;
+                position = Mouse.current.position.ReadValue();
+            }
+            else if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasReleasedThisFrame)
+            {
+                wasReleased = true;
+                position = Touchscreen.current.primaryTouch.position.ReadValue();
+            }
+        }
+
+        // -- 2. Process States --
+        if (wasPressed) HandleDown(position);
+        else if (isPressed) HandleDrag(position); // Only updates state now
+        else if (wasReleased) HandleUp(position); // Execution happens here
+    }
+
+    private void HandleDown(Vector2 screenPos)
+    {
+        TileView hit = RaycastForTile(screenPos);
+        if (hit == null) return;
+
+        if (_isLightningInputActive)
+        {
+            LocalPlayerController.OnTileSelectedForLightning(hit.GridPosition);
             return;
         }
-        
-        // Check if we released on the same tile
-        if (tile == _startTile)
+        if (_isPhantomInputActive)
         {
-            _startTile = null;
-            return; // It was just a click, not a swipe
+            LocalPlayerController.OnTileSelectedForPhantom(hit);
+            return;
         }
 
-        // Check for adjacency (we can ask the TileView for its grid pos)
-        Vector2Int posA = _startTile.GridPosition;
-        Vector2Int posB = tile.GridPosition;
+        _pressedTile = hit;
+        _pressPosition = screenPos;
+        _hasMovedPastThreshold = false;
+    }
 
-        int dist = Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
+    private void HandleDrag(Vector2 screenPos)
+    {
+        if (_pressedTile == null) return;
         
-        if (dist == 1)
+        // We just track the threshold here for visual feedback logic (if you add it later),
+        // but we DO NOT execute the swap here anymore.
+        float dist = Vector2.Distance(_pressPosition, screenPos);
+        float pixelThreshold = _swipeThresholdInches * _dpi;
+
+        if (dist > pixelThreshold)
         {
-            // Valid adjacent swipe!
-            // Tell our Player script to send the command
-            LocalPlayerController.RequestSwap(posA, posB);
+            _hasMovedPastThreshold = true;
         }
-        
-        _startTile = null;
     }
 
-    public void ActivateLightningInput()
+    private void HandleUp(Vector2 screenPos)
     {
-        isLightningInputActive = true;
+        if (_pressedTile == null) return;
+
+        // Calculate final distance from the start point
+        float dist = Vector2.Distance(_pressPosition, screenPos);
+        float pixelThreshold = _swipeThresholdInches * _dpi;
+
+        // Decision: Was this a Swipe or a Tap?
+        // We use the distance at the moment of RELEASE. 
+        // This allows the user to drag out, change their mind, drag back, and release to cancel.
+        if (dist > pixelThreshold)
+        {
+            // It is a Swipe
+            Vector2 dir = (screenPos - _pressPosition).normalized;
+            AttemptSwipe(_pressedTile, dir);
+        }
+        else
+        {
+            // It is a Tap (even if they wiggled the finger a little bit)
+            // We Raycast again to see if they released ON the same tile they started.
+            TileView hit = RaycastForTile(screenPos);
+            if (hit != null && hit == _pressedTile)
+            {
+                HandleTap(hit);
+            }
+            else
+            {
+                // Released over void or different tile but didn't drag enough to swipe
+                // Just deselect to be safe/clean
+                DeselectCurrent(); 
+            }
+        }
+
+        ResetInputState();
     }
-    public void DisableLightningInput()
+
+    private void AttemptSwipe(TileView startTile, Vector2 direction)
     {
-        isLightningInputActive = false;
+        Vector2Int targetPos = startTile.GridPosition;
+
+        // Direction Locking: Ensure we don't accidentally swap diagonally
+        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+        {
+            // Horizontal
+            targetPos.x += direction.x > 0 ? 1 : -1;
+        }
+        else
+        {
+            // Vertical
+            targetPos.y += direction.y > 0 ? 1 : -1;
+        }
+
+        if (targetPos.x < 0 || targetPos.x > 4 || targetPos.y < 0 || targetPos.y > 4)
+        {
+            Debug.Log("Out of bounds swipe, ignored client-side.");
+        }
+        else
+        {
+            LocalPlayerController.RequestSwap(startTile.GridPosition, targetPos);
+            DeselectCurrent(); 
+        }
     }
-    public void ChangePhantomInputState(bool isActive)
+
+    private void HandleTap(TileView tile)
     {
-        isPhantomInputActive = isActive;
+        if (_selectedTile == null)
+        {
+            SelectTile(tile);
+        }
+        else if (_selectedTile == tile)
+        {
+            DeselectCurrent();
+        }
+        else
+        {
+            if (IsAdjacent(_selectedTile, tile))
+            {
+                LocalPlayerController.RequestSwap(_selectedTile.GridPosition, tile.GridPosition);
+                DeselectCurrent();
+            }
+            else
+            {
+                DeselectCurrent();
+                SelectTile(tile);
+            }
+        }
     }
+
+    // --- Helpers ---
+    private void SelectTile(TileView tile)
+    {
+        _selectedTile = tile;
+        _selectedTile.SetSelected(true);
+    }
+
+    private void DeselectCurrent()
+    {
+        if (_selectedTile != null)
+        {
+            _selectedTile.SetSelected(false);
+            _selectedTile = null;
+        }
+    }
+
+    private bool IsAdjacent(TileView a, TileView b)
+    {
+        int diff = Mathf.Abs(a.GridPosition.x - b.GridPosition.x) + 
+                   Mathf.Abs(a.GridPosition.y - b.GridPosition.y);
+        return diff == 1;
+    }
+
+    private void ResetInputState()
+    {
+        _pressedTile = null;
+        _hasMovedPastThreshold = false;
+    }
+
+    private TileView RaycastForTile(Vector2 screenPos)
+    {
+        PointerEventData pointerData = new PointerEventData(EventSystem.current)
+        {
+            position = screenPos
+        };
+
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        foreach (var result in results)
+        {
+            var tile = result.gameObject.GetComponent<TileView>();
+            if (tile != null) return tile;
+        }
+        return null;
+    }
+
+    // --- Public API ---
+    public void DisableSwapControls()
+    {
+        _canSwap = false;
+        DeselectCurrent();
+        ResetInputState();
+    }
+    public void EnableControls() => _canSwap = true;
+    public void SetPlayer(NetworkPlayer p) => LocalPlayerController = p;
+    public void ActivateLightningInput() => _isLightningInputActive = true;
+    public void DisableLightningInput() => _isLightningInputActive = false;
+    public void ChangePhantomInputState(bool s) => _isPhantomInputActive = s;
 }
 }

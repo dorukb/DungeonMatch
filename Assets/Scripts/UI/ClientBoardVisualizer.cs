@@ -103,7 +103,7 @@ public class ClientBoardVisualizer : MonoBehaviour
         
         TileView tileView = tileGO.GetComponent<TileView>();
         bool useAlternativeSprite = state.isDoubleEffect && (state.type == Tile.Attack || state.type == Tile.Heal);
-        tileView.Initialize(def, gridPos, humanPlayerInput, useAlternativeSprite);
+        tileView.Initialize(def, gridPos, useAlternativeSprite);
         
         // 5. Add to our dictionary for tracking
         _visualTiles[state.uniqueID] = tileView;
