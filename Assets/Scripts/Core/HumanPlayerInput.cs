@@ -4,7 +4,7 @@ namespace DorkyProductions
 {
     
 // This is NOT a NetworkBehaviour. It's a simple, local input handler.
-public class PlayerInput : MonoBehaviour
+public class HumanPlayerInput : MonoBehaviour
 {
     public NetworkPlayer LocalPlayerController { get; private set; }
     private TileView _startTile;

@@ -10,7 +10,7 @@ namespace DorkyProductions
 
     public class NetworkPlayer : NetworkBehaviour
     {
-        private PlayerInput _playerInput;
+        private HumanPlayerInput _humanPlayerInput;
         private ClientEventHandler _clientEventHandler;
         private ChestSkillHelper _chestSkillHelper;
 
@@ -45,14 +45,14 @@ namespace DorkyProductions
             // TODO: Verify this is not a problem with Bot/AI Player.
             Debug.Log($"OnStartLocalPlayer for netId: {netId}");
             base.OnStartLocalPlayer();
-            _playerInput = FindAnyObjectByType<PlayerInput>();
-            if (_playerInput == null)
+            _humanPlayerInput = FindAnyObjectByType<HumanPlayerInput>();
+            if (_humanPlayerInput == null)
             {
                 Debug.LogError("Could not find PlayerInput in the scene, check the Player Prefab.");
                 return;
             }
 
-            _playerInput.SetPlayer(this);
+            _humanPlayerInput.SetPlayer(this);
             
             _clientEventHandler = FindAnyObjectByType<ClientEventHandler>();
             if (_clientEventHandler == null)
@@ -132,13 +132,13 @@ namespace DorkyProductions
         [Client]
         public void EnableControls()
         {
-            _playerInput.EnableControls();
+            _humanPlayerInput.EnableControls();
         }
 
         [Client]
         public void DisableSwapControls()
         {
-            _playerInput.DisableSwapControls();
+            _humanPlayerInput.DisableSwapControls();
         }
 
         // This is called by the local PlayerInput script.
@@ -209,17 +209,17 @@ namespace DorkyProductions
 
         public void ActivateLightningInput()
         {
-            _playerInput.ActivateLightningInput();
+            _humanPlayerInput.ActivateLightningInput();
         }
 
         public void ActivatePhantomMatchInput()
         {
-            _playerInput.ChangePhantomInputState(true);
+            _humanPlayerInput.ChangePhantomInputState(true);
         }
         public void OnTileSelectedForLightning(Vector2Int targetTilePos)
         {
             AttemptLightningSkillUse(targetTilePos);
-            _playerInput.DisableLightningInput();
+            _humanPlayerInput.DisableLightningInput();
         }
         public void OnTileSelectedForPhantom(TileView selectedTile)
         {            
@@ -227,7 +227,7 @@ namespace DorkyProductions
            bool shouldTriggerSkill = _chestSkillHelper.OnNewTileSelected(selectedTile);
            if (shouldTriggerSkill)
            {
-               _playerInput.ChangePhantomInputState(false);
+               _humanPlayerInput.ChangePhantomInputState(false);
                AttemptPhantomSkillUse(_chestSkillHelper.GetSelectedTilePositions());
                _chestSkillHelper.ClearSelectedTiles();
            }

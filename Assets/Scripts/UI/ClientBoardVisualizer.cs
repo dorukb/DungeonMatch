@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using DG.Tweening;
+using UnityEngine.Serialization;
+
 namespace DorkyProductions
 {
     
@@ -12,8 +14,8 @@ public class ClientBoardVisualizer : MonoBehaviour
     [SerializeField]
     private GameObject tileViewPrefab; // A prefab with a SpriteRenderer and a TileView.cs script
 
-    [SerializeField]
-    public PlayerInput playerInput;
+    [FormerlySerializedAs("playerInput")] [SerializeField]
+    public HumanPlayerInput humanPlayerInput;
     
     [Header("AI Delay Event Fields")]
     [SerializeField] private CanvasGroup thinkingUI;
@@ -101,7 +103,7 @@ public class ClientBoardVisualizer : MonoBehaviour
         
         TileView tileView = tileGO.GetComponent<TileView>();
         bool useAlternativeSprite = state.isDoubleEffect && (state.type == Tile.Attack || state.type == Tile.Heal);
-        tileView.Initialize(def, gridPos, playerInput, useAlternativeSprite);
+        tileView.Initialize(def, gridPos, humanPlayerInput, useAlternativeSprite);
         
         // 5. Add to our dictionary for tracking
         _visualTiles[state.uniqueID] = tileView;

@@ -99,7 +99,7 @@ public class LobbyController : MonoBehaviour
     
     private void OnLeaveLobbyFailed(string errormessage)
     {
-        Debug.LogError($"LeaveLobby failed: {errormessage}, maybe try again? or cry.");
+        Debug.Log($"LeaveLobby failed: {errormessage}, expected, as we have many redundant calls.");
         leaveLobbyButton.interactable = true;
     }
 }

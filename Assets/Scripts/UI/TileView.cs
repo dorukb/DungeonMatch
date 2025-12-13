@@ -18,7 +18,7 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     
     // Store our logical position for input reference
     public Vector2Int GridPosition { get; set; }
-    private PlayerInput _inputManager;
+    private HumanPlayerInput _inputManager;
     public Tile Type { get; private set; }
     
     private void Awake()
@@ -28,7 +28,7 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     }
 
     // Called by ClientBoardVisualizer when spawned
-    public void Initialize(TileDefinitionSO definition, Vector2Int gridPos, PlayerInput localPlayerInput, bool useAlternativeSprite = false)
+    public void Initialize(TileDefinitionSO definition, Vector2Int gridPos, HumanPlayerInput localHumanPlayerInput, bool useAlternativeSprite = false)
     {
         if (useAlternativeSprite)
         {
@@ -39,7 +39,7 @@ public class TileView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
             _image.sprite = definition.tileSprite;
         }
         GridPosition = gridPos;
-        _inputManager = localPlayerInput;
+        _inputManager = localHumanPlayerInput;
         Type = definition.type;
     }
 
