@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 8031bcb6b22184244a4546afb7a7217a
+guid: 7a6bb9b4501663344b4f9c5e3b296ff0
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4558930620607232576
-    second: x2 SWORD 1_0
+      213: 4873269229741006406
+    second: SELECT GLOW_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: x2 SWORD 1_0
+      name: SELECT GLOW_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 257
-        height: 250
+        x: 3
+        y: 2
+        width: 296
+        height: 286
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 04af1f4ce33944f30800000000000000
-      internalID: 4558930620607232576
+      spriteID: 64edd857b8451a340800000000000000
+      internalID: 4873269229741006406
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      x2 SWORD 1_0: 4558930620607232576
+      SELECT GLOW_0: 4873269229741006406
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

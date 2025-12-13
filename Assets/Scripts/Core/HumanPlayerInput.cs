@@ -9,9 +9,8 @@ public class HumanPlayerInput : MonoBehaviour
 {
     public NetworkPlayer LocalPlayerController { get; private set; }
 
-    [Header("Responsiveness")]
-    [Tooltip("Physical distance (inches) the finger must move to register a swipe.")]
-    [SerializeField] private float _swipeThresholdInches = 0.2f; // Increased slightly for safety
+    // Physical distance (inches) the finger must move to register a swipe.
+    private float _swipeThresholdInches = 0.25f;
 
     // State Tracking
     private TileView _selectedTile;
