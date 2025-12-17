@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using DorkyProductions.AI;
 using DorkyProductions.Skills;
+using DorkyProductions.UI;
 using UnityEngine;
 using Mirror;
 
@@ -218,8 +219,10 @@ namespace DorkyProductions
         }
         public void OnTileSelectedForLightning(Vector2Int targetTilePos)
         {
+            UIMediator.OnPlayerChestEnded.Invoke();
             AttemptLightningSkillUse(targetTilePos);
             _humanPlayerInput.DisableLightningInput();
+
         }
         public void OnTileSelectedForPhantom(TileView selectedTile)
         {            
@@ -228,9 +231,11 @@ namespace DorkyProductions
            if (shouldTriggerSkill)
            {
                _humanPlayerInput.ChangePhantomInputState(false);
+               UIMediator.OnPlayerChestEnded.Invoke();
                AttemptPhantomSkillUse(_chestSkillHelper.GetSelectedTilePositions());
                _chestSkillHelper.ClearSelectedTiles();
            }
+
         }
     }
 }
