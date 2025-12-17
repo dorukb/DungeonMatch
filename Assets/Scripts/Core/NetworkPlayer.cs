@@ -219,7 +219,7 @@ namespace DorkyProductions
         }
         public void OnTileSelectedForLightning(Vector2Int targetTilePos)
         {
-            UIMediator.OnPlayerChestEnded.Invoke();
+            UIMediator.OnPlayerChestEnded?.Invoke();
             AttemptLightningSkillUse(targetTilePos);
             _humanPlayerInput.DisableLightningInput();
 
@@ -231,7 +231,7 @@ namespace DorkyProductions
            if (shouldTriggerSkill)
            {
                _humanPlayerInput.ChangePhantomInputState(false);
-               UIMediator.OnPlayerChestEnded.Invoke();
+               UIMediator.OnPlayerChestEnded?.Invoke();
                AttemptPhantomSkillUse(_chestSkillHelper.GetSelectedTilePositions());
                _chestSkillHelper.ClearSelectedTiles();
            }

@@ -39,12 +39,7 @@ public class ClientChestHandler : MonoBehaviour
     private void UseSkill()
     {
         chestUIController.gameObject.SetActive(false);
-
-        // string lightningCallToAction = "Select a tile to remove.";
-        // string phantomCallToActionText = "Select any 3 tiles of same type to match!";
-        
-        //turnDisplayUI?.OverwriteTurnText((_rewardedSkill.callToAction));
-        UIMediator.OnPlayerChestOpened.Invoke(_rewardedSkill.id);
+        UIMediator.OnPlayerChestOpened?.Invoke(_rewardedSkill.id);
 
         // Enable specific input logic that allows the use of the Skill.
         // NetworkPlayer triggers the command.

@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -8,56 +9,77 @@ namespace DorkyProductions.UI
     {
         [SerializeField] private GameObject turnTextObject;
         [SerializeField] private TextMeshProUGUI turnText;
-        private Tween _hideTimer;
-        
+        [SerializeField] private float turnNotificationDuration = 3.0f;
+        [SerializeField] private float offScreenOffset = 1000f; // Distance to left/right
+        [SerializeField] private RectTransform turnDisplayParent;
+        [SerializeField] private GameObject boardGlow;
+
+        private void Awake()
+        {
+            boardGlow.SetActive(false);
+            turnTextObject.gameObject.SetActive(false);
+        }
+
         private void OnEnable()
         {
-            turnTextObject.gameObject.SetActive(false);
             UIMediator.OnPlayerTurnStarted += UpdateTurnText;
         }
 
         private void OnDisable()
         {
             UIMediator.OnPlayerTurnStarted -= UpdateTurnText;
-            turnTextObject.gameObject.SetActive(false);
-            _hideTimer?.Kill();
         }
-
         private void UpdateTurnText(PlayerType player, bool isExtra)
         {
-
-            if (player == PlayerType.Local)
+            bool isLocalPlayersTurn = player == PlayerType.Local;
+            if (isLocalPlayersTurn)
             {
-                turnText.text = "Your Turn " + (isExtra ? "(Extra!)" : "");
+                turnText.text = "Your Turn " + (isExtra ? "(Extra)" : "");
             }
             else
             {
-                turnText.text = "Opponent's Turn" + (isExtra ? "(Extra!)" : "");
+                turnText.text = "Opponent's Turn" + (isExtra ? "(Extra)" : "");
             }
             
-            turnTextObject.gameObject.SetActive(true);
-
-            // 2. Kill only the previous timer if it exists
-            // This won't affect other tweens on this transform
-            _hideTimer?.Kill();
-
-            // 3. Create a new delayed call
-            _hideTimer = DOVirtual.DelayedCall(1.0f, () => 
-                {
-                    turnTextObject.gameObject.SetActive(false);
-                })
-                .SetLink(gameObject); // Senior Tip: Auto-kills tween if object is destroyed
-
+            PlayTurnStartedAnimation(isLocalPlayersTurn);
         }
-
-        public void OverwriteTurnText(string text)
+        private void PlayTurnStartedAnimation(bool isLocalPlayersTurn)
         {
-            turnText.text = text;
+            turnTextObject.gameObject.SetActive(true);
+            if (isLocalPlayersTurn)
+            {
+                boardGlow.gameObject.SetActive(true);
+            }
+            
+            // 1. Calculate the time unit
+            float unit = turnNotificationDuration / 3f;
 
-            // If you call OverwriteTurnText, you might also want to schedule a hide call:
-            // CancelInvoke(HideFunctionName);
-            // turnText.gameObject.SetActive(true);
-            // Invoke(HideFunctionName, 3.0f);
+            // 2. Setup initial position (Off-screen left)
+            turnDisplayParent.anchoredPosition = new Vector2(-offScreenOffset, turnDisplayParent.anchoredPosition.y);
+            turnDisplayParent.localScale = Vector3.one;
+
+            Sequence turnSequence = DOTween.Sequence();
+
+            turnSequence
+                // PHASE 1: Appear from left (1 unit)
+                .Append(turnDisplayParent.DOAnchorPosX(0, unit / 2.0f).SetEase(Ease.OutBack))
+            
+                // PHASE 2: Attention Grabber in center (2 units), A slight pulse/scale effect
+                .Append(turnDisplayParent.DOScale(1.1f, unit).SetEase(Ease.InOutSine))
+                .Append(turnDisplayParent.DOScale(1.0f, unit).SetEase(Ease.InOutSine))
+            
+                // PHASE 3: Disappear to the right (1 unit)
+                .Append(turnDisplayParent.DOAnchorPosX(offScreenOffset, unit / 2.0f).SetEase(Ease.InBack))
+            
+                .OnComplete(() => {
+                    Debug.Log("Turn animation finished.");
+                    turnTextObject.gameObject.SetActive(false);
+                    if (isLocalPlayersTurn)
+                    {
+                        boardGlow.gameObject.SetActive(false);
+                    }
+                });
         }
+       
     }
 }
