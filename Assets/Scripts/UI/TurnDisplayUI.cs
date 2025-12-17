@@ -13,7 +13,7 @@ namespace DorkyProductions.UI
         [SerializeField] private float offScreenOffset = 1000f; // Distance to left/right
         [SerializeField] private RectTransform turnDisplayParent;
         [SerializeField] private GameObject boardGlow;
-
+        [SerializeField] private GameObject boardBlur;
         private void Awake()
         {
             boardGlow.SetActive(false);
@@ -35,21 +35,18 @@ namespace DorkyProductions.UI
             if (isLocalPlayersTurn)
             {
                 turnText.text = "Your Turn " + (isExtra ? "(Extra)" : "");
+                boardBlur.SetActive(false);
+                PlayTurnStartedAnimation();
             }
             else
             {
-                turnText.text = "Opponent's Turn" + (isExtra ? "(Extra)" : "");
+                boardBlur.SetActive(true);
             }
-            
-            PlayTurnStartedAnimation(isLocalPlayersTurn);
         }
-        private void PlayTurnStartedAnimation(bool isLocalPlayersTurn)
+        private void PlayTurnStartedAnimation()
         {
             turnTextObject.gameObject.SetActive(true);
-            if (isLocalPlayersTurn)
-            {
-                boardGlow.gameObject.SetActive(true);
-            }
+            boardGlow.gameObject.SetActive(true);
             
             // 1. Calculate the time unit
             float unit = turnNotificationDuration / 3f;
@@ -74,10 +71,7 @@ namespace DorkyProductions.UI
                 .OnComplete(() => {
                     Debug.Log("Turn animation finished.");
                     turnTextObject.gameObject.SetActive(false);
-                    if (isLocalPlayersTurn)
-                    {
-                        boardGlow.gameObject.SetActive(false);
-                    }
+                    boardGlow.gameObject.SetActive(false);
                 });
         }
        

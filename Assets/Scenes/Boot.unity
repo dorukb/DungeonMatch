@@ -167,6 +167,7 @@ MonoBehaviour:
   library: {fileID: 11400000, guid: fc22ce0f18f937244ae2cc4ae4375151, type: 2}
   sfxGroup: {fileID: -6706892767612939866, guid: b491cf605031c97498aff8b8d74ebde4, type: 2}
   musicGroup: {fileID: -294453467725972737, guid: b491cf605031c97498aff8b8d74ebde4, type: 2}
+  minInterval: 0.05
 --- !u!1001 &526907424
 PrefabInstance:
   m_ObjectHideFlags: 0

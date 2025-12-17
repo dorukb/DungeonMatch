@@ -41,6 +41,8 @@ public class LobbyController : MonoBehaviour
         
         EpicTransport.Server.OnClientDisconnectedFromServer -= HandleClientDisconnect;
         EpicTransport.Client.OnHostShutdownAbruptly -= HandleHostShutdownAbruptly;
+        
+        AudioManager.Instance.PlayMusic(MusicType.Intro);
     }
 
     private void Awake()

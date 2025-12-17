@@ -159,6 +159,7 @@ namespace DorkyProductions
         public Tween Handle(GameStartedEvent e)
         {
             Debug.Log("Game started, setup the local board");
+            AudioManager.Instance.PlayMusic(MusicType.Gameplay);
             return _visualizer.InitBoard(e.boardState);
         }
 
@@ -166,6 +167,14 @@ namespace DorkyProductions
         {
             Debug.Log($"GAME END and WINNER is {e.winnerID}");
             var winner = GetPlayerType(e.winnerID);
+            if (winner == PlayerType.Local)
+            {
+                AudioManager.Instance.PlaySFX(SFXType.WinScreen);
+            }
+            else
+            {
+                AudioManager.Instance.PlaySFX(SFXType.LoseScreen);
+            }
             UIMediator.OnGameEnded?.Invoke(winner);
             return null;
         }
@@ -179,12 +188,14 @@ namespace DorkyProductions
         public Tween Handle(SwappedTilesEvent e)
         {
             Debug.Log($"Swap tiles: {e.firstId}, {e.secondId}");
+            AudioManager.Instance.PlaySFX(SFXType.TileSwap);
             return _visualizer.AnimateSwap(e.firstId, e.secondId);
         }
 
         public Tween Handle(SwapDeniedEvent e)
         {
             Debug.Log($"Swap denied");
+            // TODO: SFX SWAP DENIED
             if (_localPlayer != null && e.playerNetId == _localPlayer.netId)
             {
                 _localPlayer.EnableControls();
@@ -196,7 +207,18 @@ namespace DorkyProductions
         {
             Debug.Log($"Attack event received.");
             // TODO: Create & Return the Attack anim tween.
-
+            if (e.absorbedByShieldAmount > 0)
+            {
+                AudioManager.Instance.PlaySFX(SFXType.AttackHitOnShield);
+            }
+            else if (e.isPowerful)
+            {
+                AudioManager.Instance.PlaySFX(SFXType.MatchCritAttack);
+            }
+            else
+            {
+                AudioManager.Instance.PlaySFX(SFXType.MatchAttack);
+            }
             var targetPlayer = GetPlayerType(e.targetPlayerID);
             UIMediator.OnPlayerHealthUpdated?.Invoke(targetPlayer, e.targetsUpdatedHealth);
             UIMediator.OnPlayerShieldUpdated?.Invoke(targetPlayer, e.targetsUpdatedShield);
@@ -209,6 +231,10 @@ namespace DorkyProductions
             Debug.Log($"Heal player {e.targetPlayerID}");
             
             var targetPlayer = GetPlayerType(e.targetPlayerID);
+            if (targetPlayer == PlayerType.Local)
+            {
+                AudioManager.Instance.PlaySFX(SFXType.MatchPotion);
+            }
             UIMediator.OnPlayerHealthUpdated?.Invoke(targetPlayer, e.targetsUpdatedHealth);
             return null;
         }
@@ -217,6 +243,10 @@ namespace DorkyProductions
         {
             Debug.Log($"Player {e.targetPlayerID} gained some shield.");
             var targetPlayer = GetPlayerType(e.targetPlayerID);
+            if (targetPlayer == PlayerType.Local)
+            {
+                AudioManager.Instance.PlaySFX(SFXType.MatchShield);
+            }
             UIMediator.OnPlayerShieldUpdated?.Invoke(targetPlayer, e.targetsUpdatedShield);
             return null;
         }
@@ -225,16 +255,19 @@ namespace DorkyProductions
         {
             Debug.Log($"Player {e.targetPlayerID} matched Crosses. Got multiplier: {e.currentMultiplier}");
             var targetPlayer = GetPlayerType(e.targetPlayerID);
+            if (targetPlayer == PlayerType.Local)
+            {
+                AudioManager.Instance.PlaySFX(SFXType.MatchCross);
+            }
             UIMediator.OnPlayersCrossMultiplierUpdated?.Invoke(targetPlayer, e.currentMultiplier);
             
-            // TODO: Implement Cross multiplayer View. anim sfc etc.
+            // TODO: Implement Cross multiplayer View. anim etc.
             return null;
         } 
         public Tween Handle(CrossConsumedEvent e)
         {
             Debug.Log($"Player {e.targetPlayerID} CONSUMED cross multiplier. Used multiplier: {e.appliedMultiplier}");
             // TODO: Implement Cross using, Bless like animation on the Sword, Shield??
-            
             var targetPlayer = GetPlayerType(e.targetPlayerID);
             UIMediator.OnPlayersCrossMultiplierUpdated?.Invoke(targetPlayer, 0f);
             return null;
@@ -245,6 +278,10 @@ namespace DorkyProductions
             // TODO: Bug, If player earns 2 chests back to back, before opening the first one, the second reward overrides the first
             Debug.Log($"Player {e.targetPlayerID} received Chest.");
             var targetPlayer = GetPlayerType(e.targetPlayerID);
+            if (targetPlayer == PlayerType.Local)
+            {
+                AudioManager.Instance.PlaySFX(SFXType.MatchChest);
+            }
             UIMediator.OnPlayerChestUpdated?.Invoke(targetPlayer, true);
 
             if (targetPlayer == PlayerType.Local)
@@ -261,20 +298,15 @@ namespace DorkyProductions
                 return null;
             }
 
-            
-            // if we have both Chest and Cross.
-            
-            
             if (e.context.ActivePlayerNetId == _localPlayer.netId)
             {
                 Debug.Log("My Turn Started");
+                AudioManager.Instance.PlaySFX(SFXType.YourTurn);
                 UIMediator.OnPlayerTurnStarted(PlayerType.Local, e.context.ExtraTurnsLeft > 0);
 
                 if (e.context.ChestsLeft > 0)
                 {
-                    // Chest should NOT give right to Swap/match again.
-                    // this _extra_ turn is specifically for Opening the Chest.
-                    // Visualizer.OpenChest(e.)
+                    // Chest should NOT give right to Swap/match again. this _extra_ turn is specifically for Opening the Chest.
                     _localPlayer.DisableSwapControls();
                     _chestHandler.OpenChest();
                     

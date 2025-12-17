@@ -34,6 +34,7 @@ public class ClientChestHandler : MonoBehaviour
         chestUIController.useButton.onClick.AddListener(UseSkill);
         
         chestUIController.Setup(_rewardedSkill.skillName, _rewardedSkill.icon);
+        AudioManager.Instance.PlaySFX(SFXType.ChestOpen);
     }
 
     private void UseSkill()

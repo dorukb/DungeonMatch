@@ -108,7 +108,12 @@ public class ClientBoardVisualizer : MonoBehaviour
         // 5. Add to our dictionary for tracking
         _visualTiles[state.uniqueID] = tileView;
         
-        var spawnAnim = rt.DOAnchorPos(targetPos, SPAWN_DURATION).SetEase(Ease.OutBack, 0.5f);
+        var spawnAnim = rt.DOAnchorPos(targetPos, SPAWN_DURATION)
+            .SetEase(Ease.OutBack, 0.5f)
+            .OnComplete(() => {
+                // TODO: this should play "during" the anim, not after bounce for "snappy" sound.
+                AudioManager.Instance.PlaySFX(SFXType.TileLand);
+            });
         return spawnAnim;
     }
     
@@ -143,7 +148,13 @@ public class ClientBoardVisualizer : MonoBehaviour
     {
         Vector2 newAnchoredPos = GetAnchoredPosition(newGridPos);
         tileToMove.GridPosition = newGridPos;
-        return tileToMove.RectTransform.DOAnchorPos(newAnchoredPos, duration).SetEase(Ease.OutBack, 0.5f);
+        var tween = tileToMove.RectTransform.DOAnchorPos(newAnchoredPos, duration)
+            .SetEase(Ease.OutBack, 0.5f)
+            .OnComplete(() => {
+                // TODO: this should play "during" the anim, not after bounce for "snappy" sound.
+                AudioManager.Instance.PlaySFX(SFXType.TileLand);
+            });
+        return tween;
     }
 
     public Tween AnimateFall(ushort tileId, Vector2Int toPos)
@@ -185,50 +196,40 @@ public class ClientBoardVisualizer : MonoBehaviour
         };
         return s;
     }
+    
     public Tween AnimateAIDelay(float eDuration)
     {
+        float unit = eDuration / 5f;
         Sequence s = DOTween.Sequence();
-            
-        // 1. Safety Check
-        if (eDuration < 0.2f) return s.AppendInterval(eDuration);
-
-        float fadeInTime = 0.25f;
-        float fadeOutTime = 0.25f;
-            
-        // 2. Setup
+    
+        // 1. Setup
         s.OnStart(() => {
-            // Ensure the parent handles visibility...
             thinkingUI.alpha = 0;
             thinkingUI.gameObject.SetActive(true);
-                
-            // ...and the child is ready to pop up
             thinkingIcon.localScale = Vector3.one; 
         });
 
-        // 3. Fade In (Parent) & Pop Up (Child)
-        // Because Icon is a child, it fades in with the parent automatically.
-        s.Append(thinkingUI.DOFade(1f, fadeInTime));
-            
-        // We animate scale on the child ONLY so the bubble background doesn't wobble
-        s.Join(thinkingIcon.DOScale(1.2f, fadeInTime).SetEase(Ease.OutBack));
+        // 2. PHASE 1: Fade In (1 unit)
+        s.Append(thinkingUI.DOFade(1f, unit).SetEase(Ease.OutCubic));
 
-        // 4. "Breathing" Pulse (Looping on Child)
-        s.Append(thinkingIcon.DOScale(1.0f, 0.5f).SetLoops(5, LoopType.Yoyo));
+        // 3. PHASE 2: Breathing Idle (3 units)
+        // We scale up and down. To fit 3 units exactly, 
+        // we do 3 loops of 0.5 units each way (0.5 * 2 * 3 = 3 units).
+        s.Append(thinkingIcon.DOScale(1.1f, 0.5f * unit)
+            .SetEase(Ease.InOutSine)
+            .SetLoops(6, LoopType.Yoyo)); // 6 half-cycles = 3 full units
 
-        // 5. Wait for the core duration
-        s.AppendInterval(eDuration - fadeInTime - fadeOutTime);
+        // 4. PHASE 3: Fade Out (1 unit)
+        // We Join the scale reset so it shrinks while fading
+        s.Append(thinkingUI.DOFade(0f, unit).SetEase(Ease.InCubic));
+        s.Join(thinkingIcon.DOScale(1.0f, unit));
 
-        // 6. Fade Out
-        s.AppendCallback(() => thinkingIcon.DOKill()); 
-        s.Append(thinkingUI.DOFade(0f, fadeOutTime));
-        s.Join(thinkingIcon.DOScale(0f, fadeOutTime).SetEase(Ease.InBack));
-
-        // 7. Cleanup
         s.OnComplete(() => {
             thinkingUI.gameObject.SetActive(false);
         });
 
         return s;
     }
+    
 }
 }

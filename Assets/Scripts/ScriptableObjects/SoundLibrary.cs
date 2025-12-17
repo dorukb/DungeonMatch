@@ -10,7 +10,7 @@ public class SoundLibrary : ScriptableObject
     public AudioClip GetRandomClip(SFXType type) {
         var mapping = sfxGroups.Find(m => m.type == type);
         if (mapping != null && mapping.clips.Length > 0) {
-            return mapping.clips[Random.Range(0, sfxGroups.Count)];
+            return mapping.clips[Random.Range(0, mapping.clips.Length)];
         }
         Debug.LogWarning($"No clips found for SoundType: {type}");
         return null;
@@ -56,6 +56,6 @@ public enum SFXType {
 }
 public enum MusicType
 {
-    Main,
+    Gameplay,
     Intro
 }

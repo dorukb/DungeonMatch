@@ -221,6 +221,8 @@ namespace DorkyProductions
         {
             UIMediator.OnPlayerChestEnded?.Invoke();
             AttemptLightningSkillUse(targetTilePos);
+            // TODO: Do we need to check if user actually used the skill??
+            AudioManager.Instance.PlaySFX(SFXType.Lightning);
             _humanPlayerInput.DisableLightningInput();
 
         }
@@ -232,6 +234,8 @@ namespace DorkyProductions
            {
                _humanPlayerInput.ChangePhantomInputState(false);
                UIMediator.OnPlayerChestEnded?.Invoke();
+               // TODO: Do we need to check if user actually used the skill??
+               AudioManager.Instance.PlaySFX(SFXType.PhantomMatchTap);
                AttemptPhantomSkillUse(_chestSkillHelper.GetSelectedTilePositions());
                _chestSkillHelper.ClearSelectedTiles();
            }

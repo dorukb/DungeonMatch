@@ -17,8 +17,13 @@ public class AudioManager : MonoBehaviour {
 
     private List<AudioSource> _sfxPool;
     private AudioSource _musicSource;
-    private const int POOL_SIZE = 15;
-
+    private const int POOL_SIZE = 25;
+    
+    // Tracks the last time a specific SoundType was played
+    private Dictionary<SFXType, float> _lastPlayedTime = new Dictionary<SFXType, float>();
+    // Minimum delay between the SAME sound (in seconds)
+    [SerializeField] private float minInterval = 0.05f; 
+    
     void Awake() {
         if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
         else { Destroy(gameObject); return; }
@@ -51,6 +56,11 @@ public class AudioManager : MonoBehaviour {
     }
 
     public void PlaySFX(SFXType type, float pitchRange = 0.1f) {
+        if (_lastPlayedTime.ContainsKey(type)) {
+            if (Time.time - _lastPlayedTime[type] < minInterval) {
+                return; // Skip this sound, it's playing too fast!
+            }
+        }
         AudioClip clip = library.GetRandomClip(type);
         if (clip == null) return;
 
@@ -67,7 +77,7 @@ public class AudioManager : MonoBehaviour {
     
     public void PlayMusic(MusicType type, bool fade = true) {
         AudioClip clip = library.GetMusic(type);
-        if (clip == null || _musicSource.clip == clip) return;
+        if (clip == null || _musicSource == null || _musicSource.clip == clip) return;
 
         // TODO: Use Tweener to cross-fade volume
         _musicSource.clip = clip;
