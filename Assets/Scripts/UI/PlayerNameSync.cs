@@ -56,6 +56,7 @@ public class PlayerNameSync : NetworkBehaviour
 
         _localPlayerPortraitUI.SetPlayerNameText(localName);
         CmdSetDisplayName(localName);
+
     }
 
     [Command]

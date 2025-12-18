@@ -16,8 +16,9 @@ namespace DorkyProductions
         private ChestSkillHelper _chestSkillHelper;
 
         public static readonly int PLAYER_STARTING_HEALTH = 20;
+        public static readonly int PLAYER_STARTING_SHIELD = 20;
         private int health = PLAYER_STARTING_HEALTH; // server only.
-        private int shield = 0;
+        private int shield = PLAYER_STARTING_SHIELD;
         private float currentCrossMultiplier = 0f;
 
         public bool IsBot { get; private set; }
@@ -105,7 +106,14 @@ namespace DorkyProductions
         [Server]
         public void GainShield(int amount)
         {
-            shield += amount;
+            if (shield + amount > PLAYER_STARTING_SHIELD)
+            {
+                shield = PLAYER_STARTING_SHIELD;
+            }
+            else
+            {
+                shield += amount;
+            }
         }
 
         [Server]
@@ -219,10 +227,8 @@ namespace DorkyProductions
         }
         public void OnTileSelectedForLightning(Vector2Int targetTilePos)
         {
-            UIMediator.OnPlayerChestEnded?.Invoke();
+            UIMediator.OnPlayerChestEnded.Invoke();
             AttemptLightningSkillUse(targetTilePos);
-            // TODO: Do we need to check if user actually used the skill??
-            AudioManager.Instance.PlaySFX(SFXType.Lightning);
             _humanPlayerInput.DisableLightningInput();
 
         }
@@ -233,9 +239,7 @@ namespace DorkyProductions
            if (shouldTriggerSkill)
            {
                _humanPlayerInput.ChangePhantomInputState(false);
-               UIMediator.OnPlayerChestEnded?.Invoke();
-               // TODO: Do we need to check if user actually used the skill??
-               AudioManager.Instance.PlaySFX(SFXType.PhantomMatchTap);
+               UIMediator.OnPlayerChestEnded.Invoke();
                AttemptPhantomSkillUse(_chestSkillHelper.GetSelectedTilePositions());
                _chestSkillHelper.ClearSelectedTiles();
            }

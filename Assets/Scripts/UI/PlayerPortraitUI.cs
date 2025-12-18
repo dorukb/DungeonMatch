@@ -50,8 +50,20 @@ public class PlayerPortraitUI : MonoBehaviour
     {
         crossDisplay.SetActive(false);
         chestDisplay.SetActive(false);
+        
+        SetPlayerHealthText(NetworkPlayer.PLAYER_STARTING_HEALTH);
+        SetPlayerShieldText(NetworkPlayer.PLAYER_STARTING_SHIELD);
     }
 
+    public void SetPlayerHealthText(int health)
+    {
+        playerHealthText.text = health.ToString();
+    }
+    
+    public void SetPlayerShieldText(int shield)
+    {
+        playerShieldText.text = shield.ToString();
+    }
     public void SetPlayerNameText(string text)
     {
         playerNameText.text = text;
