@@ -62,6 +62,8 @@ public class PlayerNameGenerator : MonoBehaviour
     /// </summary>
     public void SetRandomName()
     {
+        AudioManager.Instance.PlaySFX(SFXType.DiceRoll);
+        
         string generatedName = GenerateRandomName();
         nameDisplayText.text = generatedName;
         _chosenName = generatedName;

@@ -75,6 +75,9 @@ MonoBehaviour:
   - type: 18
     clips:
     - {fileID: 8300000, guid: 4b1a4eed5617f9546b718746e1de0d4b, type: 3}
+  - type: 19
+    clips:
+    - {fileID: 8300000, guid: 5cb9ee20a5658e3428c29dbed04c1ff6, type: 3}
   musicGroups:
   - type: 0
     clip: {fileID: 8300000, guid: 127c4e2237ab7db44b9dca295003c4e5, type: 3}

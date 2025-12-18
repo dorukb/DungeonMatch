@@ -15,7 +15,8 @@ namespace DorkyProductions
                 Debug.LogError("NetworkManager not found!");
                 return;
             }
-
+            
+            AudioManager.Instance.PlaySFX(SFXType.TapPlayButton);
             netman.isOfflineMode = true;
             netman.minPlayers = 1;
             netman.StartHost();

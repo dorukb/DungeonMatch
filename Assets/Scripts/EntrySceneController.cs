@@ -51,7 +51,13 @@ public class EntrySceneController : MonoBehaviour
         }
         
         // Connect the Button click programmatically.
-        joinButton.onClick.AddListener(JoinMatch);
+        //joinButton.onClick.AddListener(JoinMatch);
+        
+        joinButton.onClick.AddListener(() => 
+        {
+            AudioManager.Instance.PlaySFX(SFXType.TapPlayButton); // Play sound first
+            JoinMatch();                            // Then run logic
+        });
     }
 
     public void JoinMatch()

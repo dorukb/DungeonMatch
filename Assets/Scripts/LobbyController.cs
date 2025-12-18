@@ -65,6 +65,8 @@ public class LobbyController : MonoBehaviour
     }
     public void RequestLeaveLobby()
     {
+        AudioManager.Instance.PlaySFX(SFXType.TapMenuButton);
+        
         if (manager.isOfflineMode)
         {
             manager.StopHost();

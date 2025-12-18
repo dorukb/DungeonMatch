@@ -70,6 +70,9 @@ public class GameMaster : NetworkBehaviour
 
         players.Add(player);
         Debug.Log($"Player {player.netId} registered. Total players: {players.Count}");
+        
+        //TODO: is this place correct?
+        AudioManager.Instance.PlaySFX(SFXType.GameFound);
 
         // Check if we have enough players to start
         if (players.Count == requiredPlayers)
