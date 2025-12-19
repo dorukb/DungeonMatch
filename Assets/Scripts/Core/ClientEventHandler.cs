@@ -167,6 +167,7 @@ namespace DorkyProductions
         {
             Debug.Log($"GAME END and WINNER is {e.winnerID}");
             var winner = GetPlayerType(e.winnerID);
+            AudioManager.Instance.StopMusic(MusicType.Gameplay);
             if (winner == PlayerType.Local)
             {
                 AudioManager.Instance.PlaySFX(SFXType.WinScreen);
@@ -207,7 +208,13 @@ namespace DorkyProductions
         {
             Debug.Log($"Attack event received.");
             // TODO: Create & Return the Attack anim tween.
-            if (e.absorbedByShieldAmount > 0)
+            
+            if (e.isFinalHit)
+            {
+                AudioManager.Instance.PlaySFX(SFXType.FinalHit);
+                AudioManager.Instance.StopMusic(MusicType.Gameplay);
+            }
+            else if (e.absorbedByShieldAmount > 0)
             {
                 AudioManager.Instance.PlaySFX(SFXType.AttackHitOnShield);
             }

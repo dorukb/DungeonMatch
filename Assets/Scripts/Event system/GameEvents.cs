@@ -161,8 +161,9 @@ namespace DorkyProductions
         public int sufferedDamage;
         public int targetsUpdatedShield;
         public bool isPowerful;
+        public bool isFinalHit;
         
-        public AttackEvent Setup(int health, int remainingShield, uint target, bool powerful, int absorbedAmount, int sufferedDamageAmount)
+        public AttackEvent Setup(int health, int remainingShield, uint target, bool powerful, int absorbedAmount, int sufferedDamageAmount, bool isFinal)
         {
             targetsUpdatedHealth = health;
             targetsUpdatedShield = remainingShield;
@@ -170,6 +171,7 @@ namespace DorkyProductions
             targetPlayerID = target;
             absorbedByShieldAmount = absorbedAmount;
             sufferedDamage = sufferedDamageAmount;
+            isFinalHit = isFinal;
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);

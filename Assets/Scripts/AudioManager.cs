@@ -74,6 +74,11 @@ public class AudioManager : MonoBehaviour {
         _musicSource.clip = musicClip;
         _musicSource.Play();
     }
+
+    public void StopMusic(MusicType musicClip)
+    {
+        _musicSource.Stop();
+    }
     
     public void PlayMusic(MusicType type, bool fade = true) {
         AudioClip clip = library.GetMusic(type);
