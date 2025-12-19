@@ -55,8 +55,8 @@ public enum SFXType {
     PhantomMatchTap3,
     Lightning,
     CoinCollected,
-    DiceRoll,
     FinalHit,
+    DiceRoll,
 }
 public enum MusicType
 {

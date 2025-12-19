@@ -50,30 +50,49 @@ namespace DorkyProductions.AI
             }
         }
 
-        
+        private List<Vector2Int> RandomSwap(Vector2Int posA, Vector2Int posB, GameBoard board)
+        {
+            bool foundMove = false;
+            List<Vector2Int> foundPos =  new List<Vector2Int>();
+            
+            posA = new Vector2Int(Random.Range(0, 5), Random.Range(0, 5)); // Assuming 5x5
+            // Try neighbors
+            Vector2Int[] dirs = { Vector2Int.up, Vector2Int.right };
+            Vector2Int offset = dirs[Random.Range(0, 2)];
+            posB = posA + offset;
+
+            if (board.IsValidSwap(posA, posB))
+            {
+                foundMove = true;
+                foundPos.Add(posA);
+                foundPos.Add(posB);
+
+                return foundPos;
+            }
+
+            return foundPos;
+        }
         private void EasySwap(GameBoard board)
         {
             // TODO: Implement actual AI Swap Logic.
             Vector2Int posA = Vector2Int.zero;
             Vector2Int posB = Vector2Int.zero;
             bool foundMove = false;
+            List<Vector2Int> foundPos;
             
             // Dumb random search for valid swap (Replace with AIHelper.GetBestMove)
-            int attempts = 0;
-            while(!foundMove && attempts < 50)
-            {
-                posA = new Vector2Int(Random.Range(0, 5), Random.Range(0, 5)); // Assuming 5x5
-                // Try neighbors
-                Vector2Int[] dirs = { Vector2Int.up, Vector2Int.right };
-                Vector2Int offset = dirs[Random.Range(0, 2)];
-                posB = posA + offset;
+            foundPos = RandomSwap(posA, posB, board);
 
-                if (board.IsValidSwap(posA, posB))
-                {
-                    foundMove = true;
-                }
-                attempts++;
+            if (foundPos.Count == 2)
+            {
+                posA = foundPos[0];
+                posB = foundPos[1];
             }
+            else
+            {
+                Debug.LogError("No position found to be swapped. You really messed up");
+            }
+            
 
             // --- EXECUTION ---
             // We call GameMaster directly. 
@@ -119,6 +138,24 @@ namespace DorkyProductions.AI
                             }
                         }
                     }
+
+                }
+            }
+
+            if (foundMove == false)
+            {
+                //if no possible match then select a random swap.
+                Debug.Log("no possible match so swap randomly");
+                List<Vector2Int> foundPos;
+                foundPos = RandomSwap(posA, posB, board);
+                if (foundPos.Count == 2)
+                {
+                    posA = foundPos[0];
+                    posB = foundPos[1];
+                }
+                else
+                {
+                    Debug.LogError("No position found to be swapped. You really messed up");
                 }
             }
             

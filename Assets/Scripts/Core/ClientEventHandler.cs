@@ -206,7 +206,7 @@ namespace DorkyProductions
 
         public Tween Handle(AttackEvent e)
         {
-            Debug.Log($"Attack event received.");
+            Debug.Log($"Attack event received. Health is: {e.targetsUpdatedHealth} shield is: {e.targetsUpdatedShield}");
             // TODO: Create & Return the Attack anim tween.
             
             if (e.isFinalHit)

@@ -361,7 +361,8 @@ public class GameBoard
         bool isPowerfulAttack = match.isDoubleEffect;
         bool isFinalHit = false;
         attackEvent.Setup( opponent.GetCurrentHealth(), opponent.GetShield(), opponent.netId, isPowerfulAttack, absorbedAmount, remainingDmg, isFinalHit );
-        
+        eventBatch.Add(attackEvent);
+
         if (opponent.GetCurrentHealth() == 0)
         {
             isFinalHit = true;
@@ -370,7 +371,6 @@ public class GameBoard
             GameMaster.Instance.TriggerEndGame(activePlayer, eventBatch);
         }
         
-        eventBatch.Add(attackEvent);
     }
 
     private void SimulateTileFall(List<GameEventBase> eventBatch)
