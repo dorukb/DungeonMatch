@@ -50,10 +50,13 @@ public enum SFXType {
     TapMenuButton,
     TapPlayButton,
     YourTurn,
-    PhantomMatchTap,
+    PhantomMatchTap1,
+    PhantomMatchTap2,
+    PhantomMatchTap3,
     Lightning,
     CoinCollected,
     DiceRoll,
+    FinalHit,
 }
 public enum MusicType
 {

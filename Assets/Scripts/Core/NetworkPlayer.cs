@@ -16,7 +16,7 @@ namespace DorkyProductions
         private ChestSkillHelper _chestSkillHelper;
 
         public static readonly int PLAYER_STARTING_HEALTH = 20;
-        public static readonly int PLAYER_STARTING_SHIELD = 20;
+        public static readonly int PLAYER_STARTING_SHIELD = 10;
         private int health = PLAYER_STARTING_HEALTH; // server only.
         private int shield = PLAYER_STARTING_SHIELD;
         private float currentCrossMultiplier = 0f;
@@ -227,13 +227,14 @@ namespace DorkyProductions
         }
         public void OnTileSelectedForLightning(Vector2Int targetTilePos)
         {
+            AudioManager.Instance.PlaySFX(SFXType.Lightning);
             UIMediator.OnPlayerChestEnded.Invoke();
             AttemptLightningSkillUse(targetTilePos);
             _humanPlayerInput.DisableLightningInput();
 
         }
         public void OnTileSelectedForPhantom(TileView selectedTile)
-        {            
+        {          
             // if this tile was already selected, unselect it.
            bool shouldTriggerSkill = _chestSkillHelper.OnNewTileSelected(selectedTile);
            if (shouldTriggerSkill)
