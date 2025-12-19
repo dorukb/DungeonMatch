@@ -208,24 +208,29 @@ namespace DorkyProductions
         {
             Debug.Log($"Attack event received. Health is: {e.targetsUpdatedHealth} shield is: {e.targetsUpdatedShield}");
             // TODO: Create & Return the Attack anim tween.
-            
             if (e.isFinalHit)
             {
                 AudioManager.Instance.PlaySFX(SFXType.FinalHit);
                 AudioManager.Instance.StopMusic(MusicType.Gameplay);
             }
-            else if (e.absorbedByShieldAmount > 0)
-            {
-                AudioManager.Instance.PlaySFX(SFXType.AttackHitOnShield);
-            }
-            else if (e.isPowerful)
-            {
-                AudioManager.Instance.PlaySFX(SFXType.MatchCritAttack);
-            }
             else
             {
-                AudioManager.Instance.PlaySFX(SFXType.MatchAttack);
+                //TODO: if both if happened then it play one of two sounds.
+                if (e.absorbedByShieldAmount > 0)
+                {
+                    AudioManager.Instance.PlaySFX(SFXType.AttackHitOnShield);
+                }
+                else if (e.isPowerful)
+                {
+                    AudioManager.Instance.PlaySFX(SFXType.MatchCritAttack);
+                }
+            
+                else
+                {
+                    AudioManager.Instance.PlaySFX(SFXType.MatchAttack);
+                }
             }
+            
             var targetPlayer = GetPlayerType(e.targetPlayerID);
             UIMediator.OnPlayerHealthUpdated?.Invoke(targetPlayer, e.targetsUpdatedHealth);
             UIMediator.OnPlayerShieldUpdated?.Invoke(targetPlayer, e.targetsUpdatedShield);

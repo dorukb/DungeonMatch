@@ -360,17 +360,17 @@ public class GameBoard
         var attackEvent = EventPool.Get<AttackEvent>();
         bool isPowerfulAttack = match.isDoubleEffect;
         bool isFinalHit = false;
-        attackEvent.Setup( opponent.GetCurrentHealth(), opponent.GetShield(), opponent.netId, isPowerfulAttack, absorbedAmount, remainingDmg, isFinalHit );
-        eventBatch.Add(attackEvent);
-
         if (opponent.GetCurrentHealth() == 0)
         {
             isFinalHit = true;
-            attackEvent.Setup( opponent.GetCurrentHealth(), opponent.GetShield(), opponent.netId, isPowerfulAttack, absorbedAmount, remainingDmg, isFinalHit );
-            eventBatch.Add(attackEvent);
+        }
+        attackEvent.Setup( opponent.GetCurrentHealth(), opponent.GetShield(), opponent.netId, isPowerfulAttack, absorbedAmount, remainingDmg, isFinalHit );
+        eventBatch.Add(attackEvent);
+        
+        if (opponent.GetCurrentHealth() == 0)
+        {
             GameMaster.Instance.TriggerEndGame(activePlayer, eventBatch);
         }
-        
     }
 
     private void SimulateTileFall(List<GameEventBase> eventBatch)
