@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
 
@@ -29,7 +30,7 @@ namespace DorkyProductions.AI
                 GameMaster.Instance.OnServerChestMatched -= SaveChestRewardForOpening;
             }
         }
-
+        
         [Server]
         private void MakeMove(Context context, GameBoard board)
         {
@@ -44,11 +45,13 @@ namespace DorkyProductions.AI
             }
             else
             {
-                Swap(board);
+                //Change Swap method as Easy-Medium
+                MediumSwap(board);
             }
         }
 
-        private void Swap(GameBoard board)
+        
+        private void EasySwap(GameBoard board)
         {
             // TODO: Implement actual AI Swap Logic.
             Vector2Int posA = Vector2Int.zero;
@@ -78,6 +81,53 @@ namespace DorkyProductions.AI
             GameMaster.Instance.ProcessPlayerSwap(netIdentity, posA, posB, VisualThinkingDuration);
         }
 
+        private void MediumSwap(GameBoard board)
+        {
+            Vector2Int posA = Vector2Int.zero;
+            Vector2Int posB = Vector2Int.zero;
+            bool foundMove = false;
+            int bestPriorityFound = 100;
+
+            for (int x = 0; x < GameBoard.BoardWidth; x++)
+            {
+                for (int y = 0; y < GameBoard.BoardHeight; y++)
+                {
+                    Vector2Int currentPos = new Vector2Int(x, y);
+                    // Only need to check Right and Up to cover all unique adjacent pairs
+                    Vector2Int[] neighbors = { currentPos + Vector2Int.right, currentPos + Vector2Int.up };
+
+                    foreach (Vector2Int neighbor in neighbors)
+                    {
+                        // 1. Use your existing IsValidSwap for bounds and type-mismatch checks
+                        if (board.IsValidSwap(currentPos, neighbor))
+                        {
+                            // 2. Check what tile type this move would actually match
+                            Tile resultType = MatchAlgorithm.GetBestMatchedType(board, currentPos, neighbor);
+
+                            if (resultType != Tile.Unknown)
+                            {
+                                int priority = MatchAlgorithm.GetPriorityWeight(resultType); // Use the weight function from step 1
+                    
+                                // 3. Prioritize the move (Lower weight = Higher priority)
+                                if (priority < bestPriorityFound)
+                                {
+                                    bestPriorityFound = priority;
+                                    posA = currentPos;
+                                    posB = neighbor;
+                                    foundMove = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // --- EXECUTION ---
+                        // We call GameMaster directly. 
+                        // We pass 'VisualThinkingDuration' to inject the 'OpponentThinkingEvent'
+            GameMaster.Instance.ProcessPlayerSwap(netIdentity, posA, posB, VisualThinkingDuration);
+        }
+        
         [Server]
         private void PerformLightningSkill()
         {
@@ -93,5 +143,7 @@ namespace DorkyProductions.AI
             
             skillId = rewardSkillId;
         }
+        
+        
     }
 }

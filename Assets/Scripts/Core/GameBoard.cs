@@ -552,6 +552,11 @@ public class GameBoard
     
         return boardState[index];
     }
+    
+    internal void SetTileAtInternal(int index, TileState state)
+    {
+        boardState[index] = state;
+    }
 
 }
 

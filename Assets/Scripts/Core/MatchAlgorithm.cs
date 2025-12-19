@@ -230,6 +230,60 @@ public static class MatchAlgorithm
 
         return allMatches;
     }
+    
+    public static Tile GetBestMatchedType(GameBoard board, Vector2Int posA, Vector2Int posB)
+        {
+            // 1. Get raw access to the boardState via reflection or by making boardState internal
+            // For this implementation, we use the GetIndex logic from your GameBoard
+            int idxA = (posA.x * GameBoard.BoardHeight) + posA.y;
+            int idxB = (posB.x * GameBoard.BoardHeight) + posB.y;
+    
+            // Since boardState is private in your file, this logic assumes this method 
+            // has access or you've adjusted boardState to 'internal'.
+            var stateA = board.GetTileAt(posA);
+            var stateB = board.GetTileAt(posB);
+    
+            // 2. Perform the fake swap in the actual list
+            // Note: We access the private list here. In a production environment, 
+            // you might need a 'GetStateList()' helper in GameBoard.
+            board.SetTileAtInternal(idxA, stateB);
+            board.SetTileAtInternal(idxB, stateA);
+    
+            // 3. Use your existing FindMatchesAfterSwap logic
+            var matches = FindMatchesAfterSwap(board, posA, posB);
+    
+            Tile bestType = Tile.Unknown;
+            int bestPriority = int.MaxValue;
+    
+            foreach (var match in matches)
+            {
+                int currentPriority = GetPriorityWeight(match.tileType);
+                if (currentPriority < bestPriority)
+                {
+                    bestPriority = currentPriority;
+                    bestType = match.tileType;
+                }
+            }
+    
+            // 4. Undo the fake swap
+            board.SetTileAtInternal(idxA, stateA);
+            board.SetTileAtInternal(idxB, stateB);
+    
+            return bestType;
+        }
+
+    public static int GetPriorityWeight(Tile type)
+        {
+            return type switch
+            {
+                Tile.Cross  => 1,
+                Tile.Attack => 2,
+                Tile.Chest  => 3,
+                Tile.Shield => 4,
+                Tile.Heal   => 5, // Your "Potion" equivalent
+                _           => 100
+            };
+        }
 }
     
 }
