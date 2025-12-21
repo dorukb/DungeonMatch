@@ -159,7 +159,10 @@ namespace DorkyProductions
         public Tween Handle(GameStartedEvent e)
         {
             Debug.Log("Game started, setup the local board");
+            
+            // TODO: Consider moving Audio related stuff to its own class, triggered by the already-existing events.
             AudioManager.Instance.PlayMusic(MusicType.Gameplay);
+            UIMediator.OnGameStarted?.Invoke();
             return _visualizer.InitBoard(e.boardState);
         }
 
@@ -167,6 +170,9 @@ namespace DorkyProductions
         {
             Debug.Log($"GAME END and WINNER is {e.winnerID}");
             var winner = GetPlayerType(e.winnerID);
+            
+            // TODO: THere should be a short delay btw stopping (to actually feel the silence)
+            // and playing SFX & showing the win/lose screen. Currently it all happens inside the same frame (15-20 ms)
             AudioManager.Instance.StopMusic(MusicType.Gameplay);
             if (winner == PlayerType.Local)
             {
@@ -210,12 +216,13 @@ namespace DorkyProductions
             // TODO: Create & Return the Attack anim tween.
             if (e.isFinalHit)
             {
-                AudioManager.Instance.PlaySFX(SFXType.FinalHit);
                 AudioManager.Instance.StopMusic(MusicType.Gameplay);
+                // TODO: again, a short delay may be needed here.
+                AudioManager.Instance.PlaySFX(SFXType.FinalHit);
             }
             else
             {
-                //TODO: if both if happened then it play one of two sounds.
+                //TODO: Decide which sfx has priority. Shield Block, Crit attack or even final attack?
                 if (e.absorbedByShieldAmount > 0)
                 {
                     AudioManager.Instance.PlaySFX(SFXType.AttackHitOnShield);
@@ -224,7 +231,6 @@ namespace DorkyProductions
                 {
                     AudioManager.Instance.PlaySFX(SFXType.MatchCritAttack);
                 }
-            
                 else
                 {
                     AudioManager.Instance.PlaySFX(SFXType.MatchAttack);
