@@ -111,7 +111,7 @@ public class GameMaster : NetworkBehaviour
             }
         }
         // activePlayerIndex = 0;
-        Context.Setup(players[activePlayerIndex].netId, 0, 0);
+        Context.Setup(players[activePlayerIndex].netId, 0, 0, false);
         
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         
@@ -284,6 +284,7 @@ public class GameMaster : NetworkBehaviour
         {
             Debug.Log("[Server] Not changing the active player at the end of the turn due to Extra Turn.");
             Context.ExtraTurnsLeft -= 1;
+            Context.IsCurrentTurnExtra = true;
         }
         else //regular behavior, go to Next player.
         {
@@ -292,7 +293,7 @@ public class GameMaster : NetworkBehaviour
             
             activePlayerIndex = (activePlayerIndex + 1) % players.Count;
             var newActivePlayer = players[activePlayerIndex];
-            Context.Setup(newActivePlayer.netId, 0, 0);
+            Context.Setup(newActivePlayer.netId, 0, 0, false);
         }
         eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
     }

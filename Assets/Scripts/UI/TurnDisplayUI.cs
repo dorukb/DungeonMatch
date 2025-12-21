@@ -34,7 +34,14 @@ namespace DorkyProductions.UI
             bool isLocalPlayersTurn = player == PlayerType.Local;
             if (isLocalPlayersTurn)
             {
-                turnText.text = "Your Turn " + (isExtra ? "(Extra)" : "");
+                if (isExtra)
+                {
+                    turnText.text = "Extra Turn";
+                }
+                else
+                {
+                    turnText.text = "Your Turn";
+                }
                 boardBlur.SetActive(false);
                 PlayTurnStartedAnimation();
             }
