@@ -359,15 +359,11 @@ public class GameBoard
 
         var attackEvent = EventPool.Get<AttackEvent>();
         bool isPowerfulAttack = match.isDoubleEffect;
-        bool isFinalHit = false;
-        if (opponent.GetCurrentHealth() == 0)
-        {
-            isFinalHit = true;
-        }
+        bool isFinalHit = opponent.GetCurrentHealth() == 0;
         attackEvent.Setup( opponent.GetCurrentHealth(), opponent.GetShield(), opponent.netId, isPowerfulAttack, absorbedAmount, remainingDmg, isFinalHit );
         eventBatch.Add(attackEvent);
         
-        if (opponent.GetCurrentHealth() == 0)
+        if (isFinalHit)
         {
             GameMaster.Instance.TriggerEndGame(activePlayer, eventBatch);
         }
