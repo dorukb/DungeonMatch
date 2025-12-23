@@ -15,3 +15,7 @@ MonoBehaviour:
   type: 2
   tileSprite: {fileID: -1028012128017238524, guid: 778d87cff95b0cb49960adb0dc1edde6, type: 3}
   tileSprite2x: {fileID: -1028012128017238524, guid: 778d87cff95b0cb49960adb0dc1edde6, type: 3}
+  supportsDoubleEffect: 0
+  doubleEffectChance: 0.2
+  spawnWeight: 10
+  displayProbability: 0.21276596

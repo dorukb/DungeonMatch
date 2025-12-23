@@ -24,6 +24,9 @@ public class GameMaster : NetworkBehaviour
     [Tooltip("The number of players required to start a game")]
     public int requiredPlayers = 2;
 
+    [SerializeField]
+    private TileDatabase tileDatabase;
+    
     private List<NetworkPlayer> players = new List<NetworkPlayer>();
     private int activePlayerIndex = 0;
     
@@ -115,8 +118,8 @@ public class GameMaster : NetworkBehaviour
         
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         
-        _gameBoard = new GameBoard();
-        var boardState = _gameBoard.FillBoardWithNoMatches();
+        _gameBoard = new GameBoard(tileDatabase);
+        var boardState = _gameBoard.SetupInitialBoardWithNoMatches();
         
         eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState));
         eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));

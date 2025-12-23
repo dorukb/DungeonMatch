@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
 using Mirror;
-using DorkyProductions.UI;
 using Firebase.RemoteConfig;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -19,59 +17,88 @@ public class GameBoard
     // Index = (y * BoardWidth) + x
     private readonly List<TileState> boardState = new List<TileState>(BoardHeight * BoardWidth);
     private ushort _nextTileID = 0;
+
+    // OPTIMIZATION: Reusable list of ScriptableObjects (References only, very cheap)
+    private List<TileDefinitionSO> _validCandidates = new List<TileDefinitionSO>();
     
-    private readonly List<Tile> _allTileTypes = new List<Tile> 
-    { 
-        Tile.Attack, Tile.Shield, Tile.Cross, 
-        Tile.Heal, Tile.Chest 
-    };
-    // 2. A single, reusable list to hold available types for each tile.
-    private readonly List<Tile> _availableTypes = new List<Tile>();
-    
-    public List<TileState> FillBoardWithNoMatches()
+    private TileDatabase _tileDatabase;
+    public GameBoard(TileDatabase tileDatabase)
     {
-        for (int i = 0; i < BoardHeight * BoardWidth; i++)
+        _tileDatabase = tileDatabase;
+    }
+    
+   public List<TileState> SetupInitialBoardWithNoMatches()
+    {
+        boardState.Clear();
+        if (boardState.Capacity < BoardWidth * BoardHeight)
+            boardState.Capacity = BoardWidth * BoardHeight;
+
+        var masterList = _tileDatabase.allTileDefinitions;
+
+        for (int i = 0; i < BoardWidth * BoardHeight; i++)
         {
             int x = i % BoardWidth;
             int y = i / BoardWidth;
 
-            // 1. Reset the reusable list to the master list
-            _availableTypes.Clear();
-            _availableTypes.AddRange(_allTileTypes);
-            // 2. Check for potential horizontal matches (check 2 tiles to the left)
-            if (x > 1)
+            // ---------------------------------------------------------
+            // 1. DETERMINE CONSTRAINTS
+            // ---------------------------------------------------------
+            Tile forbiddenType1 = Tile.Unknown;
+            Tile forbiddenType2 = Tile.Unknown;
+
+            // Check Left (Needs 2 tiles to the left)
+            if (x >= 2)
             {
-                Tile left1ID = GetTileSafe(x-1,y).type;
-                Tile left2ID = GetTileSafe(x-2,y).type;
-                if (left1ID == left2ID)
+                Tile left1 = GetTileSafe(x - 1, y).type;
+                Tile left2 = GetTileSafe(x - 2, y).type;
+
+                // Only forbid if they are valid types and they match
+                if (left1 != Tile.Unknown && left1 == left2)
                 {
-                    // Both tiles to the left match, so we cannot use their type.
-                    _availableTypes.Remove(left1ID);
+                    forbiddenType1 = left1;
                 }
             }
 
-            // 3. Check for potential vertical matches (check 2 tiles below)
-            if (y > 1)
+            // Check Down (Needs 2 tiles below)
+            if (y >= 2)
             {
-                Tile down1ID = GetTileSafe(x,y-1).type;
-                Tile down2ID = GetTileSafe(x,y-2).type;
-                if (down1ID == down2ID)
+                Tile down1 = GetTileSafe(x, y - 1).type;
+                Tile down2 = GetTileSafe(x, y - 2).type;
+
+                if (down1 != Tile.Unknown && down1 == down2)
                 {
-                    // Both tiles below match, so we cannot use their type.
-                    _availableTypes.Remove(down1ID);
+                    forbiddenType2 = down1;
                 }
             }
-            
-            Dictionary<Tile, double> dynamicWeights = TileDistribution.GetDynamicWeightsForAllowedTypes(_availableTypes);
-            Tile newType = TileDistribution.SelectTileFromWeights(dynamicWeights);
-            TileState newTile = GenerateNewTile(newType);
-            boardState.Add(newTile);
-            TileDistribution.TileAdded(newType);
+
+            _validCandidates.Clear();
+
+            for (int k = 0; k < masterList.Count; k++)
+            {
+                var def = masterList[k];
+                
+                if (def.type == Tile.Unknown) continue;
+                if (def.type == forbiddenType1 || def.type == forbiddenType2) continue;
+
+                _validCandidates.Add(def);
+            }
+
+            TileDefinitionSO selectedDef;
+
+            if (_validCandidates.Count > 0)
+            {
+                selectedDef = _tileDatabase.GetWeightedRandomDefinition(_validCandidates);
+            }
+            else
+            {
+                // FALLBACK: Rules were too strict
+                selectedDef = _tileDatabase.GetRandomDefinition(); // Uses master list internally
+            }
+            boardState.Add(GenerateNewTile(selectedDef));
         }
 
         return boardState;
-    }
-
+}
     public void ProcessSwapMove(Vector2Int posA, Vector2Int posB, NetworkIdentity performingPlayer, List<GameEventBase> eventBatch)
     {
         // Perform the swap ---
@@ -101,7 +128,6 @@ public class GameBoard
     {
         // Remove tile without any Match effects.
         TileState tileToRemove = boardState[GetIndex(tilePos)];
-        TileDistribution.TileRemoved(tileToRemove.type);
         eventBatch.Add(EventPool.Get<TileRemovedEvent>().Setup(tileToRemove.uniqueID));
         boardState[GetIndex(tilePos)] = TileState.Empty;
         
@@ -164,7 +190,7 @@ public class GameBoard
             {
                 // TODO: when chest breaks this flow, avoid further matches is useless, this is "after a swap" maybe we need a turn based check.
                 bool avoidFurtherMatches = refillCnt > 0;
-                RefillBoard(eventBatch, avoidFurtherMatches);
+                RefillBoard(eventBatch, true);
                 refillCnt++;
                 matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
             }
@@ -219,7 +245,6 @@ public class GameBoard
         {
             foreach (var pos in match.positions)
             {
-                TileDistribution.TileRemoved(boardState[GetIndex(pos)].type);
                 boardState[GetIndex(pos)] = TileState.Empty;
             }
         }
@@ -426,21 +451,17 @@ public class GameBoard
 
                     if (avoidMatches)
                     {
-                        // If avoiding matches, actively search for a safe tile type.
-                        var possibleTypes = TileDistribution.GetAllPossibleTileTypes();
-                        fillingTile = TryFindNonMatchingTile(gridPos, possibleTypes);
+                        fillingTile = TryFindNonMatchingTile(gridPos);
                     }
                     else
                     {
-                        // Normal refill: generate tile based on weights, no match check.
-                        var dynamicWeights = TileDistribution.CalculateDynamicWeights();
-                        fillingTile = GenerateNewTile(dynamicWeights);
+                        var def = _tileDatabase.GetRandomDefinition();
+                        fillingTile = GenerateNewTile(def);
                     }
                 
                     // Place the found/generated tile.
                     int spawnIdx = GetIndex(x, y);
                     boardState[spawnIdx] = fillingTile;
-                    TileDistribution.TileAdded(fillingTile.type);
                 
                     eventBatch.Add(EventPool.Get<TileSpawnedEvent>().Setup(fillingTile, gridPos));
                     Debug.Log($"[Server] Draw new tile to pos: ({x},{y})");
@@ -448,34 +469,53 @@ public class GameBoard
             }
         }
     }
-
-    private TileState TryFindNonMatchingTile(Vector2Int gridPos, List<Tile> possibleTypes)
+    private TileState TryFindNonMatchingTile(Vector2Int gridPos)
     {
-        // Shuffle the types to ensure a good random distribution of tile types when multiple are safe.
-        // Assuming 'Shuffle' is an extension method for List<T>.
-        possibleTypes.Shuffle();
-
-        // We only need a temporary TileState instance for checking the type.
+        // 1. CLEAR buffer
+        _validCandidates.Clear();
+        
+        // We need a temp state just to check the 'WouldCauseMatch' logic
         TileState tempTile = new TileState();
-    
-        foreach (var type in possibleTypes)
+
+        // 2. ITERATE the master list directly
+        // We don't filter types; we check every definition in the database.
+        var masterList = _tileDatabase.allTileDefinitions;
+        for (int i = 0; i < masterList.Count; i++)
         {
-            // Temporarily assign the type for the check.
-            tempTile.type = type; 
-   
+            TileDefinitionSO def = masterList[i];
+            
+            // Assign type to temp state for the check
+            tempTile.type = def.type;
+
             if (!WouldCauseMatchAt(gridPos, tempTile))
             {
-                // Found a safe type! Generate the final TileState instance (e.g., with unique ID, etc.)
-                return GenerateNewTile(type); 
+                _validCandidates.Add(def);
             }
         }
 
-        // Fallback: If ALL types cause a match (extremely rare in non-full boards),
-        // we must pick one to avoid an infinite loop or null reference. We accept the match here.
-        Debug.LogWarning($"[Server] WARNING: All possible tile types cause a match at {gridPos}. Falling back to random type.");
-        return GenerateNewTile(possibleTypes[0]);
+        // 3. PICK directly from buffer
+        if (_validCandidates.Count > 0)
+        {
+            TileDefinitionSO selectedDef = _tileDatabase.GetWeightedRandomDefinition(_validCandidates);
+            return GenerateNewTile(selectedDef);
+        }
+
+        // Fallback
+        Debug.LogWarning($"[Server] No safe tile found at {gridPos}.");
+        return GenerateNewTile(_tileDatabase.GetRandomDefinition());
     }
 
+    // UPDATED: Now takes the SO directly! No more lookups.
+    private TileState GenerateNewTile(TileDefinitionSO def)
+    {
+        bool isDouble = false;
+        if (def.supportsDoubleEffect)
+        {
+            isDouble = Random.value < def.doubleEffectChance;
+        }
+        return new TileState(_nextTileID++, def.type, isDouble);
+    }
+    
     private bool WouldCauseMatchAt(Vector2Int gridPos, TileState tempTile)
     {
         boardState[GetIndex(gridPos)] = tempTile;
@@ -492,56 +532,7 @@ public class GameBoard
 
         return false;
     }
-    private TileState GenerateNewTile(Tile type)
-    {
-        bool isDoubleEffect = false;
-        if (type == Tile.Attack || type == Tile.Heal)
-        {
-            // %20 double effect
-            isDoubleEffect = Random.value > 0.8f;
-        }
-        return new TileState(_nextTileID++, type, isDoubleEffect);
-    }
-
-    private TileState GenerateNewTile(Dictionary<Tile, double> dynamicWeights)
-    {
-        double totalWeight = dynamicWeights.Values.Sum();
-
-        if (totalWeight <= 0)
-        {
-            //TODO: decide what to do here
-            //Debug.Log(); // no tile can be dropped
-        }
-
-        double randomTarget = Random.value * totalWeight;
-            
-        double currentCumulativeWeight = 0;
-
-        foreach (var kvp in dynamicWeights)
-        {
-            Tile tileType = kvp.Key;
-            double weight = kvp.Value;
-            
-            currentCumulativeWeight += weight;
-
-            // Check if the random target falls within this tile's weight segment
-            if (randomTarget < currentCumulativeWeight)
-            {
-                // This tile is selected!
-                bool isDoubleEffect = false;
-                if (tileType == Tile.Attack || tileType == Tile.Heal)
-                {
-                    // %20 double effect
-                    isDoubleEffect = Random.value > 0.8f;
-                }
-                return new TileState(_nextTileID++, tileType, isDoubleEffect);
-            }
-        }
-
-        var randFallBackTile = (Tile) (Random.Range(1, 6));
-        // Fallback
-        return new TileState(_nextTileID++, randFallBackTile, false);
-    }
+  
     private int GetIndex(Vector2Int pos) =>  GetIndex(pos.x, pos.y);
     private int GetIndex(int x, int y) => (x * BoardHeight) + y;
     private TileState GetTileSafe(int x, int y)
