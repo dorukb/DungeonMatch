@@ -9,7 +9,7 @@ namespace DorkyProductions
 {
     
 public class GameBoard
-{
+{ 
     public static readonly int BoardWidth = 5;
     public static readonly int BoardHeight = 5;
  
@@ -26,6 +26,8 @@ public class GameBoard
     };
     // 2. A single, reusable list to hold available types for each tile.
     private readonly List<Tile> _availableTypes = new List<Tile>();
+    private readonly List<Tile> _basicTypes = new List<Tile> {Tile.Attack, Tile.Heal, Tile.Shield};
+
     
     public List<TileState> FillBoardWithNoMatches()
     {
@@ -36,7 +38,8 @@ public class GameBoard
 
             // 1. Reset the reusable list to the master list
             _availableTypes.Clear();
-            _availableTypes.AddRange(_allTileTypes);
+            _availableTypes.AddRange(_basicTypes);
+            
             // 2. Check for potential horizontal matches (check 2 tiles to the left)
             if (x > 1)
             {
@@ -60,15 +63,30 @@ public class GameBoard
                     _availableTypes.Remove(down1ID);
                 }
             }
-            
-            Dictionary<Tile, double> dynamicWeights = TileDistribution.GetDynamicWeightsForAllowedTypes(_availableTypes);
-            Tile newType = TileDistribution.SelectTileFromWeights(dynamicWeights);
-            TileState newTile = GenerateNewTile(newType);
-            boardState.Add(newTile);
-            TileDistribution.TileAdded(newType);
+
+            AddNewTile(_availableTypes);
+
+            //Dictionary<Tile, double> dynamicWeights = TileDistribution.GetDynamicWeightsForAllowedTypes(_availableTypes);
+            //Tile newType = TileDistribution.SelectTileFromWeights(dynamicWeights);
+            //TileState newTile = GenerateNewTile(newType);
+            //boardState.Add(newTile);
+            //TileDistribution.TileAdded(newType);
         }
 
         return boardState;
+    }
+
+    private void AddNewTile(List<Tile> availableTypes)
+    {
+        if (Random.value < 0.2f)
+        {
+            _availableTypes.Add(Random.value < 0.5f ? Tile.Cross : Tile.Chest);
+        }
+        _availableTypes.Shuffle();
+        int index = Random.Range(0, _availableTypes.Count);
+        Tile newType =  _availableTypes[index];
+        TileState newTile = GenerateNewTile(newType);
+        boardState.Add(newTile);
     }
 
     public void ProcessSwapMove(Vector2Int posA, Vector2Int posB, NetworkIdentity performingPlayer, List<GameEventBase> eventBatch)
@@ -238,6 +256,7 @@ public class GameBoard
             
             var opponent = GameMaster.Instance.GetInactivePlayer();
             // Then apply the effect
+            SpawnController.AddToken(match.matchCount);
             switch (match.tileType)
             {
                 case Tile.Unknown:
@@ -417,14 +436,17 @@ public class GameBoard
                     if (avoidMatches)
                     {
                         // If avoiding matches, actively search for a safe tile type.
+                        //TODO: change it to _alltypes sth. gro TileDistribution class
                         var possibleTypes = TileDistribution.GetAllPossibleTileTypes();
-                        fillingTile = TryFindNonMatchingTile(gridPos, possibleTypes);
+                        fillingTile = TryFindNonMatchingTile(gridPos, _allTileTypes);
                     }
                     else
                     {
                         // Normal refill: generate tile based on weights, no match check.
-                        var dynamicWeights = TileDistribution.CalculateDynamicWeights();
-                        fillingTile = GenerateNewTile(dynamicWeights);
+                        //var dynamicWeights = TileDistribution.CalculateDynamicWeights();
+                        //fillingTile = GenerateNewTile(dynamicWeights);
+                        // Check Token Queue first
+                        fillingTile = GetFillingTile(gridPos);
                     }
                 
                     // Place the found/generated tile.
@@ -437,6 +459,27 @@ public class GameBoard
                 }
             }
         }
+    }
+
+    private TileState GetFillingTile(Vector2Int gridPos)
+    {
+        TileState fillingTile;
+        Tile newType;
+        if (SpawnController._spawnQueue.Count > 0) {
+            newType = SpawnController._spawnQueue.Dequeue();
+            fillingTile = GenerateNewTile(newType);
+        } 
+        // Random low-chance for natural special spawn (20%)
+        else if (Random.value < 0.2f) {
+            newType = (Random.value < 0.5f) ? Tile.Cross : Tile.Chest;
+            fillingTile = GenerateNewTile(newType);
+        }
+        // Standard Normal Card
+        else {
+            fillingTile = TryFindNonMatchingTile(gridPos, _basicTypes);
+        }
+
+        return fillingTile;
     }
 
     private TileState TryFindNonMatchingTile(Vector2Int gridPos, List<Tile> possibleTypes)

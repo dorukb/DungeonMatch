@@ -13,7 +13,7 @@ namespace DorkyProductions.UI
         
         private static readonly Dictionary<Tile, float> _targetPercentages = new Dictionary<Tile, float>
         {
-            { Tile.Attack, 0.30f }, { Tile.Heal, 0.20f }, { Tile.Shield, 0.20f }, { Tile.Cross, 0.15f }, { Tile.Chest, 0.15f }
+            { Tile.Attack, 0.36f }, { Tile.Heal, 0.22f }, { Tile.Shield, 0.20f }, { Tile.Cross, 0.15f }, { Tile.Chest, 0.07f }
         };
 
         private static readonly Dictionary<Tile, int> _currentTileCounts = new Dictionary<Tile, int>
@@ -76,7 +76,7 @@ namespace DorkyProductions.UI
             return allowedWeights;
         }
 
-        public static double GetDynamicWeight(Tile type)
+        public static double GetDynamicWeightOld(Tile type)
         {
             if (!_targetPercentages.ContainsKey(type))
             {
@@ -106,6 +106,36 @@ namespace DorkyProductions.UI
             double dynamicWeight = baseWeight * adjustmentFactor;
             // Ensure the weight is not negative (though highly unlikely with a small K_FACTOR)
             return Math.Max(0.001f, dynamicWeight); 
+        }
+        
+        public static double GetDynamicWeight(Tile type)
+        {
+            if (!_targetPercentages.ContainsKey(type)) return 0.001f;
+
+            float targetDensity = _targetPercentages[type];
+    
+            // 1. Calculate Total and Current Count
+            int totalTiles = _currentTileCounts.Values.Sum();
+            _currentTileCounts.TryGetValue(type, out int count);
+
+            // If board is empty, use base weight
+            if (totalTiles == 0) return targetDensity;
+
+            double currentDensity = (double)count / totalTiles;
+
+            // 2. Calculate the "Pressure"
+            // If target is 0.3 and current is 0.1, pressure is 0.2
+            double pressure = targetDensity - currentDensity;
+
+            // 3. Apply a Scaling Factor (Adjust 'k' to make it feel more/less aggressive)
+            // A value of 0.5 to 1.0 is usually good for small boards.
+            double k = 0.8; 
+            double weight = targetDensity + (pressure * k);
+
+            // 4. CRITICAL: Clamp the results
+            // This ensures a tile never disappears (min 5%) 
+            // and never floods (max 50%)
+            return Math.Clamp(weight, 0.05, 0.50);
         }
 
         public static Tile SelectTileFromWeights(Dictionary<Tile, double> weights)
