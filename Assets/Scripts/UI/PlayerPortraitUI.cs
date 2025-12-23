@@ -28,8 +28,6 @@ public class PlayerPortraitUI : MonoBehaviour
     [SerializeField]
     public PlayerType displayForPlayer;
     
-    // TODO: move this to a central constant file.
-    // NO MORE duplicated code!
     private void OnEnable()
     {
         UIMediator.OnPlayerHealthUpdated += UpdatePlayerHealth;

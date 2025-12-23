@@ -162,6 +162,7 @@ public class GameBoard
             // Refill, when no more falling matches
             if (matchesToProcess.Count == 0)
             {
+                // TODO: when chest breaks this flow, avoid further matches is useless, this is "after a swap" maybe we need a turn based check.
                 bool avoidFurtherMatches = refillCnt > 0;
                 RefillBoard(eventBatch, avoidFurtherMatches);
                 refillCnt++;

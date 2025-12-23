@@ -344,6 +344,7 @@ namespace DorkyProductions
                 if (e.context.ChestsLeft > 0)
                 {
                     Debug.Log("Opponent is Opening a Chest. Hold on...");
+                    UIMediator.OnPlayerChestUpdated?.Invoke(PlayerType.Opponent, false);
                 }
             }
             return null;
