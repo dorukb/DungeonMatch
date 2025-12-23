@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Mirror;
 using DorkyProductions.UI;
+using Firebase.RemoteConfig;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -168,7 +169,7 @@ public class GameBoard
             }
         }
     }
-    public bool IsValidSwap(Vector2Int posA, Vector2Int posB)
+    public bool IsValidSwap(Vector2Int posA, Vector2Int posB, bool isVerbose = false)
     {
         // Check bounds
         if (posA.x < 0 || posA.x >= BoardWidth || posA.y < 0 || posA.y >= BoardHeight ||
@@ -181,13 +182,19 @@ public class GameBoard
         // Prevents accidental no-effect swaps. 
         if (GetTileAt(posA).type == GetTileAt(posB).type)
         {
-            Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. Tiles are same type.");
+            if (isVerbose)
+            {
+                Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. Tiles are same type.");
+            }
             return false;
         }
 
         if (GetTileAt(posA).type == Tile.Unknown|| GetTileAt(posB).type == Tile.Unknown)
         {
-            Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. at least one of the tiles is Empty.");
+            if (isVerbose)
+            {
+                Debug.LogWarning($"[Client] Invalid swap: {posA} <-> {posB}. at least one of the tiles is Empty.");
+            }
             // dont allow swapping with Empty tiles.
             return false;
         }
@@ -283,7 +290,7 @@ public class GameBoard
         // can stack.
         // What's the diff between matching 3-4-5 cross?
         // => 1.75, 2.0, 2.5x multiplier.
-        float gainedMultiplier = BasicCardEffects.GetCrossMultiplier(match.matchCount);
+        float gainedMultiplier = RemoteConfigManager.Instance.GetCrossVal(match.matchCount);
         activePlayer.GainMultiplier(gainedMultiplier);
         eventBatch.Add(EventPool.Get<CrossMatchedEvent>().Setup(activePlayer.netId, activePlayer.GetMultiplier()));
         gm.GrantExtraTurnToCurrentPlayer(false);
@@ -291,7 +298,8 @@ public class GameBoard
 
     private static void ApplyHealEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match)
     {
-        int healAmount = BasicCardEffects.GetHeal(match.matchCount);
+        int healAmount = RemoteConfigManager.Instance.GetHealVal(match.matchCount);
+        
         if (match.isDoubleEffect)
         {
             healAmount *= 2;
@@ -311,7 +319,7 @@ public class GameBoard
 
     private static void ApplyShieldEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match)
     {
-        int shieldAmount = BasicCardEffects.GetShield(match.matchCount);
+        int shieldAmount = RemoteConfigManager.Instance.GetShieldVal(match.matchCount);
         
         // Consume Cross Multiplier, if any.
         if (activePlayer.GetMultiplier() > Mathf.Epsilon)
@@ -328,7 +336,8 @@ public class GameBoard
 
     private static void ApplyAttackEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, NetworkPlayer opponent)
     {
-        int dmgAmount = BasicCardEffects.GetDamage(match.matchCount);
+        int dmgAmount = RemoteConfigManager.Instance.GetAttackVal(match.matchCount);
+
         if (match.isDoubleEffect)
         {
             dmgAmount *= 2;

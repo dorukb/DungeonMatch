@@ -15,10 +15,8 @@ namespace DorkyProductions
         private ClientEventHandler _clientEventHandler;
         private ChestSkillHelper _chestSkillHelper;
 
-        public static readonly int PLAYER_STARTING_HEALTH = 20;
-        public static readonly int PLAYER_STARTING_SHIELD = 10;
-        private int health = PLAYER_STARTING_HEALTH; // server only.
-        private int shield = PLAYER_STARTING_SHIELD;
+        private int health = 0;
+        private int shield = 0;
         private float currentCrossMultiplier = 0f;
 
         public bool IsBot { get; private set; }
@@ -30,8 +28,10 @@ namespace DorkyProductions
 
         public override void OnStartServer()
         {
-            Debug.Log($"OnStartServer for id :{netId}");
             // When the player object is spawned on the server, register it
+            health = RemoteConfigManager.Instance.GetStartingHealth();
+            shield = RemoteConfigManager.Instance.GetStartingShield();
+            Debug.Log($"OnStartServer for id :{netId}, health:{health}, shield:{shield}");
             GameMaster.Instance.RegisterPlayer(this);
         }
 
@@ -88,9 +88,10 @@ namespace DorkyProductions
         [Server]
         public void Heal(int heal)
         {
-            if (health + heal > PLAYER_STARTING_HEALTH)
+            var startingHealth = RemoteConfigManager.Instance.GetStartingHealth();
+            if (health + heal > startingHealth)
             {
-                health = PLAYER_STARTING_HEALTH;
+                health = startingHealth;
             }
             else
             {
@@ -106,9 +107,10 @@ namespace DorkyProductions
         [Server]
         public void GainShield(int amount)
         {
-            if (shield + amount > PLAYER_STARTING_SHIELD)
+            var startingShield = RemoteConfigManager.Instance.GetStartingShield();
+            if (shield + amount > startingShield)
             {
-                shield = PLAYER_STARTING_SHIELD;
+                shield = startingShield;
             }
             else
             {

@@ -51,8 +51,8 @@ public class PlayerPortraitUI : MonoBehaviour
         crossDisplay.SetActive(false);
         chestDisplay.SetActive(false);
         
-        SetPlayerHealthText(NetworkPlayer.PLAYER_STARTING_HEALTH);
-        SetPlayerShieldText(NetworkPlayer.PLAYER_STARTING_SHIELD);
+        SetPlayerHealthText(RemoteConfigManager.Instance.GetStartingHealth());
+        SetPlayerShieldText(RemoteConfigManager.Instance.GetStartingShield());
     }
 
     public void SetPlayerHealthText(int health)
@@ -70,9 +70,10 @@ public class PlayerPortraitUI : MonoBehaviour
     }
     private void UpdatePlayerHealth(PlayerType player, int currentHealth)
     {
-        if (player != displayForPlayer) return; 
-        
-        float fillAmount = (float)currentHealth / (float) NetworkPlayer.PLAYER_STARTING_HEALTH;
+        if (player != displayForPlayer) return;
+
+
+        float fillAmount = (float)currentHealth / RemoteConfigManager.Instance.GetStartingHealth();
         fillAmount = Mathf.Max(0.1f, fillAmount);
         playerHealthBar.fillAmount = fillAmount;
         playerHealthText.text = currentHealth.ToString();
@@ -82,7 +83,7 @@ public class PlayerPortraitUI : MonoBehaviour
     {
         if (player != displayForPlayer) return; 
         
-        float fillAmount = (float)currentShield / (float) NetworkPlayer.PLAYER_STARTING_SHIELD;
+        float fillAmount = (float)currentShield / RemoteConfigManager.Instance.GetStartingShield();
         fillAmount = Mathf.Max(0.1f, fillAmount);
         playerShieldBar.fillAmount = fillAmount;
         playerShieldText.text = currentShield.ToString();

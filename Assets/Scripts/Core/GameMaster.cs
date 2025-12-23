@@ -204,7 +204,7 @@ public class GameMaster : NetworkBehaviour
     {
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         bool canMakeMove = ValidateUserTurn(sender);
-        bool isValidMove = canMakeMove && _gameBoard.IsValidSwap(posA, posB);
+        bool isValidMove = canMakeMove && _gameBoard.IsValidSwap(posA, posB, true);
         if (isValidMove)
         {
             if (artificialDelay > 0.1f)

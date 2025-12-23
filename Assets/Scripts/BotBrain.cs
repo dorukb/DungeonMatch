@@ -41,6 +41,7 @@ namespace DorkyProductions.AI
             Debug.Log("Bot is Making a Move.");
             if (context.ChestsLeft > 0)
             {
+                // TODO: Bot should be able to use Phantom Match.
                 PerformLightningSkill();
             }
             else
@@ -52,7 +53,6 @@ namespace DorkyProductions.AI
 
         private List<Vector2Int> RandomSwap(Vector2Int posA, Vector2Int posB, GameBoard board)
         {
-            bool foundMove = false;
             List<Vector2Int> foundPos =  new List<Vector2Int>();
             
             posA = new Vector2Int(Random.Range(0, 5), Random.Range(0, 5)); // Assuming 5x5
@@ -63,10 +63,8 @@ namespace DorkyProductions.AI
 
             if (board.IsValidSwap(posA, posB))
             {
-                foundMove = true;
                 foundPos.Add(posA);
                 foundPos.Add(posB);
-
                 return foundPos;
             }
 
@@ -74,7 +72,6 @@ namespace DorkyProductions.AI
         }
         private void EasySwap(GameBoard board)
         {
-            // TODO: Implement actual AI Swap Logic.
             Vector2Int posA = Vector2Int.zero;
             Vector2Int posB = Vector2Int.zero;
             bool foundMove = false;
@@ -93,10 +90,6 @@ namespace DorkyProductions.AI
                 Debug.LogError("No position found to be swapped. You really messed up");
             }
             
-
-            // --- EXECUTION ---
-            // We call GameMaster directly. 
-            // We pass 'VisualThinkingDuration' to inject the 'OpponentThinkingEvent'
             GameMaster.Instance.ProcessPlayerSwap(netIdentity, posA, posB, VisualThinkingDuration);
         }
 
@@ -159,9 +152,6 @@ namespace DorkyProductions.AI
                 }
             }
             
-            // --- EXECUTION ---
-                        // We call GameMaster directly. 
-                        // We pass 'VisualThinkingDuration' to inject the 'OpponentThinkingEvent'
             GameMaster.Instance.ProcessPlayerSwap(netIdentity, posA, posB, VisualThinkingDuration);
         }
         
