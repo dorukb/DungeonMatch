@@ -20,7 +20,7 @@ public class RemoteConfigManager : MonoBehaviour
 
     private const string STARTING_HEALTH_KEY = "starting_health";
     private const string STARTING_SHIELD_KEY = "starting_shield";
-    
+    private const string AVOID_MATCH_CHANCE_KEY = "avoid_match_chance";
     // Fast local lookups
     private Dictionary<int, int> attackValues = new Dictionary<int, int>();
     private Dictionary<int, int> healValues = new Dictionary<int, int>();
@@ -32,6 +32,7 @@ public class RemoteConfigManager : MonoBehaviour
     
     private int startingHealth = PLAYER_STARTING_HEALTH;
     private int startingShield = PLAYER_STARTING_SHIELD;
+    private float avoidMatchChance = 0.85f;
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -43,18 +44,24 @@ public class RemoteConfigManager : MonoBehaviour
     // Call this after a successful Fetch and Activate
     private void UpdateLocalCaches()
     {
-        startingHealth = (int)FirebaseRemoteConfig.DefaultInstance.GetValue(STARTING_HEALTH_KEY).LongValue;
-        startingShield = (int)FirebaseRemoteConfig.DefaultInstance.GetValue(STARTING_SHIELD_KEY).LongValue;
-        
+        var config = FirebaseRemoteConfig.DefaultInstance;
+
+        startingHealth = (int)config.GetValue(STARTING_HEALTH_KEY).LongValue;
+        startingShield = (int)config.GetValue(STARTING_SHIELD_KEY).LongValue;
+            
+        // --- CACHE NEW VALUE ---
+        avoidMatchChance = (float)config.GetValue(AVOID_MATCH_CHANCE_KEY).DoubleValue;
+            
         for (int i = 3; i <= 5; i++)
         {
-            attackValues[i] = (int)FirebaseRemoteConfig.DefaultInstance.GetValue($"{ATTACK_PREFIX}{i}").LongValue;
-            healValues[i] = (int)FirebaseRemoteConfig.DefaultInstance.GetValue($"{HEAL_PREFIX}{i}").LongValue;
-            shieldValues[i] = (int)FirebaseRemoteConfig.DefaultInstance.GetValue($"{SHIELD_PREFIX}{i}").LongValue;
-            crossValues[i] = (float)FirebaseRemoteConfig.DefaultInstance.GetValue($"{CROSS_PREFIX}{i}").DoubleValue;
+            attackValues[i] = (int)config.GetValue($"{ATTACK_PREFIX}{i}").LongValue;
+            healValues[i] = (int)config.GetValue($"{HEAL_PREFIX}{i}").LongValue;
+            shieldValues[i] = (int)config.GetValue($"{SHIELD_PREFIX}{i}").LongValue;
+            crossValues[i] = (float)config.GetValue($"{CROSS_PREFIX}{i}").DoubleValue;
         }
-        Debug.Log("Dictionaries updated from Remote Config.");
+        Debug.Log($"Config updated. Avoid Match Chance: {avoidMatchChance}");
     }
+    public float GetAvoidMatchChance() => avoidMatchChance;
     public int GetAttackVal(int count) => attackValues.ContainsKey(count) ? attackValues[count] : 1;
     public int GetHealVal(int count) => healValues.ContainsKey(count) ? healValues[count] : 1;
     public int GetShieldVal(int count) => shieldValues.ContainsKey(count) ? shieldValues[count] : 1;
@@ -88,7 +95,8 @@ public class RemoteConfigManager : MonoBehaviour
             { "heal_3", 3 },   { "heal_4", 4 },   { "heal_5", 6 },
             { "shield_3", 3 }, { "shield_4", 4 }, { "shield_5", 6 },
             { "cross_3", 2.0f }, { "cross_4", 2.25f }, { "cross_5", 2.5f },
-            { "starting_shield", 10 }, {"starting_health", 20 }
+            { STARTING_SHIELD_KEY, 10 }, {STARTING_HEALTH_KEY, 20 },
+            { AVOID_MATCH_CHANCE_KEY, 0.85f }
         };
 
         FirebaseRemoteConfig.DefaultInstance.SetDefaultsAsync(defaults)

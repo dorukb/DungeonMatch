@@ -171,7 +171,6 @@ public class GameBoard
     {
         // This 'master' loop handles all chain reactions (cascades AND refills).
         // StabilizeBoard procedure
-        int refillCnt = 0;
         while (matchesToProcess.Count > 0)
         { 
             Debug.Log("[Server] Matches on board:");
@@ -189,9 +188,9 @@ public class GameBoard
             if (matchesToProcess.Count == 0)
             {
                 // TODO: when chest breaks this flow, avoid further matches is useless, this is "after a swap" maybe we need a turn based check.
-                bool avoidFurtherMatches = refillCnt > 0;
-                RefillBoard(eventBatch, true);
-                refillCnt++;
+                // 85% chance to avoid matches (true),15% chance to allow them (false)
+                bool avoidMatches = Random.value < RemoteConfigManager.Instance.GetAvoidMatchChance();
+                RefillBoard(eventBatch, avoidMatches);
                 matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
             }
         }
