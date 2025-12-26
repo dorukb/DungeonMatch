@@ -162,7 +162,7 @@ public class GameBoard
         }
         var matchesToProcess = new List<MatchResult>
         {
-            new MatchResult(targetTiles, matchedTile.type, isDoubleEffect)
+            new MatchResult(targetTiles, matchedTile.type, isDoubleEffect, false)
         };
         
         StabilizeBoard(eventBatch, matchesToProcess);

@@ -11,15 +11,17 @@ namespace DorkyProductions
         public Tile tileType;
         public int matchCount;
         public bool isDoubleEffect;
+        public bool isSpecialShape;
         // We store the actual positions for clearing them
         // TODO: maybe make positions HashSet, to prevent duplicate memory usage during find all matches.
         public List<Vector2Int> positions;
 
-        public MatchResult(List<Vector2Int> positions, Tile tileType, bool isDoubleEffect)
+        public MatchResult(List<Vector2Int> positions, Tile tileType, bool isDoubleEffect, bool isSpecialShape)
         {
             this.tileType = tileType;
             this.positions = positions;
             this.isDoubleEffect = isDoubleEffect;
+            this.isSpecialShape = isSpecialShape;
             this.matchCount = positions.Count;
         }
         public string DisplayMatchType()
@@ -28,20 +30,8 @@ namespace DorkyProductions
         }
         public string Debug()
         {
-            string positionsStr;
-            if (positions == null)
-            {
-                positionsStr = "[null list]";
-            }
-            else
-            {
-                // string.Join automatically calls .ToString() on each Vector2Int,
-                // formatting them as (x, y).
-                positionsStr = $"[{string.Join(", ", positions)}]";
-            }
-
-            // Uses this.ToString() to get the friendly type name and adds the count/positions
-            return $"MatchData(Type: {this.DisplayMatchType()}, Count: {matchCount}, Positions: {positionsStr})";
+            string positionsStr = positions == null ? "[null list]" : $"[{string.Join(", ", positions)}]";
+            return $"MatchData(Type: {tileType}, Count: {matchCount}, Special: {isSpecialShape}, Pos: {positionsStr})";
         }
     }
 }

@@ -21,6 +21,8 @@ public class RemoteConfigManager : MonoBehaviour
     private const string STARTING_HEALTH_KEY = "starting_health";
     private const string STARTING_SHIELD_KEY = "starting_shield";
     private const string AVOID_MATCH_CHANCE_KEY = "avoid_match_chance";
+    private const string MATCH_STRATEGY_KEY = "match_strategy";
+    
     // Fast local lookups
     private Dictionary<int, int> attackValues = new Dictionary<int, int>();
     private Dictionary<int, int> healValues = new Dictionary<int, int>();
@@ -33,6 +35,8 @@ public class RemoteConfigManager : MonoBehaviour
     private int startingHealth = PLAYER_STARTING_HEALTH;
     private int startingShield = PLAYER_STARTING_SHIELD;
     private float avoidMatchChance = 0.85f;
+    private int matchStrategyIdx = 0;
+    
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -48,8 +52,7 @@ public class RemoteConfigManager : MonoBehaviour
 
         startingHealth = (int)config.GetValue(STARTING_HEALTH_KEY).LongValue;
         startingShield = (int)config.GetValue(STARTING_SHIELD_KEY).LongValue;
-            
-        // --- CACHE NEW VALUE ---
+        matchStrategyIdx = (int)config.GetValue(MATCH_STRATEGY_KEY).LongValue;
         avoidMatchChance = (float)config.GetValue(AVOID_MATCH_CHANCE_KEY).DoubleValue;
             
         for (int i = 3; i <= 5; i++)
@@ -69,6 +72,12 @@ public class RemoteConfigManager : MonoBehaviour
 
     public int GetStartingHealth() => startingHealth;
     public int GetStartingShield() => startingShield;
+    
+    public int GetMatchStrategyIdx()
+    {
+        Debug.Log("Match strategy: " + matchStrategyIdx);
+        return matchStrategyIdx;
+    }
     private void InitializeFirebase()
     {
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
@@ -96,7 +105,7 @@ public class RemoteConfigManager : MonoBehaviour
             { "shield_3", 3 }, { "shield_4", 4 }, { "shield_5", 6 },
             { "cross_3", 2.0f }, { "cross_4", 2.25f }, { "cross_5", 2.5f },
             { STARTING_SHIELD_KEY, 10 }, {STARTING_HEALTH_KEY, 20 },
-            { AVOID_MATCH_CHANCE_KEY, 0.85f }
+            { AVOID_MATCH_CHANCE_KEY, 0.85f }, {MATCH_STRATEGY_KEY, 0},
         };
 
         FirebaseRemoteConfig.DefaultInstance.SetDefaultsAsync(defaults)
@@ -133,6 +142,5 @@ public class RemoteConfigManager : MonoBehaviour
                 Debug.Log("Config is now active and ready to use.");
             });
     }
-
 }
 }
