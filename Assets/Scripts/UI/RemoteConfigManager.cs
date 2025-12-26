@@ -55,6 +55,7 @@ public class RemoteConfigManager : MonoBehaviour
         matchStrategyIdx = (int)config.GetValue(MATCH_STRATEGY_KEY).LongValue;
         avoidMatchChance = (float)config.GetValue(AVOID_MATCH_CHANCE_KEY).DoubleValue;
             
+        Debug.Log("Config updated. Match strategy: " + matchStrategyIdx);
         for (int i = 3; i <= 5; i++)
         {
             attackValues[i] = (int)config.GetValue($"{ATTACK_PREFIX}{i}").LongValue;
@@ -75,7 +76,6 @@ public class RemoteConfigManager : MonoBehaviour
     
     public int GetMatchStrategyIdx()
     {
-        Debug.Log("Match strategy: " + matchStrategyIdx);
         return matchStrategyIdx;
     }
     private void InitializeFirebase()

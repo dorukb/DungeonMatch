@@ -8,15 +8,22 @@ namespace DorkyProductions
     // Matches strictly rows/cols >= 3.
     // Shape: T, L, Cross are formed by merging a Vert match into a Horz match.
     // --------------------------------------------------------------------------
-    public class StructuralMatchStrategy : IMatchStrategy
+   public class StructuralMatchStrategy : IMatchStrategy
     {
         private static readonly MatchResult[,] _matchMap = new MatchResult[GameBoard.BoardWidth, GameBoard.BoardHeight];
+
+        public List<MatchResult> FindMatchesAt(GameBoard board, Vector2Int pos)
+        {
+            List<MatchResult> results = new List<MatchResult>();
+            MatchResult match = FindMatchIntersectionAt(board, pos);
+            if (match != null) results.Add(match);
+            return results;
+        }
 
         public List<MatchResult> FindMatchesAfterSwap(GameBoard board, Vector2Int swapPos1, Vector2Int swapPos2)
         {
             List<MatchResult> foundMatches = new List<MatchResult>();
             HashSet<Vector2Int> claimedCenters = new HashSet<Vector2Int>();
-
             void CheckAndAdd(Vector2Int pos)
             {
                 if (claimedCenters.Contains(pos)) return;
@@ -27,22 +34,9 @@ namespace DorkyProductions
                     claimedCenters.Add(pos);
                 }
             }
-
             CheckAndAdd(swapPos1);
             CheckAndAdd(swapPos2);
             return foundMatches;
-        }
-        // This checks if the single tile at 'pos' participates in any line/cross match.
-        public List<MatchResult> FindMatchesAt(GameBoard board, Vector2Int pos)
-        {
-            List<MatchResult> results = new List<MatchResult>();
-            // Reuse the intersection logic
-            MatchResult match = FindMatchIntersectionAt(board, pos);
-            if (match != null)
-            {
-                results.Add(match);
-            }
-            return results;
         }
 
         public List<MatchResult> FindAllMatchesOnBoard(GameBoard board)
@@ -77,8 +71,9 @@ namespace DorkyProductions
                             points.Add(p);
                             if (board.GetTileAt(p).isDoubleEffect) isDouble = true;
                         }
-
-                        var hMatch = new MatchResult(points, currentTile.type, isDouble, false);
+                        // Check Length >= 5
+                        bool isSpecial = matchLen >= 5;
+                        var hMatch = new MatchResult(points, currentTile.type, isDouble, isSpecial);
                         allMatches.Add(hMatch);
 
                         foreach (var p in points) _matchMap[p.x, p.y] = hMatch;
@@ -120,7 +115,7 @@ namespace DorkyProductions
 
                         if (intersectingMatch != null)
                         {
-                            // MERGE (T/L/Cross)
+                            // MERGE: Intersections are ALWAYS Special
                             intersectingMatch.isSpecialShape = true;
                             if (isDouble) intersectingMatch.isDoubleEffect = true;
                             foreach (var vp in vertPoints)
@@ -130,7 +125,9 @@ namespace DorkyProductions
                         }
                         else
                         {
-                            allMatches.Add(new MatchResult(vertPoints, currentTile.type, isDouble, false));
+                            // Check Length >= 5
+                            bool isSpecial = matchLen >= 5;
+                            allMatches.Add(new MatchResult(vertPoints, currentTile.type, isDouble, isSpecial));
                         }
                         y += matchLen - 1;
                     }
@@ -139,7 +136,6 @@ namespace DorkyProductions
             return allMatches;
         }
 
-        // Helper: Check local intersection for swaps
         private MatchResult FindMatchIntersectionAt(GameBoard board, Vector2Int pos)
         {
             TileState centerTile = board.GetTileAt(pos);
@@ -157,13 +153,15 @@ namespace DorkyProductions
 
             if (hValid && vValid)
             {
-                isSpecial = true;
+                isSpecial = true; // Intersections = T/L/Cross = Special
                 finalPos.AddRange(horz);
                 foreach (var p in vert) if (p != pos) finalPos.Add(p);
             }
             else
             {
                 finalPos = hValid ? horz : vert;
+                // Check Length >= 5
+                if (finalPos.Count >= 5) isSpecial = true;
             }
 
             bool isDouble = centerTile.isDoubleEffect;
@@ -176,15 +174,12 @@ namespace DorkyProductions
         {
             List<Vector2Int> line = new List<Vector2Int> { start };
             Tile type = board.GetTileAt(start).type;
-            
-            // Positive
             for (int i = 1; i < 5; i++)
             {
                 Vector2Int p = start + (dir * i);
                 if (!MatchAlgorithm.IsPosInBounds(p) || board.GetTileAt(p).type != type) break;
                 line.Add(p);
             }
-            // Negative
             for (int i = 1; i < 5; i++)
             {
                 Vector2Int p = start - (dir * i);
@@ -194,9 +189,6 @@ namespace DorkyProductions
             return line;
         }
 
-        public Tile GetBestMatchedType(GameBoard board, Vector2Int posA, Vector2Int posB)
-        {
-            return MatchAlgorithm.SharedPredictionLogic.Predict(this, board, posA, posB);
-        }
+        public Tile GetBestMatchedType(GameBoard board, Vector2Int posA, Vector2Int posB) => MatchAlgorithm.SharedPredictionLogic.Predict(this, board, posA, posB);
     }
 }

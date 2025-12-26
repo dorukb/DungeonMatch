@@ -253,6 +253,29 @@ public class GameBoard
     // returns: Whether this match should stop the Chain events immediately: i.e, shouldOpenChest
     private void ApplyMatchEffects(List<MatchResult> matchResults, List<GameEventBase> eventBatch)
     {
+        
+        // Note: We only Grant extra turn for 5+ matches if there are no Cross & Chest matches at the moment.
+        bool includesSpecialShapedMatch = false;
+        bool includesChestOrCross = false;
+        foreach (var match in matchResults)
+        {
+            if (match.isSpecialShape)
+            {
+                includesSpecialShapedMatch = true;
+            }
+
+            if (match.tileType == Tile.Chest || match.tileType == Tile.Cross)
+            {
+                includesChestOrCross = true;
+            }
+        }
+
+        if (!includesChestOrCross && includesSpecialShapedMatch)
+        {
+            // Grant the Extra Turn from special shapes 5+ L, T etc.
+            GameMaster.Instance.GrantExtraTurnToCurrentPlayer(false);
+        }
+        
         // This is where Card specific match effect will take place.
         foreach (var match in matchResults)
         {
@@ -517,19 +540,13 @@ public class GameBoard
     
     private bool WouldCauseMatchAt(Vector2Int gridPos, TileState tempTile)
     {
+        // Temporarily change board state to check for matches.
         boardState[GetIndex(gridPos)] = tempTile;
         var foundMatches = MatchAlgorithm.FindMatchesAt(this, gridPos);
         
-        //restore the boardstate
+        //restore the state
         boardState[GetIndex(gridPos)] = TileState.Empty;
-        
-        if (foundMatches.Count > 0) 
-        {
-            //There are matches if tile were there.
-            return true;
-        }
-
-        return false;
+        return foundMatches.Count > 0;
     }
   
     private int GetIndex(Vector2Int pos) =>  GetIndex(pos.x, pos.y);

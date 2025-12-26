@@ -131,7 +131,7 @@ namespace DorkyProductions
 
             bool spansX = (maxX - minX) > 0;
             bool spansY = (maxY - minY) > 0;
-            bool isSpecial = spansX && spansY; // It is 2D, not a line
+            bool isSpecial = (spansX && spansY) || _currentGroup.Count >= 5; // It is 2D, not a line
 
             return new MatchResult(new List<Vector2Int>(_currentGroup), type, isDouble, isSpecial);
         }

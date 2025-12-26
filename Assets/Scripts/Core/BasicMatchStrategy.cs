@@ -81,12 +81,12 @@ namespace DorkyProductions
                     // Select the Best Match (Favor Horizontal if equal, or Length)
                     if (horizontalMatch.Count >= 3)
                     {
-                        allMatches.Add(new MatchResult(horizontalMatch, currentTile.type, isHorzDoubleEffect, false));
+                        allMatches.Add(new MatchResult(horizontalMatch, currentTile.type, isHorzDoubleEffect, horizontalMatch.Count == 5));
                         foreach (Vector2Int pos in horizontalMatch) claimedTiles.Add(pos);
                     }
                     else if (verticalMatch.Count >= 3)
                     {
-                        allMatches.Add(new MatchResult(verticalMatch, currentTile.type, isVertDoubleEffect, false));
+                        allMatches.Add(new MatchResult(verticalMatch, currentTile.type, isVertDoubleEffect, verticalMatch.Count == 5));
                         foreach (Vector2Int pos in verticalMatch) claimedTiles.Add(pos);
                     }
                 }
@@ -158,7 +158,7 @@ namespace DorkyProductions
 
             if (candidateTiles.Count >= 3)
             {
-                return new MatchResult(candidateTiles, currentType, includesDoubleEffectTile, false);
+                return new MatchResult(candidateTiles, currentType, includesDoubleEffectTile, candidateTiles.Count == 5);
             }
             else return null;
         }
