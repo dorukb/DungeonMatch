@@ -74,7 +74,6 @@ namespace DorkyProductions.AI
         {
             Vector2Int posA = Vector2Int.zero;
             Vector2Int posB = Vector2Int.zero;
-            bool foundMove = false;
             List<Vector2Int> foundPos;
             
             // Dumb random search for valid swap (Replace with AIHelper.GetBestMove)

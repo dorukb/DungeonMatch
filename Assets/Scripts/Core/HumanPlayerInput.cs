@@ -16,8 +16,7 @@ public class HumanPlayerInput : MonoBehaviour
     private TileView _selectedTile;
     private TileView _pressedTile;
     private Vector2 _pressPosition;
-    private bool _hasMovedPastThreshold; // Track if we ever dragged far enough
-
+    
     // Flags
     private bool _canSwap = false;
     private bool _isLightningInputActive = false;
@@ -94,22 +93,10 @@ public class HumanPlayerInput : MonoBehaviour
 
         _pressedTile = hit;
         _pressPosition = screenPos;
-        _hasMovedPastThreshold = false;
     }
 
     private void HandleDrag(Vector2 screenPos)
     {
-        if (_pressedTile == null) return;
-        
-        // We just track the threshold here for visual feedback logic (if you add it later),
-        // but we DO NOT execute the swap here anymore.
-        float dist = Vector2.Distance(_pressPosition, screenPos);
-        float pixelThreshold = _swipeThresholdInches * _dpi;
-
-        if (dist > pixelThreshold)
-        {
-            _hasMovedPastThreshold = true;
-        }
     }
 
     private void HandleUp(Vector2 screenPos)
@@ -227,7 +214,6 @@ public class HumanPlayerInput : MonoBehaviour
     private void ResetInputState()
     {
         _pressedTile = null;
-        _hasMovedPastThreshold = false;
     }
 
     private TileView RaycastForTile(Vector2 screenPos)
