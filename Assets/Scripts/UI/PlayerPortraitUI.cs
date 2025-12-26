@@ -26,7 +26,7 @@ public class PlayerPortraitUI : MonoBehaviour
     
     [Tooltip("Which player does this UI portrait represent?")]
     [SerializeField]
-    public PlayerType displayForPlayer;
+    public UI.PlayerType displayForPlayer;
     
     private void OnEnable()
     {
@@ -66,7 +66,7 @@ public class PlayerPortraitUI : MonoBehaviour
     {
         playerNameText.text = text;
     }
-    private void UpdatePlayerHealth(PlayerType player, int currentHealth)
+    private void UpdatePlayerHealth(UI.PlayerType player, int currentHealth)
     {
         if (player != displayForPlayer) return;
 
@@ -77,7 +77,7 @@ public class PlayerPortraitUI : MonoBehaviour
         playerHealthText.text = currentHealth.ToString();
     }
     
-    private void UpdatePlayerShield(PlayerType player, int currentShield)
+    private void UpdatePlayerShield(UI.PlayerType player, int currentShield)
     {
         if (player != displayForPlayer) return; 
         
@@ -87,7 +87,7 @@ public class PlayerPortraitUI : MonoBehaviour
         playerShieldText.text = currentShield.ToString();
     }
 
-    private void UpdateCrossMultiplier(PlayerType player, float currMultiplier)
+    private void UpdateCrossMultiplier(UI.PlayerType player, float currMultiplier)
     {
         if (player != displayForPlayer) return;
 
@@ -96,7 +96,7 @@ public class PlayerPortraitUI : MonoBehaviour
         crossDisplay.SetActive(hasMultiplier);
     }
     
-    private void UpdateChestDisplay(PlayerType player, bool hasChest)
+    private void UpdateChestDisplay(UI.PlayerType player, bool hasChest)
     {
         if (player != displayForPlayer) return;
         

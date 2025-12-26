@@ -21,7 +21,7 @@ public class PlayerNameSync : NetworkBehaviour
         {
             for (int i = 0; i < playerPortraitUIs.Length; i++)
             {
-                if (playerPortraitUIs[i].displayForPlayer == PlayerType.Local)
+                if (playerPortraitUIs[i].displayForPlayer == UI.PlayerType.Local)
                 {
                     _localPlayerPortraitUI = playerPortraitUIs[i];
                 }

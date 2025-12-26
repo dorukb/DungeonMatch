@@ -338,8 +338,8 @@ public class GameBoard
             activePlayer.ResetMultiplier();
         }
         
-        activePlayer.Heal(healAmount);
-        eventBatch.Add(EventPool.Get<HealEvent>().Setup(activePlayer.GetCurrentHealth(), activePlayer.netId, powerful: match.isDoubleEffect));
+        int actualHealedAmount = activePlayer.Heal(healAmount);
+        eventBatch.Add(EventPool.Get<HealEvent>().Setup(activePlayer.GetCurrentHealth(), activePlayer.netId, powerful: match.isDoubleEffect, actualHealedAmount));
     }
 
     private static void ApplyShieldEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match)
@@ -354,9 +354,9 @@ public class GameBoard
             activePlayer.ResetMultiplier();
         }
         
-        activePlayer.GainShield(shieldAmount);
+        int actualGainedShieldAmount = activePlayer.GainShield(shieldAmount);
         ShieldEvent shieldEvent = EventPool.Get<ShieldEvent>();
-        eventBatch.Add(shieldEvent.Setup(activePlayer.netId, activePlayer.GetShield()));
+        eventBatch.Add(shieldEvent.Setup(activePlayer.netId, activePlayer.GetShield(), actualGainedShieldAmount));
     }
 
     private static void ApplyAttackEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, NetworkPlayer opponent)

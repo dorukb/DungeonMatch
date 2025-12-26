@@ -86,16 +86,20 @@ namespace DorkyProductions
             }
         }
         [Server]
-        public void Heal(int heal)
+        // returns actual gained amount, capped by starting value.
+        public int Heal(int heal)
         {
             var startingHealth = RemoteConfigManager.Instance.GetStartingHealth();
             if (health + heal > startingHealth)
             {
+                int actualGainedAmount = startingHealth - health;
                 health = startingHealth;
+                return actualGainedAmount;
             }
             else
             {
                 health += heal;
+                return heal;
             }
         }
         [Server]
@@ -105,16 +109,20 @@ namespace DorkyProductions
         }
 
         [Server]
-        public void GainShield(int amount)
+        // returns actual gained amount, capped by starting value.
+        public int GainShield(int amount)
         {
             var startingShield = RemoteConfigManager.Instance.GetStartingShield();
             if (shield + amount > startingShield)
             {
+                int actualGainedAmount = startingShield - shield;
                 shield = startingShield;
+                return actualGainedAmount;
             }
             else
             {
                 shield += amount;
+                return amount;
             }
         }
 

@@ -202,15 +202,17 @@ namespace DorkyProductions
     {
         public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.Heal;
-        public int targetsUpdatedHealth;
-        public bool isPowerful;
         public uint targetPlayerID;
+        public bool isPowerful;
+        public int targetsUpdatedHealth;
+        public int gainedAmount;
         
-        public HealEvent Setup(int health, uint targetId, bool powerful)
+        public HealEvent Setup(int health, uint targetId, bool powerful, int gainedAmount)
         {
             targetsUpdatedHealth = health;
             isPowerful = powerful;
             targetPlayerID = targetId;
+            this.gainedAmount = gainedAmount;
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
@@ -237,11 +239,13 @@ namespace DorkyProductions
         public override EventType EventType => EventType.Shield;
         public uint targetPlayerID;
         public int targetsUpdatedShield;
+        public int gainedAmount;
 
-        public ShieldEvent Setup(uint target, int updatedShieldAmount)
+        public ShieldEvent Setup(uint target, int updatedShieldAmount, int gainedAmount)
         {
-            targetPlayerID = target; 
-            targetsUpdatedShield = updatedShieldAmount;
+            this.targetPlayerID = target; 
+            this.targetsUpdatedShield = updatedShieldAmount;
+            this.gainedAmount = gainedAmount;
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
@@ -249,15 +253,22 @@ namespace DorkyProductions
         {
             writer.Write(targetPlayerID);
             writer.Write(targetsUpdatedShield);
+            writer.Write(gainedAmount);
         }
 
         public override void Deserialize(NetworkReader reader)
         {
             targetPlayerID = reader.Read<uint>();
             targetsUpdatedShield = reader.Read<int>();
+            gainedAmount = reader.Read<int>();
         }
 
-        public override void Reset() => targetPlayerID = 0;
+        public override void Reset()
+        {
+            targetsUpdatedShield = 0;
+            gainedAmount = 0;
+            targetPlayerID = uint.MaxValue;
+        }
     }
     
     public class ChestMatchedEvent : GameEventBase

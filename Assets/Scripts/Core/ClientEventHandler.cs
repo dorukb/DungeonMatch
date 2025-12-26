@@ -17,6 +17,8 @@ namespace DorkyProductions
         private UIMediator _mediator;
         [SerializeField] 
         private ClientChestHandler _chestHandler;
+        [SerializeField]
+        private MatchEffectsController _effectsController;
         
         // private List<GameEvent> gameHistory = new List<GameEvent>();
         private Queue<GameEventBase> eventQueue = new Queue<GameEventBase>();
@@ -240,6 +242,17 @@ namespace DorkyProductions
             var targetPlayer = GetPlayerType(e.targetPlayerID);
             UIMediator.OnPlayerHealthUpdated?.Invoke(targetPlayer, e.targetsUpdatedHealth);
             UIMediator.OnPlayerShieldUpdated?.Invoke(targetPlayer, e.targetsUpdatedShield);
+            
+            // Dont wait for these effect to end, breaks fluidity.
+            if (e.absorbedByShieldAmount > 0)
+            {
+                // damage the Shield
+                _effectsController.ShowValue(-e.absorbedByShieldAmount, targetPlayer, StatType.Shield);
+            }
+            if (e.sufferedDamage > 0)
+            {
+                _effectsController.ShowValue(-e.sufferedDamage, targetPlayer, StatType.Health);
+            }
             return null;
         }
 
@@ -254,6 +267,9 @@ namespace DorkyProductions
                 AudioManager.Instance.PlaySFX(SFXType.MatchPotion);
             }
             UIMediator.OnPlayerHealthUpdated?.Invoke(targetPlayer, e.targetsUpdatedHealth);
+            
+            // Dont wait for these effect to end, breaks fluidity.
+            _effectsController.ShowValue(e.gainedAmount, targetPlayer, StatType.Health);
             return null;
         }
 
@@ -266,6 +282,9 @@ namespace DorkyProductions
                 AudioManager.Instance.PlaySFX(SFXType.MatchShield);
             }
             UIMediator.OnPlayerShieldUpdated?.Invoke(targetPlayer, e.targetsUpdatedShield);
+            
+            // Dont wait for these effect to end, breaks fluidity.
+            _effectsController.ShowValue(e.gainedAmount, targetPlayer, StatType.Shield);
             return null;
         }
 
