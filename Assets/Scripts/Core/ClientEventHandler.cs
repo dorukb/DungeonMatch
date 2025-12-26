@@ -43,7 +43,7 @@ namespace DorkyProductions
 
         private void OnDestroy()
         {
-            Debug.Log("ClientGameMaster is destroyed.");
+            Debug.Log("ClientEventHandler is destroyed.");
         }
         public void SetLocalPlayer(NetworkPlayer networkPlayer)
         {
@@ -58,7 +58,7 @@ namespace DorkyProductions
             {
                 // Read the number of events
                 ushort eventCount = reader.Read<ushort>();
-                Debug.Log($"[Client] received {eventCount} events.");
+                // Debug.Log($"[Client] received {eventCount} events.");
                 
                 for (int i = 0; i < eventCount; i++)
                 {
@@ -154,7 +154,7 @@ namespace DorkyProductions
             }
 
             yield return parallelSequence.WaitForCompletion();
-            Debug.Log("Parallel batch finished.");
+            // Debug.Log("Parallel batch finished.");
         }
 
         #region Blocking Handlers
@@ -190,13 +190,13 @@ namespace DorkyProductions
 
         public Tween Handle(MatchedTilesEvent e)
         {
-            Debug.Log($"MatchOccurred/RemoveTiles for: {e.matchedTileIDs}");
+            // Debug.Log($"MatchOccurred/RemoveTiles for: {e.matchedTileIDs}");
             return _visualizer.AnimatePop(e.matchedTileIDs);
         }
 
         public Tween Handle(SwappedTilesEvent e)
         {
-            Debug.Log($"Swap tiles: {e.firstId}, {e.secondId}");
+            // Debug.Log($"Swap tiles: {e.firstId}, {e.secondId}");
             AudioManager.Instance.PlaySFX(SFXType.TileSwap);
             return _visualizer.AnimateSwap(e.firstId, e.secondId);
         }
@@ -259,7 +259,7 @@ namespace DorkyProductions
         public Tween Handle(HealEvent e)
         {
             // TODO: Create & Return the Heal anim tween.
-            Debug.Log($"Heal player {e.targetPlayerID}");
+            // Debug.Log($"Heal player {e.targetPlayerID}");
             
             var targetPlayer = GetPlayerType(e.targetPlayerID);
             if (targetPlayer == PlayerType.Local)
@@ -275,7 +275,6 @@ namespace DorkyProductions
 
         public Tween Handle(ShieldEvent e)
         {
-            Debug.Log($"Player {e.targetPlayerID} gained some shield.");
             var targetPlayer = GetPlayerType(e.targetPlayerID);
             if (targetPlayer == PlayerType.Local)
             {
@@ -290,7 +289,7 @@ namespace DorkyProductions
 
         public Tween Handle(CrossMatchedEvent e)
         {
-            Debug.Log($"Player {e.targetPlayerID} matched Crosses. Got multiplier: {e.currentMultiplier}");
+            // Debug.Log($"Player {e.targetPlayerID} matched Crosses. Got multiplier: {e.currentMultiplier}");
             var targetPlayer = GetPlayerType(e.targetPlayerID);
             if (targetPlayer == PlayerType.Local)
             {
@@ -303,7 +302,7 @@ namespace DorkyProductions
         } 
         public Tween Handle(CrossConsumedEvent e)
         {
-            Debug.Log($"Player {e.targetPlayerID} CONSUMED cross multiplier. Used multiplier: {e.appliedMultiplier}");
+            // Debug.Log($"Player {e.targetPlayerID} CONSUMED cross multiplier. Used multiplier: {e.appliedMultiplier}");
             // TODO: Implement Cross using, Bless like animation on the Sword, Shield??
             var targetPlayer = GetPlayerType(e.targetPlayerID);
             UIMediator.OnPlayersCrossMultiplierUpdated?.Invoke(targetPlayer, 0f);
@@ -313,7 +312,7 @@ namespace DorkyProductions
         public Tween Handle(ChestMatchedEvent e)
         {        
             // TODO: Bug, If player earns 2 chests back to back, before opening the first one, the second reward overrides the first
-            Debug.Log($"Player {e.targetPlayerID} received Chest.");
+            // Debug.Log($"Player {e.targetPlayerID} received Chest.");
             var targetPlayer = GetPlayerType(e.targetPlayerID);
             if (targetPlayer == PlayerType.Local)
             {
@@ -337,7 +336,7 @@ namespace DorkyProductions
 
             if (e.context.ActivePlayerNetId == _localPlayer.netId)
             {
-                Debug.Log("My Turn Started");
+                // Debug.Log("My Turn Started");
                 AudioManager.Instance.PlaySFX(SFXType.YourTurn);
                 UIMediator.OnPlayerTurnStarted(PlayerType.Local, e.context.IsCurrentTurnExtra);
 
@@ -362,7 +361,6 @@ namespace DorkyProductions
 
                 if (e.context.ChestsLeft > 0)
                 {
-                    Debug.Log("Opponent is Opening a Chest. Hold on...");
                     UIMediator.OnPlayerChestUpdated?.Invoke(PlayerType.Opponent, false);
                 }
             }
@@ -373,7 +371,7 @@ namespace DorkyProductions
         {
             if (_localPlayer != null && e.playerNetId == _localPlayer.netId)
             {
-                Debug.Log("My Turn Ended");
+                // Debug.Log("My Turn Ended");
                 _localPlayer.DisableSwapControls();
             }
             return null;

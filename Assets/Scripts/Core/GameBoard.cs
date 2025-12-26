@@ -173,11 +173,11 @@ public class GameBoard
         // StabilizeBoard procedure
         while (matchesToProcess.Count > 0)
         { 
-            Debug.Log("[Server] Matches on board:");
-            foreach (var res in matchesToProcess)
-            {
-                Debug.Log(res.Debug());
-            }
+            // Debug.Log("[Server] Matches on board:");
+            // foreach (var res in matchesToProcess)
+            // {
+            //     Debug.Log(res.Debug());
+            // }
         
             ApplyMatchEffects(matchesToProcess, eventBatch);
             RemoveMatchedTiles(matchesToProcess);
@@ -256,7 +256,7 @@ public class GameBoard
         // This is where Card specific match effect will take place.
         foreach (var match in matchResults)
         {
-            Debug.Log($"Matched: {match.matchCount} of {match.DisplayMatchType()}");
+            // Debug.Log($"Matched: {match.matchCount} of {match.DisplayMatchType()}");
             var ids = new List<ushort>();
             foreach (var pos in match.positions)
             {
@@ -437,7 +437,7 @@ public class GameBoard
     
     private void RefillBoard(List<GameEventBase> eventBatch, bool avoidMatches)
     {
-        Debug.Log("[Server] Refilling board");
+        // Debug.Log("[Server] Refilling board");
         // rules: "bottom to top, then left to right"
         for (int x = 0; x < BoardWidth; x++)
         {
@@ -463,7 +463,7 @@ public class GameBoard
                     boardState[spawnIdx] = fillingTile;
                 
                     eventBatch.Add(EventPool.Get<TileSpawnedEvent>().Setup(fillingTile, gridPos));
-                    Debug.Log($"[Server] Draw new tile to pos: ({x},{y})");
+                    // Debug.Log($"[Server] Draw new tile to pos: ({x},{y})");
                 }
             }
         }

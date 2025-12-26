@@ -285,7 +285,7 @@ public class GameMaster : NetworkBehaviour
         
         if (Context.ExtraTurnsLeft > 0)
         {
-            Debug.Log("[Server] Not changing the active player at the end of the turn due to Extra Turn.");
+            // Debug.Log("[Server] Not changing the active player at the end of the turn due to Extra Turn.");
             Context.ExtraTurnsLeft -= 1;
             Context.IsCurrentTurnExtra = true;
         }

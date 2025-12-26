@@ -165,7 +165,7 @@ namespace DorkyProductions
         public void RequestSwap(Vector2Int posA, Vector2Int posB)
         {
             if (!isLocalPlayer) return; // Should never happen, but good check
-            Debug.Log($"[Local Client] Requesting swap: {posA} <-> {posB}");
+            // Debug.Log($"[Local Client] Requesting swap: {posA} <-> {posB}");
             DisableSwapControls();
             CmdAttemptSwap(posA, posB);
         }
@@ -179,7 +179,7 @@ namespace DorkyProductions
                 return;
             }
             
-            Debug.Log($"[Server] Received swap request: {posA} <-> {posB}");
+            // Debug.Log($"[Server] Received swap request: {posA} <-> {posB}");
             GameMaster.Instance.ProcessPlayerSwap(connectionToClient.identity, posA, posB);
         }
 
