@@ -226,6 +226,16 @@ namespace DorkyProductions
             CmdAttemptStoneGuardSkill();
         }
         
+        [Client]
+        private void AttemptSoulReaverSkillUse()
+        {
+            if (!isLocalPlayer) return; // Should never happen, but good check
+            Debug.Log($"[Local Client] Requesting Phantom Skill Use");
+            DisableSwapControls();
+            
+            CmdAttemptSoulReaverSkill();
+        }
+        
         [Command]
         private void CmdAttemptLightningSkill(Vector2Int targetTilePos)
         {
@@ -261,7 +271,7 @@ namespace DorkyProductions
                 return;
             }
             
-            Debug.Log($"[Server] Received Phantom Match Skill Use request");
+            Debug.Log($"[Server] Received Phase Shift Skill Use request");
             GameMaster.Instance.ProcessPlayerPhaseShiftSkill(connectionToClient.identity, targetTiles);
         }
         
@@ -274,9 +284,23 @@ namespace DorkyProductions
                 return;
             }
             
-            Debug.Log($"[Server] Received Phantom Match Skill Use request");
+            Debug.Log($"[Server] Received Stone Guard Skill Use request");
             int amount = _chestSkillHelper.GetRewardShield();
             GameMaster.Instance.ProcessPlayerStoneGuardSkill(amount, connectionToClient.identity);
+        }
+        
+        [Command]
+        private void CmdAttemptSoulReaverSkill()
+        {
+            if (GameMaster.Instance == null)
+            {
+                Debug.LogError("Command failed: GameMaster not found on server.");
+                return;
+            }
+            
+            Debug.Log($"[Server] Received Soul Reaver Skill Use request");
+            int amount = _chestSkillHelper.GetRewardShield();
+            GameMaster.Instance.ProcessPlayerSoulReaverSkill(amount, connectionToClient.identity);
         }
 
         public void ActivateLightningInput()
@@ -328,12 +352,18 @@ namespace DorkyProductions
                 _chestSkillHelper.ClearSelectedTiles();
             }
         }
-
         public void OnUseStoneGuard()
         {
             AudioManager.Instance.PlaySFX(SFXType.Lightning);
             UIMediator.OnPlayerChestEnded.Invoke(); 
             AttemptStoneGuardSkillUse();
+        }
+
+        public void OnUseSoulReaver()
+        {
+            AudioManager.Instance.PlaySFX(SFXType.Lightning);
+            UIMediator.OnPlayerChestEnded.Invoke(); 
+            AttemptSoulReaverSkillUse();
         }
 
         

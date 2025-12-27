@@ -262,6 +262,48 @@ public class GameMaster : NetworkBehaviour
         OnServerTurnStarted?.Invoke(Context, _gameBoard);    
     }
     
+    public void ProcessPlayerSoulReaverSkill(int amount, NetworkIdentity sender, float artificialDelay = 0f)
+    {
+        List<GameEventBase> eventBatch = new List<GameEventBase>();
+        bool canMakeMove = ValidateUserTurn(sender);   
+        
+        Context.ChestsLeft--;
+        // TODO: Validate the player actually has this skill/received the chest?
+        // maybe dont even accept skillId as param, server should already know.
+        // make sure all tiles are of same type.
+        if (canMakeMove) 
+        {
+            if (artificialDelay > 0.1f)
+            {
+                eventBatch.Add(EventPool.Get<AIDelayEvent>().Setup(artificialDelay));
+            }
+            //TODO: do we have to call a func in gameboard and we should send activeplayer to it?
+            //instead just call the loseHealth here? 
+            //_gameBoard.ProcessSoulReaverEffect(sender, eventBatch);
+            
+            NetworkPlayer activePlayer = players[activePlayerIndex];
+            int healedAmount = activePlayer.Heal(amount);
+            
+            HealEvent healEvent = EventPool.Get<HealEvent>();
+            eventBatch.Add(healEvent.Setup(activePlayer.GetCurrentHealth(), activePlayer.netId, false, healedAmount));
+            
+            NetworkPlayer inactivePlayer = players.Find(p => p != activePlayer);
+            inactivePlayer.TakeDamage(amount);
+            bool isFinalHit = inactivePlayer.GetCurrentHealth() == 0;
+            
+            var attackEvent = EventPool.Get<AttackEvent>();
+            attackEvent.Setup( inactivePlayer.GetCurrentHealth(), inactivePlayer.GetShield(), inactivePlayer.netId, false, 0, amount, isFinalHit );
+            eventBatch.Add(attackEvent);
+        }
+        else
+        {
+            Debug.LogError("[Server] Couldnt use StoneGuard skill. ending turn.");
+        }
+        EndTurnAndStartNext(eventBatch);
+        SendEventBatch(eventBatch);
+        // Notify Bot (Same player goes again)
+        OnServerTurnStarted?.Invoke(Context, _gameBoard);    
+    }
     
     // This is the main "transaction" method called by a Player via [Command].
     // It processes the move and generates all resulting events.

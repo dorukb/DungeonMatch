@@ -60,6 +60,10 @@ public class ClientChestHandler : MonoBehaviour
         {
             _localPlayer.OnUseStoneGuard();
         }
+        else if (_rewardedSkill.skillType == SkillType.SoulReaver)
+        {
+            _localPlayer.OnUseSoulReaver();
+        }
         
     }
     
