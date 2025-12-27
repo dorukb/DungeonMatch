@@ -207,12 +207,12 @@ namespace DorkyProductions
         public int targetsUpdatedHealth;
         public int gainedAmount;
         
-        public HealEvent Setup(int health, uint targetId, bool powerful, int gainedAmount)
+        public HealEvent Setup(int health, uint targetId, bool powerful, int actualHealedAmount)
         {
             targetsUpdatedHealth = health;
             isPowerful = powerful;
             targetPlayerID = targetId;
-            this.gainedAmount = gainedAmount;
+            this.gainedAmount = actualHealedAmount;
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
@@ -221,6 +221,7 @@ namespace DorkyProductions
             writer.Write(targetsUpdatedHealth);
             writer.Write(isPowerful);
             writer.Write(targetPlayerID);
+            writer.Write(gainedAmount);
         }
 
         public override void Deserialize(NetworkReader reader)
@@ -228,9 +229,13 @@ namespace DorkyProductions
             targetsUpdatedHealth = reader.Read<int>();
             isPowerful = reader.Read<bool>();
             targetPlayerID = reader.Read<uint>();
+            gainedAmount = reader.Read<int>();
         }
 
-        public override void Reset() { targetsUpdatedHealth = 0; isPowerful = false; targetPlayerID = 0; }
+        public override void Reset()
+        {
+            targetsUpdatedHealth = 0; isPowerful = false; targetPlayerID = 0; gainedAmount = 0;
+        }
     }
 
     public class ShieldEvent : GameEventBase
