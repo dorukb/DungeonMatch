@@ -21,6 +21,7 @@ public class HumanPlayerInput : MonoBehaviour
     private bool _canSwap = false;
     private bool _isLightningInputActive = false;
     private bool _isPhantomInputActive = false;
+    private bool _isPhaseShiftInputActive = false;
     private float _dpi;
 
     private void Awake()
@@ -31,7 +32,7 @@ public class HumanPlayerInput : MonoBehaviour
 
     private void Update()
     {
-        if (!_canSwap && !_isLightningInputActive && !_isPhantomInputActive) return;
+        if (!_canSwap && !_isLightningInputActive && !_isPhantomInputActive && !_isPhaseShiftInputActive) return;
 
         // -- 1. Detect Input Source --
         bool isPressed = false;
@@ -88,6 +89,11 @@ public class HumanPlayerInput : MonoBehaviour
         if (_isPhantomInputActive)
         {
             LocalPlayerController.OnTileSelectedForPhantom(hit);
+            return;
+        }
+        if (_isPhaseShiftInputActive)
+        {
+            LocalPlayerController.OnTileSelectedForPhaseShift(hit);
             return;
         }
 
@@ -246,5 +252,6 @@ public class HumanPlayerInput : MonoBehaviour
     public void ActivateLightningInput() => _isLightningInputActive = true;
     public void DisableLightningInput() => _isLightningInputActive = false;
     public void ChangePhantomInputState(bool s) => _isPhantomInputActive = s;
+    public void ChangePhaseShiftInputState(bool s) => _isPhaseShiftInputActive = s;
 }
 }

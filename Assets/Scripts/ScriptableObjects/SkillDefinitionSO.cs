@@ -5,7 +5,12 @@ namespace DorkyProductions
     public enum SkillType
     {
         Lightning,
-        PhantomMatch
+        PhantomMatch,
+        PhaseShift,
+        StoneGuard,
+        SoulReaver,
+        ArcaneSweep,
+        ArcaneCleave,
     }
     
     [CreateAssetMenu(fileName = "Skill_", menuName = "DungeonMatch/Skills")]

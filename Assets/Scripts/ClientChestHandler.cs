@@ -52,6 +52,10 @@ public class ClientChestHandler : MonoBehaviour
         {
             _localPlayer.ActivatePhantomMatchInput();
         }
+        else if (_rewardedSkill.skillType == SkillType.PhaseShift)
+        {
+            _localPlayer.ActivatePhaseShiftInput();
+        }
         
     }
     

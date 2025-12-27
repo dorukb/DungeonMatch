@@ -200,6 +200,33 @@ public class GameMaster : NetworkBehaviour
         // Notify Bot (Same player goes again)
         OnServerTurnStarted?.Invoke(Context, _gameBoard);
     }
+    
+    public void ProcessPlayerPhaseShiftSkill(NetworkIdentity sender, List<Vector2Int> targetTiles, float artificialDelay = 0f)
+    {
+        List<GameEventBase> eventBatch = new List<GameEventBase>();
+        bool canMakeMove = ValidateUserTurn(sender);   
+        
+        Context.ChestsLeft--;
+        // TODO: Validate the player actually has this skill/received the chest?
+        // maybe dont even accept skillId as param, server should already know.
+        // make sure all tiles are of same type.
+        if (canMakeMove && targetTiles.Count >= 2) 
+        {
+            if (artificialDelay > 0.1f)
+            {
+                eventBatch.Add(EventPool.Get<AIDelayEvent>().Setup(artificialDelay));
+            }
+            _gameBoard.ProcessPhaseShiftEffect(targetTiles, sender, eventBatch);
+        }
+        else
+        {
+            Debug.LogError("[Server] Couldnt use PhaseShift skill. ending turn.");
+        }
+        EndTurnAndStartNext(eventBatch);
+        SendEventBatch(eventBatch);
+        // Notify Bot (Same player goes again)
+        OnServerTurnStarted?.Invoke(Context, _gameBoard);
+    }
     // This is the main "transaction" method called by a Player via [Command].
     // It processes the move and generates all resulting events.
     [Server]
@@ -346,5 +373,7 @@ public class GameMaster : NetworkBehaviour
     {
         OnServerChestMatched?.Invoke(Context, chestSkillIdx);
     }
+
+   
 }
 }

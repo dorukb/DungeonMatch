@@ -20,6 +20,7 @@ namespace DorkyProductions
         private float currentCrossMultiplier = 0f;
 
         public bool IsBot { get; private set; }
+
         private void Awake()
         {
             var botBrain = GetComponent<BotBrain>();
@@ -55,7 +56,7 @@ namespace DorkyProductions
             }
 
             _humanPlayerInput.SetPlayer(this);
-            
+
             _clientEventHandler = FindAnyObjectByType<ClientEventHandler>();
             if (_clientEventHandler == null)
             {
@@ -73,6 +74,7 @@ namespace DorkyProductions
         {
             return health;
         }
+
         [Server]
         public void TakeDamage(int damage)
         {
@@ -85,6 +87,7 @@ namespace DorkyProductions
                 health -= damage;
             }
         }
+
         [Server]
         // returns actual gained amount, capped by starting value.
         public int Heal(int heal)
@@ -102,6 +105,7 @@ namespace DorkyProductions
                 return heal;
             }
         }
+
         [Server]
         public void LoseShield(int amount)
         {
@@ -143,11 +147,13 @@ namespace DorkyProductions
         {
             return currentCrossMultiplier;
         }
+
         [Server]
         public void ResetMultiplier()
         {
             currentCrossMultiplier = 0f;
         }
+
         [Client]
         public void EnableControls()
         {
@@ -178,7 +184,7 @@ namespace DorkyProductions
                 Debug.LogError("Command failed: GameBoard not found on server.");
                 return;
             }
-            
+
             // Debug.Log($"[Server] Received swap request: {posA} <-> {posB}");
             GameMaster.Instance.ProcessPlayerSwap(connectionToClient.identity, posA, posB);
         }
@@ -190,7 +196,8 @@ namespace DorkyProductions
             Debug.Log($"[Local Client] Requesting Lightning Skill Use");
             DisableSwapControls();
             CmdAttemptLightningSkill(targetTilePos);
-        } 
+        }
+
         [Client]
         private void AttemptPhantomSkillUse(List<Vector2Int> targetTilePos)
         {
@@ -198,7 +205,16 @@ namespace DorkyProductions
             Debug.Log($"[Local Client] Requesting Phantom Skill Use");
             DisableSwapControls();
             CmdAttemptPhantomMatchSkill(targetTilePos);
-        } 
+        }
+        
+        [Client]
+        private void AttemptPhaseShiftSkillUse(List<Vector2Int> targetTilePos)
+        {
+            if (!isLocalPlayer) return; // Should never happen, but good check
+            Debug.Log($"[Local Client] Requesting Phantom Skill Use");
+            DisableSwapControls();
+            CmdAttemptPhaseShiftSkill(targetTilePos);
+        }
         
         [Command]
         private void CmdAttemptLightningSkill(Vector2Int targetTilePos)
@@ -208,11 +224,11 @@ namespace DorkyProductions
                 Debug.LogError("Command failed: GameMaster not found on server.");
                 return;
             }
-            
+
             Debug.Log($"[Server] Received Lightning Skill Use request");
             GameMaster.Instance.ProcessPlayerLightningSkillUse(connectionToClient.identity, targetTilePos);
         }
-        
+
         [Command]
         private void CmdAttemptPhantomMatchSkill(List<Vector2Int> targetTiles)
         {
@@ -221,11 +237,23 @@ namespace DorkyProductions
                 Debug.LogError("Command failed: GameMaster not found on server.");
                 return;
             }
-            
+
             Debug.Log($"[Server] Received Phantom Match Skill Use request");
             GameMaster.Instance.ProcessPlayerPhantomMatchSkill(connectionToClient.identity, targetTiles);
         }
-
+        
+        [Command]
+        private void CmdAttemptPhaseShiftSkill(List<Vector2Int> targetTiles)
+        {
+            if (GameMaster.Instance == null)
+            {
+                Debug.LogError("Command failed: GameMaster not found on server.");
+                return;
+            }
+            
+            Debug.Log($"[Server] Received Phantom Match Skill Use request");
+            GameMaster.Instance.ProcessPlayerPhaseShiftSkill(connectionToClient.identity, targetTiles);
+        }
         public void ActivateLightningInput()
         {
             _humanPlayerInput.ActivateLightningInput();
@@ -235,6 +263,12 @@ namespace DorkyProductions
         {
             _humanPlayerInput.ChangePhantomInputState(true);
         }
+
+        public void ActivatePhaseShiftInput()
+        {
+            _humanPlayerInput.ChangePhaseShiftInputState(true);
+        }
+
         public void OnTileSelectedForLightning(Vector2Int targetTilePos)
         {
             AudioManager.Instance.PlaySFX(SFXType.Lightning);
@@ -243,18 +277,33 @@ namespace DorkyProductions
             _humanPlayerInput.DisableLightningInput();
 
         }
+
         public void OnTileSelectedForPhantom(TileView selectedTile)
-        {          
+        {
             // if this tile was already selected, unselect it.
-           bool shouldTriggerSkill = _chestSkillHelper.OnNewTileSelected(selectedTile);
-           if (shouldTriggerSkill)
-           {
-               _humanPlayerInput.ChangePhantomInputState(false);
-               UIMediator.OnPlayerChestEnded.Invoke();
-               AttemptPhantomSkillUse(_chestSkillHelper.GetSelectedTilePositions());
-               _chestSkillHelper.ClearSelectedTiles();
-           }
+            bool shouldTriggerSkill = _chestSkillHelper.OnNewTileSelected(selectedTile, SkillType.PhantomMatch);
+            if (shouldTriggerSkill)
+            {
+                _humanPlayerInput.ChangePhantomInputState(false);
+                UIMediator.OnPlayerChestEnded.Invoke();
+                AttemptPhantomSkillUse(_chestSkillHelper.GetSelectedTilePositions());
+                _chestSkillHelper.ClearSelectedTiles();
+            }
 
         }
+
+        public void OnTileSelectedForPhaseShift(TileView selectedTile)
+        {
+            bool shouldTriggerSkill = _chestSkillHelper.OnNewTileSelected(selectedTile, SkillType.PhaseShift);
+            if (shouldTriggerSkill)
+            {
+                _humanPlayerInput.ChangePhaseShiftInputState(false);
+                UIMediator.OnPlayerChestEnded.Invoke();
+                AttemptPhaseShiftSkillUse(_chestSkillHelper.GetSelectedTilePositions());
+                _chestSkillHelper.ClearSelectedTiles();
+            }
+        }
+
+        
     }
 }

@@ -19,6 +19,10 @@ public class TileDatabaseEditor : Editor
         // Draw Default list of tiles (so you can add/remove them)
         SerializedProperty listProp = serializedObject.FindProperty("allTileDefinitions");
         EditorGUILayout.PropertyField(listProp, true);
+        
+        // Draw Default list of skills (so you can add/remove them)
+        SerializedProperty skillsProp = serializedObject.FindProperty("allSkills");
+        EditorGUILayout.PropertyField(skillsProp, true);
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Probability Balance", EditorStyles.boldLabel);
