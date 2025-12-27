@@ -172,6 +172,7 @@ public class GameBoard
     {
         ProcessSwapMove(targetTiles[0], targetTiles[1], sender, eventBatch);
     }
+    
     private void StabilizeBoard(List<GameEventBase> eventBatch, List<MatchResult> matchesToProcess)
     {
         // This 'master' loop handles all chain reactions (cascades AND refills).
@@ -330,7 +331,8 @@ public class GameBoard
     private void ApplyChestEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, GameMaster gm)
     {
         // TODO: Use a distribution controlled via ScriptableObject here for the various chest effects & their drop rates.
-        int chestSkillIdx = Random.Range(0, 3);
+        int chestSkillIdx = Random.Range(0, 4);
+        //int chestSkillIdx = 3;
         
         eventBatch.Add(EventPool.Get<ChestMatchedEvent>().Setup(activePlayer.netId, chestSkillIdx));
         gm.NotifyBotChestMatched(chestSkillIdx);

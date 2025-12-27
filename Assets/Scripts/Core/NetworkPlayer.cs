@@ -216,6 +216,16 @@ namespace DorkyProductions
             CmdAttemptPhaseShiftSkill(targetTilePos);
         }
         
+        [Client]
+        private void AttemptStoneGuardSkillUse()
+        {
+            if (!isLocalPlayer) return; // Should never happen, but good check
+            Debug.Log($"[Local Client] Requesting Phantom Skill Use");
+            DisableSwapControls();
+            
+            CmdAttemptStoneGuardSkill();
+        }
+        
         [Command]
         private void CmdAttemptLightningSkill(Vector2Int targetTilePos)
         {
@@ -254,6 +264,21 @@ namespace DorkyProductions
             Debug.Log($"[Server] Received Phantom Match Skill Use request");
             GameMaster.Instance.ProcessPlayerPhaseShiftSkill(connectionToClient.identity, targetTiles);
         }
+        
+        [Command]
+        private void CmdAttemptStoneGuardSkill()
+        {
+            if (GameMaster.Instance == null)
+            {
+                Debug.LogError("Command failed: GameMaster not found on server.");
+                return;
+            }
+            
+            Debug.Log($"[Server] Received Phantom Match Skill Use request");
+            int amount = _chestSkillHelper.GetRewardShield();
+            GameMaster.Instance.ProcessPlayerStoneGuardSkill(amount, connectionToClient.identity);
+        }
+
         public void ActivateLightningInput()
         {
             _humanPlayerInput.ActivateLightningInput();
@@ -302,6 +327,13 @@ namespace DorkyProductions
                 AttemptPhaseShiftSkillUse(_chestSkillHelper.GetSelectedTilePositions());
                 _chestSkillHelper.ClearSelectedTiles();
             }
+        }
+
+        public void OnUseStoneGuard()
+        {
+            AudioManager.Instance.PlaySFX(SFXType.Lightning);
+            UIMediator.OnPlayerChestEnded.Invoke(); 
+            AttemptStoneGuardSkillUse();
         }
 
         

@@ -10,6 +10,8 @@ namespace DorkyProductions.Skills
         //private readonly List<TileView> selectedTilesForPhaseShift = new();
         private readonly List<TileView> selectedTilesForSkill = new();
 
+        private readonly int REWARD_SHIELD = 3; 
+
         // Returns: True if enough tiles(3) of same type are selected, false otherwise
         public bool OnNewTileSelected(TileView selectedTile, SkillType skill)
         {
@@ -112,6 +114,11 @@ namespace DorkyProductions.Skills
         public void ClearSelectedTiles()
         {
             selectedTilesForSkill.Clear();
+        }
+
+        public int GetRewardShield()
+        {
+            return REWARD_SHIELD;
         }
     }
 }

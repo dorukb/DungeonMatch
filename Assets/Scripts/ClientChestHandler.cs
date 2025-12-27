@@ -56,6 +56,10 @@ public class ClientChestHandler : MonoBehaviour
         {
             _localPlayer.ActivatePhaseShiftInput();
         }
+        else if (_rewardedSkill.skillType == SkillType.StoneGuard)
+        {
+            _localPlayer.OnUseStoneGuard();
+        }
         
     }
     

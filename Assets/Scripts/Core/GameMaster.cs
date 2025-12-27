@@ -227,6 +227,42 @@ public class GameMaster : NetworkBehaviour
         // Notify Bot (Same player goes again)
         OnServerTurnStarted?.Invoke(Context, _gameBoard);
     }
+    
+    public void ProcessPlayerStoneGuardSkill(int amount, NetworkIdentity sender, float artificialDelay = 0f)
+    {
+        List<GameEventBase> eventBatch = new List<GameEventBase>();
+        bool canMakeMove = ValidateUserTurn(sender);   
+        
+        Context.ChestsLeft--;
+        // TODO: Validate the player actually has this skill/received the chest?
+        // maybe dont even accept skillId as param, server should already know.
+        // make sure all tiles are of same type.
+        if (canMakeMove) 
+        {
+            if (artificialDelay > 0.1f)
+            {
+                eventBatch.Add(EventPool.Get<AIDelayEvent>().Setup(artificialDelay));
+            }
+            //TODO: do we have to call a func in gameboard and we should send activeplayer to it?
+            //instead just call the gainShierld here? 
+            //_gameBoard.ProcessStoneGuardEffect(sender, eventBatch);
+    
+            NetworkPlayer activePlayer = players[activePlayerIndex];
+            int gainedAmount = activePlayer.GainShield(amount);
+            ShieldEvent shieldEvent = EventPool.Get<ShieldEvent>();
+            eventBatch.Add(shieldEvent.Setup(activePlayer.netId, activePlayer.GetShield(), gainedAmount));
+        }
+        else
+        {
+            Debug.LogError("[Server] Couldnt use StoneGuard skill. ending turn.");
+        }
+        EndTurnAndStartNext(eventBatch);
+        SendEventBatch(eventBatch);
+        // Notify Bot (Same player goes again)
+        OnServerTurnStarted?.Invoke(Context, _gameBoard);    
+    }
+    
+    
     // This is the main "transaction" method called by a Player via [Command].
     // It processes the move and generates all resulting events.
     [Server]
@@ -373,7 +409,6 @@ public class GameMaster : NetworkBehaviour
     {
         OnServerChestMatched?.Invoke(Context, chestSkillIdx);
     }
-
-   
+    
 }
 }
