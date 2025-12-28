@@ -57,6 +57,9 @@ public enum SFXType {
     CoinCollected,
     FinalHit,
     DiceRoll,
+    Match5T,
+    Match5L,
+    Match5,
 }
 public enum MusicType
 {
