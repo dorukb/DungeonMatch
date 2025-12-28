@@ -22,6 +22,8 @@ public class RemoteConfigManager : MonoBehaviour
     private const string STARTING_SHIELD_KEY = "starting_shield";
     private const string AVOID_MATCH_CHANCE_KEY = "avoid_match_chance";
     private const string MATCH_STRATEGY_KEY = "match_strategy";
+    private const string REWARD_SHIELD_KEY = "reward_shield";
+    private const string STOLEN_HEALTH_KEY = "stolen_health";
     
     // Fast local lookups
     private Dictionary<int, int> attackValues = new Dictionary<int, int>();
@@ -36,6 +38,8 @@ public class RemoteConfigManager : MonoBehaviour
     private int startingShield = PLAYER_STARTING_SHIELD;
     private float avoidMatchChance = 0.85f;
     private int matchStrategyIdx = 0;
+    private int rewardShield = 3;
+    private int stolenHealth = 3;
     
     private void Awake()
     {
@@ -54,6 +58,8 @@ public class RemoteConfigManager : MonoBehaviour
         startingShield = (int)config.GetValue(STARTING_SHIELD_KEY).LongValue;
         matchStrategyIdx = (int)config.GetValue(MATCH_STRATEGY_KEY).LongValue;
         avoidMatchChance = (float)config.GetValue(AVOID_MATCH_CHANCE_KEY).DoubleValue;
+        rewardShield = (int)config.GetValue(REWARD_SHIELD_KEY).LongValue;
+        stolenHealth = (int)config.GetValue(STOLEN_HEALTH_KEY).LongValue;
             
         Debug.Log("Config updated. Match strategy: " + matchStrategyIdx);
         for (int i = 3; i <= 5; i++)
@@ -78,6 +84,10 @@ public class RemoteConfigManager : MonoBehaviour
     {
         return matchStrategyIdx;
     }
+
+    public int GetRewardShield() => rewardShield;
+    public int GetStolenHealth() => stolenHealth;
+    
     private void InitializeFirebase()
     {
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>

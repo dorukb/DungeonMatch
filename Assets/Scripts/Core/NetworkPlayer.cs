@@ -285,7 +285,7 @@ namespace DorkyProductions
             }
             
             Debug.Log($"[Server] Received Stone Guard Skill Use request");
-            int amount = _chestSkillHelper.GetRewardShield();
+            int amount = RemoteConfigManager.Instance.GetRewardShield();
             GameMaster.Instance.ProcessPlayerStoneGuardSkill(amount, connectionToClient.identity);
         }
         
@@ -299,8 +299,8 @@ namespace DorkyProductions
             }
             
             Debug.Log($"[Server] Received Soul Reaver Skill Use request");
-            int amount = _chestSkillHelper.GetRewardShield();
-            GameMaster.Instance.ProcessPlayerSoulReaverSkill(amount, connectionToClient.identity);
+            int healAmount = RemoteConfigManager.Instance.GetStolenHealth();
+            GameMaster.Instance.ProcessPlayerSoulReaverSkill(healAmount, connectionToClient.identity);
         }
 
         public void ActivateLightningInput()
