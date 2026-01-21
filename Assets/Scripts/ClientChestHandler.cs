@@ -64,6 +64,10 @@ public class ClientChestHandler : MonoBehaviour
         {
             _localPlayer.OnUseSoulReaver();
         }
+        else if (_rewardedSkill.skillType == SkillType.ArcaneSweep)
+        {
+            _localPlayer.ActivateArcaneSweepInput();
+        }
         
     }
     

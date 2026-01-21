@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Dynamic;
 using Mirror;
 using Firebase.RemoteConfig;
 using UnityEngine;
@@ -173,6 +174,32 @@ public class GameBoard
         ProcessSwapMove(targetTiles[0], targetTiles[1], sender, eventBatch);
     }
     
+    public void ProcessArcaneSweepEffect(Vector2Int tilePos, NetworkIdentity sender, List<GameEventBase> eventBatch)
+    {
+        int row = tilePos.y;
+        TileState tileToRemove;
+        
+        for(int i = 0; i < BoardWidth; i++)
+        {
+            tileToRemove = boardState[GetIndex(i, row)];
+            eventBatch.Add(EventPool.Get<TileRemovedEvent>().Setup(tileToRemove.uniqueID));
+            boardState[GetIndex(i, row)] = TileState.Empty;
+        }
+        
+        SimulateTileFall(eventBatch);
+        var matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
+
+        if (matchesToProcess.Count > 0)
+        {
+            StabilizeBoard(eventBatch, matchesToProcess);
+        }
+        else
+        {
+            RefillBoard(eventBatch, true);
+            matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
+            StabilizeBoard(eventBatch, matchesToProcess);
+        }
+    }
     private void StabilizeBoard(List<GameEventBase> eventBatch, List<MatchResult> matchesToProcess)
     {
         // This 'master' loop handles all chain reactions (cascades AND refills).
@@ -243,6 +270,7 @@ public class GameBoard
         int x = idx / BoardHeight;
         return new Vector2Int(x, y);
     }
+    
 
     private void RemoveMatchedTiles(List<MatchResult> matchResults)
     {
@@ -254,6 +282,8 @@ public class GameBoard
             }
         }
     }
+    
+    
     // --- BOARD PROCESSING HELPERS ---
 
     // returns: Whether this match should stop the Chain events immediately: i.e, shouldOpenChest
@@ -331,8 +361,8 @@ public class GameBoard
     private void ApplyChestEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, GameMaster gm)
     {
         // TODO: Use a distribution controlled via ScriptableObject here for the various chest effects & their drop rates.
-        int chestSkillIdx = Random.Range(0, 5);
-        //chestSkillIdx = 4;
+        int chestSkillIdx = Random.Range(0, 6);
+       // chestSkillIdx = 5;
         
         eventBatch.Add(EventPool.Get<ChestMatchedEvent>().Setup(activePlayer.netId, chestSkillIdx));
         gm.NotifyBotChestMatched(chestSkillIdx);
@@ -557,7 +587,9 @@ public class GameBoard
     }
   
     private int GetIndex(Vector2Int pos) =>  GetIndex(pos.x, pos.y);
+    //column-major indexing 
     private int GetIndex(int x, int y) => (x * BoardHeight) + y;
+    
     private TileState GetTileSafe(int x, int y)
     {
         // Check bounds
@@ -566,7 +598,7 @@ public class GameBoard
             // Return an "empty" or "invalid" state, not a real tile
             return TileState.Empty; 
         }
-    
+        //TODO:check here? it is row-major indexing!! contradicts with the methods above.
         int index = (y * BoardWidth) + x;
     
         // Check if the tile has been added yet

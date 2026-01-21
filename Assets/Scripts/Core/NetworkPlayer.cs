@@ -235,6 +235,16 @@ namespace DorkyProductions
             
             CmdAttemptSoulReaverSkill();
         }
+
+        [Client]
+        private void AttemptSweepSkillUse(Vector2Int targetTilePos)
+        {
+            if (!isLocalPlayer) return;
+            Debug.Log($"[Local Client] Requesting Sweep Skill Use");
+            DisableSwapControls();
+            
+            CmdAttemptSweepSkill(targetTilePos);
+        }
         
         [Command]
         private void CmdAttemptLightningSkill(Vector2Int targetTilePos)
@@ -303,6 +313,20 @@ namespace DorkyProductions
             GameMaster.Instance.ProcessPlayerSoulReaverSkill(healAmount, connectionToClient.identity);
         }
 
+        [Command]
+        private void CmdAttemptSweepSkill(Vector2Int targetTilePos)
+        {
+            if (GameMaster.Instance == null)
+            {
+                Debug.LogError("Command failed: GameMaster not found on server.");
+                return;
+            }
+            
+            Debug.Log($"[Server] Received Arcane Sweep Skill Use request");
+            bool isRow = true;
+            GameMaster.Instance.ProcessPlayerSweepSkill(targetTilePos, connectionToClient.identity);
+        }
+
         public void ActivateLightningInput()
         {
             _humanPlayerInput.ActivateLightningInput();
@@ -316,6 +340,11 @@ namespace DorkyProductions
         public void ActivatePhaseShiftInput()
         {
             _humanPlayerInput.ChangePhaseShiftInputState(true);
+        }
+
+        public void ActivateArcaneSweepInput()
+        {
+            _humanPlayerInput.ChangeSweepInputState(true);
         }
 
         public void OnTileSelectedForLightning(Vector2Int targetTilePos)
@@ -351,7 +380,28 @@ namespace DorkyProductions
                 AttemptPhaseShiftSkillUse(_chestSkillHelper.GetSelectedTilePositions());
                 _chestSkillHelper.ClearSelectedTiles();
             }
+            
         }
+        
+        public void OnTileSelectedForSweep(Vector2Int targetTilePos)
+        {
+            // if this tile was already selected, unselect it.
+            /*bool shouldTriggerSkill = _chestSkillHelper.OnNewTileSelected(selectedTile, SkillType.ArcaneSweep);
+            if (shouldTriggerSkill)
+            {
+                _humanPlayerInput.ChangeSweepInputState(false);
+                UIMediator.OnPlayerChestEnded.Invoke();
+                AttemptSweepSkillUse(_chestSkillHelper.GetSelectedTilePositions()[0]);
+                _chestSkillHelper.ClearSelectedTiles();
+            }*/
+            
+            UIMediator.OnPlayerChestEnded.Invoke();
+            AttemptSweepSkillUse(targetTilePos);
+            _humanPlayerInput.ChangeSweepInputState(false);
+            
+        }
+        
+        
         public void OnUseStoneGuard()
         {
             AudioManager.Instance.PlaySFX(SFXType.Lightning);

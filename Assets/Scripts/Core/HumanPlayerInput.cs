@@ -2,13 +2,14 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 
 namespace DorkyProductions
 {
 public class HumanPlayerInput : MonoBehaviour
 {
     public NetworkPlayer LocalPlayerController { get; private set; }
-
+    
     // Physical distance (inches) the finger must move to register a swipe.
     private float _swipeThresholdInches = 0.25f;
 
@@ -22,6 +23,7 @@ public class HumanPlayerInput : MonoBehaviour
     private bool _isLightningInputActive = false;
     private bool _isPhantomInputActive = false;
     private bool _isPhaseShiftInputActive = false;
+    private bool _isArcaneSweepInputActive = false;
     private float _dpi;
 
     private void Awake()
@@ -32,7 +34,10 @@ public class HumanPlayerInput : MonoBehaviour
 
     private void Update()
     {
-        if (!_canSwap && !_isLightningInputActive && !_isPhantomInputActive && !_isPhaseShiftInputActive) return;
+        //TODO :is this looking even good?
+        
+        if (!_canSwap && !_isLightningInputActive && !_isPhantomInputActive && !_isPhaseShiftInputActive 
+            && !_isArcaneSweepInputActive) return;
 
         // -- 1. Detect Input Source --
         bool isPressed = false;
@@ -95,6 +100,11 @@ public class HumanPlayerInput : MonoBehaviour
         {
             LocalPlayerController.OnTileSelectedForPhaseShift(hit);
             return;
+        }
+
+        if (_isArcaneSweepInputActive)
+        {
+            LocalPlayerController.OnTileSelectedForSweep(hit.GridPosition);
         }
 
         _pressedTile = hit;
@@ -200,7 +210,7 @@ public class HumanPlayerInput : MonoBehaviour
         _selectedTile = tile;
         _selectedTile.SetSelected(true);
     }
-
+    
     private void DeselectCurrent()
     {
         if (_selectedTile != null)
@@ -209,7 +219,8 @@ public class HumanPlayerInput : MonoBehaviour
             _selectedTile = null;
         }
     }
-
+    
+    
     private bool IsAdjacent(TileView a, TileView b)
     {
         int diff = Mathf.Abs(a.GridPosition.x - b.GridPosition.x) + 
@@ -253,5 +264,6 @@ public class HumanPlayerInput : MonoBehaviour
     public void DisableLightningInput() => _isLightningInputActive = false;
     public void ChangePhantomInputState(bool s) => _isPhantomInputActive = s;
     public void ChangePhaseShiftInputState(bool s) => _isPhaseShiftInputActive = s;
+    public void ChangeSweepInputState(bool s) => _isArcaneSweepInputActive = s;
 }
 }

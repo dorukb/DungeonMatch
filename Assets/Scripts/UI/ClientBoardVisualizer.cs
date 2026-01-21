@@ -230,6 +230,26 @@ public class ClientBoardVisualizer : MonoBehaviour
 
         return s;
     }
+
+    public List<TileView> GetVisualTilesAtLine(bool isRow, Vector2Int hitPosition)
+    {
+        List<TileView> line = new List<TileView>();
+        foreach (TileView tile in _visualTiles.Values)
+        {
+            if (isRow)
+            {
+                if (hitPosition.y == tile.GridPosition.y)
+                    line.Add(tile);
+            }
+            else //isCol
+            {
+                if(hitPosition.x == tile.GridPosition.x) 
+                    line.Add(tile);
+            }
+        }
+        
+        return line;
+    }
     
 }
 }

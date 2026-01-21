@@ -263,7 +263,7 @@ public class GameMaster : NetworkBehaviour
     }
     
     public void ProcessPlayerSoulReaverSkill(int amount, NetworkIdentity sender, float artificialDelay = 0f)
-    {
+    { 
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         bool canMakeMove = ValidateUserTurn(sender);   
         
@@ -303,6 +303,37 @@ public class GameMaster : NetworkBehaviour
         SendEventBatch(eventBatch);
         // Notify Bot (Same player goes again)
         OnServerTurnStarted?.Invoke(Context, _gameBoard);    
+    }
+
+    public void ProcessPlayerSweepSkill(Vector2Int tilePos, NetworkIdentity sender, float artificialDelay = 0f)
+    {
+        List<GameEventBase> eventBatch = new List<GameEventBase>();
+        bool canMakeMove = ValidateUserTurn(sender);
+        if (gameState == GameState.GameEnded)
+        {
+            Debug.Log("[Server] Game has ended already, Skill Use request has no effect at this point.");
+            return;
+        }
+        Context.ChestsLeft--;
+        // TODO: Validate the player actually has this skill/received the chest?
+        // maybe dont even accept skillId as param, server should already know.
+        if (canMakeMove)
+        {
+            if (artificialDelay > 0.1f)
+            {
+                eventBatch.Add(EventPool.Get<AIDelayEvent>().Setup(artificialDelay));
+            }
+            _gameBoard.ProcessArcaneSweepEffect(tilePos, sender, eventBatch);
+        }
+        else
+        {
+            // TODO: User currently loses the extra turn, if skill validation fails!
+            Debug.LogError("[Server] Couldnt use Arcane Sweep skill. ending turn.");
+        }
+        EndTurnAndStartNext(eventBatch);
+        SendEventBatch(eventBatch);
+        // Notify Bot (Same player goes again)
+        OnServerTurnStarted?.Invoke(Context, _gameBoard);  
     }
     
     // This is the main "transaction" method called by a Player via [Command].

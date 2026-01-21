@@ -9,8 +9,32 @@ namespace DorkyProductions.Skills
         //private readonly List<TileView> selectedTilesForPhantomMatch = new();
         //private readonly List<TileView> selectedTilesForPhaseShift = new();
         private readonly List<TileView> selectedTilesForSkill = new();
+        
+        private ClientBoardVisualizer _visualizer;
+        
+        public List<TileView> GetVisuals(bool isRow, Vector2Int gridPos)
+        {
+            List<TileView> views = new List<TileView>();
+            // 1. Check if we already found it before
+            // 2. If not, try to find it in the scene right now
+            if (_visualizer == null)
+            {
+                _visualizer = Object.FindAnyObjectByType<ClientBoardVisualizer>();
+            }
+    
+            // 3. Check if we actually found something
+            if (_visualizer != null)
+            {
+                views = _visualizer.GetVisualTilesAtLine(isRow, gridPos);
+            }
+            else
+            {
+                Debug.LogError("ChestHelper: Visualizer not found in this scene!");
+            }
 
-
+            return views; 
+        }
+        
         // Returns: True if enough tiles(3) of same type are selected, false otherwise
         public bool OnNewTileSelected(TileView selectedTile, SkillType skill)
         {
@@ -98,8 +122,22 @@ namespace DorkyProductions.Skills
                 // when 2 are selected. either show OK/submit button, or automatically send the command.
                 return selectedTilesForSkill.Count == 2;
             }
-            
-            Debug.Log("This function shouldnt be called. where did it come from?");
+
+            if (skill == SkillType.ArcaneSweep)
+            {
+                if (selectedTilesForSkill.Count == 0) //selecting a row
+                {
+                    selectedTilesForSkill.AddRange(GetVisuals(true, selectedTile.GridPosition));
+                    Debug.Log($"selected line: {selectedTilesForSkill[2]}");
+                    //SetLineSelected();
+                }
+                else
+                {
+                    Debug.Log("somehow managed to select another row. Shouldnt happen.");
+                }
+
+                return selectedTilesForSkill.Count == 5;
+            }
             return false;
         }
 
@@ -113,6 +151,22 @@ namespace DorkyProductions.Skills
         public void ClearSelectedTiles()
         {
             selectedTilesForSkill.Clear();
+        }
+
+        public void SetLineSelected()
+        {
+            foreach (TileView tile in selectedTilesForSkill)
+            {
+                tile.SetSelected(true);
+            }
+        }
+
+        public void SetLineUnselected()
+        {
+            foreach (TileView tile in selectedTilesForSkill)
+            {
+                tile.SetSelected(false);
+            }
         }
 
     }
