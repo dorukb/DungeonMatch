@@ -200,6 +200,33 @@ public class GameBoard
             StabilizeBoard(eventBatch, matchesToProcess);
         }
     }
+    
+    public void ProcessArcaneCleaveEffect(Vector2Int tilePos, NetworkIdentity sender, List<GameEventBase> eventBatch)
+    {
+        int col = tilePos.x;
+        TileState tileToRemove;
+        
+        for(int i = BoardWidth - 1; i >= 0; i--)
+        {
+            tileToRemove = boardState[GetIndex(col, i)];
+            eventBatch.Add(EventPool.Get<TileRemovedEvent>().Setup(tileToRemove.uniqueID));
+            boardState[GetIndex(col, i)] = TileState.Empty;
+        }
+        
+        SimulateTileFall(eventBatch);
+        var matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
+
+        if (matchesToProcess.Count > 0)
+        {
+            StabilizeBoard(eventBatch, matchesToProcess);
+        }
+        else
+        {
+            RefillBoard(eventBatch, true);
+            matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
+            StabilizeBoard(eventBatch, matchesToProcess);
+        }
+    }
     private void StabilizeBoard(List<GameEventBase> eventBatch, List<MatchResult> matchesToProcess)
     {
         // This 'master' loop handles all chain reactions (cascades AND refills).
@@ -284,6 +311,8 @@ public class GameBoard
     }
     
     
+    
+    
     // --- BOARD PROCESSING HELPERS ---
 
     // returns: Whether this match should stop the Chain events immediately: i.e, shouldOpenChest
@@ -361,8 +390,8 @@ public class GameBoard
     private void ApplyChestEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, GameMaster gm)
     {
         // TODO: Use a distribution controlled via ScriptableObject here for the various chest effects & their drop rates.
-        int chestSkillIdx = Random.Range(0, 6);
-       // chestSkillIdx = 5;
+        int chestSkillIdx = Random.Range(0, 7);
+        chestSkillIdx = 6;
         
         eventBatch.Add(EventPool.Get<ChestMatchedEvent>().Setup(activePlayer.netId, chestSkillIdx));
         gm.NotifyBotChestMatched(chestSkillIdx);

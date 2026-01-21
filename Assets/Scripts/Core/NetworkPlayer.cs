@@ -246,6 +246,16 @@ namespace DorkyProductions
             CmdAttemptSweepSkill(targetTilePos);
         }
         
+        [Client]
+        private void AttemptCleaveSkillUse(Vector2Int targetTilePos)
+        {
+            if (!isLocalPlayer) return;
+            Debug.Log($"[Local Client] Requesting Cleave Skill Use");
+            DisableSwapControls();
+            
+            CmdAttemptCleaveSkill(targetTilePos);
+        }
+        
         [Command]
         private void CmdAttemptLightningSkill(Vector2Int targetTilePos)
         {
@@ -323,8 +333,22 @@ namespace DorkyProductions
             }
             
             Debug.Log($"[Server] Received Arcane Sweep Skill Use request");
-            bool isRow = true;
+       
             GameMaster.Instance.ProcessPlayerSweepSkill(targetTilePos, connectionToClient.identity);
+        }
+        
+        [Command]
+        private void CmdAttemptCleaveSkill(Vector2Int targetTilePos)
+        {
+            if (GameMaster.Instance == null)
+            {
+                Debug.LogError("Command failed: GameMaster not found on server.");
+                return;
+            }
+            
+            Debug.Log($"[Server] Received Arcane Cleave Skill Use request");
+            
+            GameMaster.Instance.ProcessPlayerCleaveSkill(targetTilePos, connectionToClient.identity);
         }
 
         public void ActivateLightningInput()
@@ -345,6 +369,11 @@ namespace DorkyProductions
         public void ActivateArcaneSweepInput()
         {
             _humanPlayerInput.ChangeSweepInputState(true);
+        }
+        
+        public void ActivateArcaneCleaveInput()
+        {
+            _humanPlayerInput.ChangeCleaveInputState(true);
         }
 
         public void OnTileSelectedForLightning(Vector2Int targetTilePos)
@@ -382,6 +411,19 @@ namespace DorkyProductions
             }
             
         }
+        public void OnUseStoneGuard()
+        {
+            AudioManager.Instance.PlaySFX(SFXType.Lightning);
+            UIMediator.OnPlayerChestEnded.Invoke(); 
+            AttemptStoneGuardSkillUse();
+        }
+
+        public void OnUseSoulReaver()
+        {
+            AudioManager.Instance.PlaySFX(SFXType.Lightning);
+            UIMediator.OnPlayerChestEnded.Invoke(); 
+            AttemptSoulReaverSkillUse();
+        }
         
         public void OnTileSelectedForSweep(Vector2Int targetTilePos)
         {
@@ -400,22 +442,13 @@ namespace DorkyProductions
             _humanPlayerInput.ChangeSweepInputState(false);
             
         }
-        
-        
-        public void OnUseStoneGuard()
-        {
-            AudioManager.Instance.PlaySFX(SFXType.Lightning);
-            UIMediator.OnPlayerChestEnded.Invoke(); 
-            AttemptStoneGuardSkillUse();
-        }
 
-        public void OnUseSoulReaver()
+        public void OnTileSelectedForCleave(Vector2Int targetTilePos)
         {
-            AudioManager.Instance.PlaySFX(SFXType.Lightning);
-            UIMediator.OnPlayerChestEnded.Invoke(); 
-            AttemptSoulReaverSkillUse();
+            UIMediator.OnPlayerChestEnded.Invoke();
+            AttemptCleaveSkillUse(targetTilePos);
+            _humanPlayerInput.ChangeCleaveInputState(false);
         }
-
         
     }
 }

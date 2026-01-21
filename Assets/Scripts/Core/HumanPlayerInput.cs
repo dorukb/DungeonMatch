@@ -24,6 +24,8 @@ public class HumanPlayerInput : MonoBehaviour
     private bool _isPhantomInputActive = false;
     private bool _isPhaseShiftInputActive = false;
     private bool _isArcaneSweepInputActive = false;
+    private bool _isArcaneCleaveInputActive = false;
+
     private float _dpi;
 
     private void Awake()
@@ -37,7 +39,7 @@ public class HumanPlayerInput : MonoBehaviour
         //TODO :is this looking even good?
         
         if (!_canSwap && !_isLightningInputActive && !_isPhantomInputActive && !_isPhaseShiftInputActive 
-            && !_isArcaneSweepInputActive) return;
+            && !_isArcaneSweepInputActive && !_isArcaneCleaveInputActive) return;
 
         // -- 1. Detect Input Source --
         bool isPressed = false;
@@ -105,6 +107,11 @@ public class HumanPlayerInput : MonoBehaviour
         if (_isArcaneSweepInputActive)
         {
             LocalPlayerController.OnTileSelectedForSweep(hit.GridPosition);
+        }
+
+        if (_isArcaneCleaveInputActive)
+        {
+            LocalPlayerController.OnTileSelectedForCleave(hit.GridPosition);
         }
 
         _pressedTile = hit;
@@ -265,5 +272,6 @@ public class HumanPlayerInput : MonoBehaviour
     public void ChangePhantomInputState(bool s) => _isPhantomInputActive = s;
     public void ChangePhaseShiftInputState(bool s) => _isPhaseShiftInputActive = s;
     public void ChangeSweepInputState(bool s) => _isArcaneSweepInputActive = s;
+    public void ChangeCleaveInputState(bool s) => _isArcaneCleaveInputActive = s;
 }
 }

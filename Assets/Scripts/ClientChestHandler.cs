@@ -68,6 +68,10 @@ public class ClientChestHandler : MonoBehaviour
         {
             _localPlayer.ActivateArcaneSweepInput();
         }
+        else if (_rewardedSkill.skillType == SkillType.ArcaneCleave)
+        {
+            _localPlayer.ActivateArcaneCleaveInput();
+        }
         
     }
     
