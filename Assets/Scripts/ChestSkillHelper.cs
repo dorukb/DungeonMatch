@@ -120,6 +120,7 @@ namespace DorkyProductions.Skills
                     selectedTilesForSkill.Add(selectedTile);
                 }
                 // when 2 are selected. either show OK/submit button, or automatically send the command.
+                
                 return selectedTilesForSkill.Count == 2;
             }
 
@@ -161,7 +162,7 @@ namespace DorkyProductions.Skills
             }
         }
 
-        public void SetLineUnselected()
+        public void UnselectTiles()
         {
             foreach (TileView tile in selectedTilesForSkill)
             {

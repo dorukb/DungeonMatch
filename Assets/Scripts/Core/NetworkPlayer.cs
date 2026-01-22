@@ -407,6 +407,7 @@ namespace DorkyProductions
                 _humanPlayerInput.ChangePhaseShiftInputState(false);
                 UIMediator.OnPlayerChestEnded.Invoke();
                 AttemptPhaseShiftSkillUse(_chestSkillHelper.GetSelectedTilePositions());
+                _chestSkillHelper.UnselectTiles();
                 _chestSkillHelper.ClearSelectedTiles();
             }
             

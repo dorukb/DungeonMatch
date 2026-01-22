@@ -58,11 +58,13 @@ namespace DorkyProductions
         public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.MatchedTiles;
         public List<ushort> matchedTileIDs = new List<ushort>();
+        public bool isSpecialShape = false;
         
-        public MatchedTilesEvent Setup(List<ushort> ids) 
+        public MatchedTilesEvent Setup(List<ushort> ids, bool isFiveTile) 
         {
             matchedTileIDs.Clear();
             matchedTileIDs.AddRange(ids);
+            isSpecialShape = isFiveTile;
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);

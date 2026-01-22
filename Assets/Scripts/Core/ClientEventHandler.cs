@@ -190,6 +190,10 @@ namespace DorkyProductions
 
         public Tween Handle(MatchedTilesEvent e)
         {
+            if (e.isSpecialShape)
+            {
+                AudioManager.Instance.PlaySFX(SFXType.Match5);
+            }
             // Debug.Log($"MatchOccurred/RemoveTiles for: {e.matchedTileIDs}");
             return _visualizer.AnimatePop(e.matchedTileIDs);
         }

@@ -178,8 +178,8 @@ public class GameBoard
     {
         List<ushort> rowTiles = new List<ushort>();
         rowTiles = GetTilesAtLine(true, tilePos);
-        
-        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(rowTiles));
+
+        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(rowTiles, true));
         RemoveLineTiles(true, tilePos);
 
         
@@ -203,7 +203,7 @@ public class GameBoard
         List<ushort> colTiles = new List<ushort>();
         colTiles = GetTilesAtLine(false, tilePos);
         
-        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(colTiles));
+        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(colTiles, true));
         RemoveLineTiles(false, tilePos);
         
         SimulateTileFall(eventBatch);
@@ -373,7 +373,8 @@ public class GameBoard
             {
                 ids.Add(GetTileAt(pos).uniqueID);
             }
-            eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(ids));
+
+            eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(ids, match.isSpecialShape));
             
 
             var activePlayerNetID = GameMaster.Instance.Context.ActivePlayerNetId;
