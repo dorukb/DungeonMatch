@@ -176,15 +176,12 @@ public class GameBoard
     
     public void ProcessArcaneSweepEffect(Vector2Int tilePos, NetworkIdentity sender, List<GameEventBase> eventBatch)
     {
-        int row = tilePos.y;
-        TileState tileToRemove;
+        List<ushort> rowTiles = new List<ushort>();
+        rowTiles = GetTilesAtLine(true, tilePos);
         
-        for(int i = 0; i < BoardWidth; i++)
-        {
-            tileToRemove = boardState[GetIndex(i, row)];
-            eventBatch.Add(EventPool.Get<TileRemovedEvent>().Setup(tileToRemove.uniqueID));
-            boardState[GetIndex(i, row)] = TileState.Empty;
-        }
+        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(rowTiles));
+        RemoveLineTiles(true, tilePos);
+
         
         SimulateTileFall(eventBatch);
         var matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
@@ -203,15 +200,11 @@ public class GameBoard
     
     public void ProcessArcaneCleaveEffect(Vector2Int tilePos, NetworkIdentity sender, List<GameEventBase> eventBatch)
     {
-        int col = tilePos.x;
-        TileState tileToRemove;
+        List<ushort> colTiles = new List<ushort>();
+        colTiles = GetTilesAtLine(false, tilePos);
         
-        for(int i = BoardWidth - 1; i >= 0; i--)
-        {
-            tileToRemove = boardState[GetIndex(col, i)];
-            eventBatch.Add(EventPool.Get<TileRemovedEvent>().Setup(tileToRemove.uniqueID));
-            boardState[GetIndex(col, i)] = TileState.Empty;
-        }
+        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(colTiles));
+        RemoveLineTiles(false, tilePos);
         
         SimulateTileFall(eventBatch);
         var matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
@@ -297,7 +290,23 @@ public class GameBoard
         int x = idx / BoardHeight;
         return new Vector2Int(x, y);
     }
-    
+
+    private List<ushort> GetTilesAtLine(bool isRow, Vector2Int pos)
+    {
+        List<ushort> tiles = new List<ushort>();
+        int length = isRow ? BoardWidth : BoardHeight;
+
+        for (int i = 0; i < length; i++)
+        {
+            // If isRow, vary X. If not (isColumn), vary Y.
+            int x = isRow ? i : pos.x;
+            int y = isRow ? pos.y : i;
+        
+            tiles.Add(GetTileAt(new Vector2Int(x, y)).uniqueID);
+        }
+
+        return tiles;
+    }
 
     private void RemoveMatchedTiles(List<MatchResult> matchResults)
     {
@@ -309,8 +318,22 @@ public class GameBoard
             }
         }
     }
-    
-    
+
+    private void RemoveLineTiles(bool isRow, Vector2Int pos)
+    {
+        // 1. Determine how many tiles to loop through
+        int length = isRow ? BoardWidth : BoardHeight;
+
+        for (int i = 0; i < length; i++)
+        {
+            // 2. Calculate the correct index dynamically
+            // If isRow, 'i' is the X-coordinate. If column, 'i' is the Y-coordinate.
+            int x = isRow ? i : pos.x;
+            int y = isRow ? pos.y : i;
+
+            boardState[GetIndex(x, y)] = TileState.Empty;
+        }
+    }
     
     
     // --- BOARD PROCESSING HELPERS ---
@@ -391,7 +414,7 @@ public class GameBoard
     {
         // TODO: Use a distribution controlled via ScriptableObject here for the various chest effects & their drop rates.
         int chestSkillIdx = Random.Range(0, 7);
-        chestSkillIdx = 6;
+        //chestSkillIdx = 6;
         
         eventBatch.Add(EventPool.Get<ChestMatchedEvent>().Setup(activePlayer.netId, chestSkillIdx));
         gm.NotifyBotChestMatched(chestSkillIdx);
