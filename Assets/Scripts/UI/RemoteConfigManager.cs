@@ -52,25 +52,40 @@ public class RemoteConfigManager : MonoBehaviour
     // Call this after a successful Fetch and Activate
     private void UpdateLocalCaches()
     {
-        var config = FirebaseRemoteConfig.DefaultInstance;
-
-        startingHealth = (int)config.GetValue(STARTING_HEALTH_KEY).LongValue;
-        startingShield = (int)config.GetValue(STARTING_SHIELD_KEY).LongValue;
-        matchStrategyIdx = (int)config.GetValue(MATCH_STRATEGY_KEY).LongValue;
-        avoidMatchChance = (float)config.GetValue(AVOID_MATCH_CHANCE_KEY).DoubleValue;
-        rewardShield = (int)config.GetValue(REWARD_SHIELD_KEY).LongValue;
-        stolenHealth = (int)config.GetValue(STOLEN_HEALTH_KEY).LongValue;
-            
-        Debug.Log("Config updated. Match strategy: " + matchStrategyIdx);
-        for (int i = 3; i <= 5; i++)
+        Debug.Log("Entering UpdateLocalCaches."); // Add a log right at the beginning
+        try
         {
-            attackValues[i] = (int)config.GetValue($"{ATTACK_PREFIX}{i}").LongValue;
-            healValues[i] = (int)config.GetValue($"{HEAL_PREFIX}{i}").LongValue;
-            shieldValues[i] = (int)config.GetValue($"{SHIELD_PREFIX}{i}").LongValue;
-            crossValues[i] = (float)config.GetValue($"{CROSS_PREFIX}{i}").DoubleValue;
+            var config = FirebaseRemoteConfig.DefaultInstance;
+
+            // Ensure these keys are either in your defaults or handled gracefully if they might be missing.
+            startingHealth = (int)config.GetValue(STARTING_HEALTH_KEY).LongValue;
+            startingShield = (int)config.GetValue(STARTING_SHIELD_KEY).LongValue;
+            matchStrategyIdx = (int)config.GetValue(MATCH_STRATEGY_KEY).LongValue;
+            avoidMatchChance = (float)config.GetValue(AVOID_MATCH_CHANCE_KEY).DoubleValue;
+        
+            // POTENTIAL PROBLEM AREA: These keys are not in your provided 'defaults' dictionary.
+            // If they are not set in the Firebase Console either, GetValue() will return 0,
+            // but if there's an unexpected type or another issue, it could cause an error.
+            rewardShield = (int)config.GetValue(REWARD_SHIELD_KEY).LongValue;
+            stolenHealth = (int)config.GetValue(STOLEN_HEALTH_KEY).LongValue;
+            
+            Debug.Log("Config updated. Match strategy: " + matchStrategyIdx);
+            for (int i = 3; i <= 5; i++)
+            {
+                attackValues[i] = (int)config.GetValue($"{ATTACK_PREFIX}{i}").LongValue;
+                healValues[i] = (int)config.GetValue($"{HEAL_PREFIX}{i}").LongValue;
+                shieldValues[i] = (int)config.GetValue($"{SHIELD_PREFIX}{i}").LongValue;
+                crossValues[i] = (float)config.GetValue($"{CROSS_PREFIX}{i}").DoubleValue;
+            }
+            Debug.Log($"Config updated. Avoid Match Chance: {avoidMatchChance}");
         }
-        Debug.Log($"Config updated. Avoid Match Chance: {avoidMatchChance}");
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Exception in UpdateLocalCaches: {e.Message}\nStackTrace:\n{e.StackTrace}");
+        }
+        Debug.Log("Exiting UpdateLocalCaches."); // Add a log at the end
     }
+
     public float GetAvoidMatchChance() => avoidMatchChance;
     public int GetAttackVal(int count) => attackValues.ContainsKey(count) ? attackValues[count] : 1;
     public int GetHealVal(int count) => healValues.ContainsKey(count) ? healValues[count] : 1;
@@ -90,6 +105,7 @@ public class RemoteConfigManager : MonoBehaviour
     
     private void InitializeFirebase()
     {
+        Debug.Log("Init Firebase call.");
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
         {
             var dependencyStatus = task.Result;
@@ -107,6 +123,7 @@ public class RemoteConfigManager : MonoBehaviour
 
     private void InitializeRemoteConfig()
     {
+        // Debug.Log("Init remote config call.");
         // This dictionary acts as a fallback if fetch fails
         Dictionary<string, object> defaults = new Dictionary<string, object>
         {
@@ -116,20 +133,49 @@ public class RemoteConfigManager : MonoBehaviour
             { "cross_3", 2.0f }, { "cross_4", 2.25f }, { "cross_5", 2.5f },
             { STARTING_SHIELD_KEY, 10 }, {STARTING_HEALTH_KEY, 20 },
             { AVOID_MATCH_CHANCE_KEY, 0.85f }, {MATCH_STRATEGY_KEY, 0},
+            { REWARD_SHIELD_KEY, 5}, {STOLEN_HEALTH_KEY, 3}
         };
 
+        
         FirebaseRemoteConfig.DefaultInstance.SetDefaultsAsync(defaults)
             .ContinueWithOnMainThread(task =>
             {
-                UpdateLocalCaches();
-                FetchData();
+                if (task.IsFaulted)
+                {
+                    Debug.LogError($"SetDefaultsAsync failed: {task.Exception}");
+                }
+                else if (task.IsCanceled)
+                {
+                    Debug.LogWarning("SetDefaultsAsync was canceled.");
+                }
+                else if (task.IsCompletedSuccessfully)
+                {
+                    Debug.Log("SetDefaultsAsync completed successfully. Proceeding with updates.");
+                    UpdateLocalCaches();
+                    FetchData();
+                }
+                else
+                {
+                    // This state should ideally not be reached if the task is truly done,
+                    // but good for comprehensive debugging.
+                    Debug.LogWarning($"SetDefaultsAsync task status: {task.Status}");
+                }
             });
+
+        
+        // FirebaseRemoteConfig.DefaultInstance.SetDefaultsAsync(defaults)
+        //     .ContinueWithOnMainThread(task =>
+        //     {
+        //         UpdateLocalCaches();
+        //         FetchData();
+        //     });
     }
     private void FetchData()
     {
         // 1. Define the timeout (Zero for instant updates during dev)
         System.TimeSpan fetchTimeout = System.TimeSpan.Zero; 
 
+        Debug.Log("Fetch Request...");
         FirebaseRemoteConfig.DefaultInstance.FetchAsync(fetchTimeout)
             .ContinueWithOnMainThread(fetchTask =>
             {
