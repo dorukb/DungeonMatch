@@ -71,14 +71,21 @@ namespace DorkyProductions
         public override void Serialize(NetworkWriter writer)
         {
             writer.Write(matchedTileIDs);
+            writer.Write(isSpecialShape);
         }
 
         public override void Deserialize(NetworkReader reader)
         {                    
             matchedTileIDs.AddRange(reader.Read<List<ushort>>());
+            isSpecialShape = reader.Read<bool>();
         }
 
-        public override void Reset() => matchedTileIDs.Clear();
+        public override void Reset()
+        {
+            matchedTileIDs.Clear();
+            isSpecialShape = false;
+        }
+
     }
 
     public class TileRemovedEvent : GameEventBase

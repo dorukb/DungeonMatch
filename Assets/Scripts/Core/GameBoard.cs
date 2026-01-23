@@ -179,7 +179,7 @@ public class GameBoard
         List<ushort> rowTiles = new List<ushort>();
         rowTiles = GetTilesAtLine(true, tilePos);
 
-        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(rowTiles, true));
+        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(rowTiles, false));
         RemoveLineTiles(true, tilePos);
 
         
@@ -203,7 +203,7 @@ public class GameBoard
         List<ushort> colTiles = new List<ushort>();
         colTiles = GetTilesAtLine(false, tilePos);
         
-        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(colTiles, true));
+        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(colTiles, false));
         RemoveLineTiles(false, tilePos);
         
         SimulateTileFall(eventBatch);
@@ -367,13 +367,12 @@ public class GameBoard
         // This is where Card specific match effect will take place.
         foreach (var match in matchResults)
         {
-            // Debug.Log($"Matched: {match.matchCount} of {match.DisplayMatchType()}");
+            //Debug.Log($"Matched: {match.matchCount} of {match.DisplayMatchType()} and isspecial: {match.isSpecialShape}");
             var ids = new List<ushort>();
             foreach (var pos in match.positions)
             {
                 ids.Add(GetTileAt(pos).uniqueID);
             }
-
             eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(ids, match.isSpecialShape));
             
 

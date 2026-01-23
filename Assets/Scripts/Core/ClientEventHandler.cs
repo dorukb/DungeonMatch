@@ -194,6 +194,7 @@ namespace DorkyProductions
             {
                 AudioManager.Instance.PlaySFX(SFXType.Match5);
             }
+            
             // Debug.Log($"MatchOccurred/RemoveTiles for: {e.matchedTileIDs}");
             return _visualizer.AnimatePop(e.matchedTileIDs);
         }
