@@ -21,7 +21,6 @@
 /[Aa]ssets/Plugins/Editor/JetBrains*
 
 # https://github-wiki-see.page/m/interaction-lab/MoveToCode/wiki/Firebase-Setup
-/[Aa]ssets/Data*
 /[Aa]ssets/Firebase*
 
 # Visual Studio cache directory
