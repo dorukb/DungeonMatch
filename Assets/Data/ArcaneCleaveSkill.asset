@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ccd5b84b42b4e9d90646dade410b57e, type: 3}
+  m_Name: ArcaneCleaveSkill
+  m_EditorClassIdentifier: Assembly-CSharp::DorkyProductions.SkillDefinitionSO
+  skillType: 6
+  skillName: Arcane  Cleave
+  description: 'Choose a column, remove all 5 cards. '
+  callToAction: Choose a column to destroy.
+  id: 6
+  icon: {fileID: 4590660386899438849, guid: 401ff8db54a76ee4a9d647efac0be0ac, type: 3}
