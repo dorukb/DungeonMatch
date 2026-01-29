@@ -29,21 +29,26 @@ namespace DorkyProductions.UI
         {
             UIMediator.OnPlayerTurnStarted -= UpdateTurnText;
         }
-        private void UpdateTurnText(PlayerType player, bool isExtra)
+        private void UpdateTurnText(PlayerType player, bool isExtra, bool isChest)
         {
             bool isLocalPlayersTurn = player == PlayerType.Local;
             if (isLocalPlayersTurn)
             {
-                if (isExtra)
+                if (!isChest)
                 {
-                    turnText.text = "Extra Turn";
+                    if (isExtra)
+                    {
+                        turnText.text = "Extra Turn";
+                    }
+                    else
+                    {
+                        turnText.text = "Your Turn";
+                    }
+                    boardBlur.SetActive(false);
+                    PlayTurnStartedAnimation();
                 }
-                else
-                {
-                    turnText.text = "Your Turn";
-                }
+                
                 boardBlur.SetActive(false);
-                PlayTurnStartedAnimation();
             }
             else
             {

@@ -343,7 +343,7 @@ namespace DorkyProductions
             {
                 // Debug.Log("My Turn Started");
                 AudioManager.Instance.PlaySFX(SFXType.YourTurn);
-                UIMediator.OnPlayerTurnStarted(PlayerType.Local, e.context.IsCurrentTurnExtra);
+                UIMediator.OnPlayerTurnStarted(PlayerType.Local, e.context.IsCurrentTurnExtra, (e.context.ChestsLeft > 0));
 
                 if (e.context.ChestsLeft > 0)
                 {
@@ -361,7 +361,7 @@ namespace DorkyProductions
             }
             else
             {
-                UIMediator.OnPlayerTurnStarted(PlayerType.Opponent, e.context.IsCurrentTurnExtra);
+                UIMediator.OnPlayerTurnStarted(PlayerType.Opponent, e.context.IsCurrentTurnExtra, (e.context.ChestsLeft > 0));
                 _localPlayer.DisableSwapControls();
 
                 if (e.context.ChestsLeft > 0)
