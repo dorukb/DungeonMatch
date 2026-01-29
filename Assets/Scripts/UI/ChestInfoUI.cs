@@ -29,8 +29,23 @@ public class ChestInfoUI : MonoBehaviour
     
     private void UpdateChestInfoText(int rewardId)
     {
-        chestInfoText.text = tileDatabase.allSkills[rewardId].callToAction;
         
+        if (rewardId == (int)SkillType.StoneGuard)
+        {
+            int val = RemoteConfigManager.Instance.GetRewardShield();
+            chestInfoText.text = $"You gain {val} shields!";
+        }
+
+        else if (rewardId == (int)SkillType.SoulReaver)
+        {
+            int val = RemoteConfigManager.Instance.GetStolenHealth();
+            chestInfoText.text = $"You stole {val} souls!";
+        }
+
+        else
+        {
+            chestInfoText.text = tileDatabase.allSkills[rewardId].callToAction;
+        }
         // 3. Make the object visible
         chestInfoText.gameObject.SetActive(true);
     }

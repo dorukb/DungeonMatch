@@ -414,7 +414,7 @@ public class GameBoard
     {
         // TODO: Use a distribution controlled via ScriptableObject here for the various chest effects & their drop rates.
         int chestSkillIdx = Random.Range(0, 7);
-        //chestSkillIdx = 6;
+        //chestSkillIdx = 4;
         
         eventBatch.Add(EventPool.Get<ChestMatchedEvent>().Setup(activePlayer.netId, chestSkillIdx));
         gm.NotifyBotChestMatched(chestSkillIdx);

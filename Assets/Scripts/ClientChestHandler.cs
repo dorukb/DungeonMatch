@@ -1,3 +1,4 @@
+using DG.Tweening;
 using DorkyProductions.UI;
 using UnityEngine;
 
@@ -58,11 +59,33 @@ public class ClientChestHandler : MonoBehaviour
         }
         else if (_rewardedSkill.skillType == SkillType.StoneGuard)
         {
-            _localPlayer.OnUseStoneGuard();
+            Sequence s = DOTween.Sequence();
+
+            // 1. Currently just a delay
+            s.AppendInterval(1f); 
+
+            // 2. This is where you'll eventually add: 
+            // s.Append(_someIcon.DOMove(target, 0.5f));
+
+            // 3. Call the logic after the delay/animation
+            s.OnComplete(() => {
+                _localPlayer.OnUseStoneGuard();
+            });
         }
         else if (_rewardedSkill.skillType == SkillType.SoulReaver)
         {
-            _localPlayer.OnUseSoulReaver();
+            Sequence s = DOTween.Sequence();
+
+            // 1. Currently just a delay
+            s.AppendInterval(1f); 
+
+            // 2. This is where you'll eventually add: 
+            // s.Append(_someIcon.DOMove(target, 0.5f));
+
+            // 3. Call the logic after the delay/animation
+            s.OnComplete(() => {
+                _localPlayer.OnUseSoulReaver();
+            });
         }
         else if (_rewardedSkill.skillType == SkillType.ArcaneSweep)
         {
