@@ -12,9 +12,13 @@ EditorBuildSettings:
     path: Assets/Scenes/MainMenuOffline.unity
     guid: b2331d01cb7008649b0c88a0a399c89e
   - enabled: 1
+    path: Assets/Scenes/OfflineOptions.unity
+    guid: d604eb312681aa6439b8f0704d7209bf
+  - enabled: 1
     path: Assets/Scenes/OnlineLobby.unity
     guid: 09b87303b207cf842822f90d54d780a7
   - enabled: 1
     path: Assets/Scenes/Game.unity
     guid: 694eed25d53c1f74baba4189fa958a51
   m_configObjects: {}
+  m_UseUCBPForAssetBundles: 0
