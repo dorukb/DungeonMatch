@@ -24,6 +24,7 @@ public class RemoteConfigManager : MonoBehaviour
     private const string MATCH_STRATEGY_KEY = "match_strategy";
     private const string REWARD_SHIELD_KEY = "reward_shield";
     private const string STOLEN_HEALTH_KEY = "stolen_health";
+    private const string DEFAULT_BOT_KEY = "default_bot";
     
     // Fast local lookups
     private Dictionary<int, int> attackValues = new Dictionary<int, int>();
@@ -40,6 +41,7 @@ public class RemoteConfigManager : MonoBehaviour
     private int matchStrategyIdx = 0;
     private int rewardShield = 3;
     private int stolenHealth = 3;
+    private int defaultBot = 1;
     
     private void Awake()
     {
@@ -68,6 +70,8 @@ public class RemoteConfigManager : MonoBehaviour
             // but if there's an unexpected type or another issue, it could cause an error.
             rewardShield = (int)config.GetValue(REWARD_SHIELD_KEY).LongValue;
             stolenHealth = (int)config.GetValue(STOLEN_HEALTH_KEY).LongValue;
+
+            defaultBot = (int)config.GetValue(DEFAULT_BOT_KEY).LongValue;
             
             Debug.Log("Config updated. Match strategy: " + matchStrategyIdx);
             for (int i = 3; i <= 5; i++)
@@ -102,6 +106,7 @@ public class RemoteConfigManager : MonoBehaviour
 
     public int GetRewardShield() => rewardShield;
     public int GetStolenHealth() => stolenHealth;
+    public int GetDefaultBot() => defaultBot;
     
     private void InitializeFirebase()
     {
@@ -133,7 +138,8 @@ public class RemoteConfigManager : MonoBehaviour
             { "cross_3", 2.0f }, { "cross_4", 2.25f }, { "cross_5", 2.5f },
             { STARTING_SHIELD_KEY, 10 }, {STARTING_HEALTH_KEY, 20 },
             { AVOID_MATCH_CHANCE_KEY, 0.85f }, {MATCH_STRATEGY_KEY, 0},
-            { REWARD_SHIELD_KEY, 5}, {STOLEN_HEALTH_KEY, 3}
+            { REWARD_SHIELD_KEY, 5}, {STOLEN_HEALTH_KEY, 3},
+            { DEFAULT_BOT_KEY, 1}
         };
 
         

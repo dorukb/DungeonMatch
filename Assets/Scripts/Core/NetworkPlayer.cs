@@ -23,7 +23,7 @@ namespace DorkyProductions
 
         private void Awake()
         {
-            var botBrain = GetComponent<BotBrain>();
+            var botBrain = GetComponent<BotBrainManager>();
             IsBot = botBrain != null;
         }
 

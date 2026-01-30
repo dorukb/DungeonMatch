@@ -1,5 +1,6 @@
 using UnityEngine;
 using Mirror;
+using UnityEngine.SceneManagement;
 
 namespace DorkyProductions
 {
@@ -7,8 +8,13 @@ namespace DorkyProductions
     {
         [Header("References")] 
         public NetworkRoomManager netman;
-
-        public void StartOfflineMatch()
+        public string optionsSceneName = "OfflineOptions";
+        public void GoToOptions()
+        {
+            AudioManager.Instance.PlaySFX(SFXType.TapPlayButton);
+            SceneManager.LoadScene(optionsSceneName);
+        }
+        /*public void StartOfflineMatch()
         {
             if (NetworkManager.singleton == null)
             {
@@ -20,6 +26,6 @@ namespace DorkyProductions
             netman.isOfflineMode = true;
             netman.minPlayers = 1;
             netman.StartHost();
-        }
+        }*/
     }
 }

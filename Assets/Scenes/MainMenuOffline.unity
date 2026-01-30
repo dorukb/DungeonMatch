@@ -256,6 +256,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DorkyProductions.OfflineLauncher
   netman: {fileID: 547521847}
+  optionsSceneName: OfflineOptions
 --- !u!1 &394538609
 GameObject:
   m_ObjectHideFlags: 0
@@ -341,7 +342,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 103465872}
         m_TargetAssemblyTypeName: DorkyProductions.OfflineLauncher, Assembly-CSharp
-        m_MethodName: StartOfflineMatch
+        m_MethodName: GoToOptions
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
