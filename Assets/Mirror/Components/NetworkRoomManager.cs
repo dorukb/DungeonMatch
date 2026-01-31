@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Mirror;
-using PlasticPipe.PlasticProtocol.Messages;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
 namespace Mirror
