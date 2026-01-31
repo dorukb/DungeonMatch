@@ -17,19 +17,19 @@ namespace DorkyProductions
         private void Start()
         {
             // Reset button listeners
-            easyButton.onClick.AddListener(() => SetLevel(0));
-            mediumButton.onClick.AddListener(() => SetLevel(1));
+            easyButton.onClick.AddListener(() => SetBotType(BotDifficulty.Easy));
+            mediumButton.onClick.AddListener(() => SetBotType(BotDifficulty.Medium));
             hardButton.interactable = false;
-            //hardButton.onClick.AddListener(() => SetLevel(2));
+            //hardButton.onClick.AddListener(() => SetBotType(BotDifficulty.Hard));
             
             startButton.onClick.AddListener(StartOfflineGame);
             
         }
 
-        public void SetLevel(int level)
+        public void SetBotType(BotDifficulty type)
         {
-            BotBrain.SetDifficulty(level);
-            Debug.Log($"Difficulty set to: {level}");
+            BotBrain.SetDifficulty(type);
+            Debug.Log($"Difficulty set to: {type}");
            
             // Add visual feedback here (e.g., changing button colors)
             AudioManager.Instance.PlaySFX(SFXType.TapPlayButton);

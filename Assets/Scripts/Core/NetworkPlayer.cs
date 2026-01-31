@@ -94,7 +94,21 @@ namespace DorkyProductions
             // Tell the client to save this new total to their Registry/File
             RpcSaveCoinsToDisk(coin);
         }
-
+        
+        [Server]
+        public void LoseCoins(int amount)
+        {
+            if (coin - amount < 0)
+            {
+                coin = 0;
+            }
+            else
+            {
+                coin -= amount;
+            }    
+            RpcSaveCoinsToDisk(coin);
+        }
+        
         [ClientRpc]
         void RpcSaveCoinsToDisk(int total)
         {

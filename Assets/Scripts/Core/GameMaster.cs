@@ -2,6 +2,8 @@ using System;
 using UnityEngine;
 using Mirror;
 using System.Collections.Generic;
+using System.Linq;
+using DorkyProductions.AI;
 
 namespace  DorkyProductions
 {
@@ -29,6 +31,7 @@ public class GameMaster : NetworkBehaviour
     
     private List<NetworkPlayer> players = new List<NetworkPlayer>();
     private int activePlayerIndex = 0;
+    private int bet_amount;
     
     private GameBoard _gameBoard; 
     private ClientEventHandler _clientEventHandler;
@@ -121,6 +124,14 @@ public class GameMaster : NetworkBehaviour
         _gameBoard = new GameBoard(tileDatabase);
         var boardState = _gameBoard.SetupInitialBoardWithNoMatches();
         
+        //TODO: this logic would change if all real players.
+        bool hasBot = players.Any(player => player.IsBot);
+        if(hasBot)
+        {
+            BotDifficulty currentBot = BotBrain.GetDifficulty();
+            bet_amount = RemoteConfigManager.Instance.GetBetAmountVal((int)currentBot);
+        }
+        
         eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState));
         eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
         // TileDistribution.LogBoardDensity();
@@ -132,14 +143,15 @@ public class GameMaster : NetworkBehaviour
     }
 
     [Server]
-    public void TriggerEndGame(NetworkPlayer winner, List<GameEventBase> eventBatch)
+    public void TriggerEndGame(NetworkPlayer winner, NetworkPlayer loser, List<GameEventBase> eventBatch)
     {
         if (gameState == GameState.GameEnded) return;
         gameState = GameState.GameEnded;
         eventBatch.Add(EventPool.Get<GameEndedEvent>().Setup(winner.netId));
         Debug.Log($"[Server] Game over. Winner: {winner.netId}");
-        winner.AddCoins(3);
-        Debug.Log("your coin is" + winner.GetCoins());
+        //TODO: substract bet_amount from loser
+        winner.AddCoins(bet_amount);
+        loser.LoseCoins(bet_amount);
     }
 
     [Server]

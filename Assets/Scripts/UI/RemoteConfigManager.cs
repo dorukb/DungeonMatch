@@ -3,6 +3,7 @@ using Firebase;
 using Firebase.Extensions;
 using Firebase.RemoteConfig;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DorkyProductions
@@ -17,6 +18,8 @@ public class RemoteConfigManager : MonoBehaviour
     private const string HEAL_PREFIX = "heal_";
     private const string SHIELD_PREFIX = "shield_";
     private const string CROSS_PREFIX = "cross_";
+    
+    private const string BET_AMOUNT_PREFIX = "bet_amount_";
 
     private const string STARTING_HEALTH_KEY = "starting_health";
     private const string STARTING_SHIELD_KEY = "starting_shield";
@@ -32,7 +35,8 @@ public class RemoteConfigManager : MonoBehaviour
     private Dictionary<int, int> healValues = new Dictionary<int, int>();
     private Dictionary<int, int> shieldValues = new Dictionary<int, int>();
     private Dictionary<int, float> crossValues = new Dictionary<int, float>();
-
+    
+    private Dictionary<int, int>  betAmounts = new Dictionary<int, int>();
     private static readonly int PLAYER_STARTING_HEALTH = 20;
     private static readonly int PLAYER_STARTING_SHIELD = 10;
     private static readonly int PLAYER_STARTING_COINS = 50;
@@ -85,6 +89,11 @@ public class RemoteConfigManager : MonoBehaviour
                 shieldValues[i] = (int)config.GetValue($"{SHIELD_PREFIX}{i}").LongValue;
                 crossValues[i] = (float)config.GetValue($"{CROSS_PREFIX}{i}").DoubleValue;
             }
+            
+            for (int i = 0; i < 3; i++)
+            {
+                betAmounts[i] = (int)config.GetValue($"{BET_AMOUNT_PREFIX}{i}").LongValue;
+            }
             Debug.Log($"Config updated. Avoid Match Chance: {avoidMatchChance}");
         }
         catch (System.Exception e)
@@ -99,7 +108,9 @@ public class RemoteConfigManager : MonoBehaviour
     public int GetHealVal(int count) => healValues.ContainsKey(count) ? healValues[count] : 1;
     public int GetShieldVal(int count) => shieldValues.ContainsKey(count) ? shieldValues[count] : 1;
     public float GetCrossVal(int count) => crossValues.ContainsKey(count) ? crossValues[count] : 2.0f;
-
+    
+    public int GetBetAmountVal(int botType) => betAmounts.ContainsKey(botType) ? betAmounts[botType] : 100;
+    
     public int GetStartingHealth() => startingHealth;
     public int GetStartingShield() => startingShield;
     public int GetStartingCoins() => startingCoins;
@@ -141,6 +152,7 @@ public class RemoteConfigManager : MonoBehaviour
             { "heal_3", 3 },   { "heal_4", 4 },   { "heal_5", 6 },
             { "shield_3", 3 }, { "shield_4", 4 }, { "shield_5", 6 },
             { "cross_3", 2.0f }, { "cross_4", 2.25f }, { "cross_5", 2.5f },
+            { "bet_amount_0", 50 }, { "bet_amount_1", 100 }, { "bet_amount_2", 200},
             { STARTING_SHIELD_KEY, 10 }, {STARTING_HEALTH_KEY, 20 },
             { STARTING_COINS_KEY, 50 },
             { AVOID_MATCH_CHANCE_KEY, 0.85f }, {MATCH_STRATEGY_KEY, 0},

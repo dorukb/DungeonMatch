@@ -7,10 +7,13 @@ namespace DorkyProductions
     {
         List<Vector2Int> FindSwap(GameBoard board);
     }
+    
+    public enum BotDifficulty { Easy = 0, Medium = 1, Hard = 2 }
 
     public static class BotBrain
     {
-        private static int botLevel = RemoteConfigManager.Instance.GetDefaultBot();
+        private static BotDifficulty _difficulty = (BotDifficulty)RemoteConfigManager.Instance.GetDefaultBot();        
+        
         //Brain Instances
         private static readonly IBotBrain _easyBotBrain = new EasyBotBrain();
         private static readonly IBotBrain _mediumBotBrain = new MediumBotBrain();
@@ -18,27 +21,22 @@ namespace DorkyProductions
 
         private static IBotBrain CurrentBrain
         {
-            
             get
             {
-                // 0 -> Easy
-                // 1 -> Medium
-                // 2 -> Hard
-                // Default -> Easy
-                int brainIndex = botLevel;
-
-                return brainIndex switch
+                return _difficulty switch
                 {
-                    1 => _mediumBotBrain,
-                    2 => _hardBotBrain,
-                    _ => _easyBotBrain
+                    BotDifficulty.Medium => _mediumBotBrain,
+                    BotDifficulty.Hard   => _hardBotBrain,
+                    _                    => _easyBotBrain
                 };
             }
         }
         
-        public static void SetDifficulty(int level)
+        public static BotDifficulty GetDifficulty() => _difficulty;
+
+        public static void SetDifficulty(BotDifficulty difficultyLevel)
         {
-            botLevel = level;
+            _difficulty = difficultyLevel;
         }
         
         // --- PUBLIC API ---

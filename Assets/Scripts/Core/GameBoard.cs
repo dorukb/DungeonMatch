@@ -511,7 +511,7 @@ public class GameBoard
         
         if (isFinalHit)
         {
-            GameMaster.Instance.TriggerEndGame(activePlayer, eventBatch);
+            GameMaster.Instance.TriggerEndGame(activePlayer, opponent, eventBatch);
         }
     }
 

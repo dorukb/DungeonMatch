@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
 using Mirror;
+using TMPro;
 using UnityEngine;
 using Attribute = Epic.OnlineServices.Lobby.Attribute;
 using UnityEngine.UI;
@@ -11,7 +12,9 @@ namespace DorkyProductions
 public class LobbyController : MonoBehaviour
 {
     [SerializeField] private Button leaveLobbyButton;
-
+    [SerializeField] private  Image coinsImage;
+    [SerializeField] private  TextMeshProUGUI coinsText;
+    
     private EOSLobby _eosLobby;
     private NetworkRoomManager manager;
     // [SerializeField] private TextMeshProUGUI statusText;
@@ -63,6 +66,37 @@ public class LobbyController : MonoBehaviour
         // Connect the Button click programmatically.
         leaveLobbyButton.onClick.AddListener(RequestLeaveLobby);
     }
+
+    private void Start()
+    {
+        // 1. If coinstext is null, try to find it in the current scene
+        if (coinsText == null)
+        {
+            // Search by Name or by finding the component in the scene
+            GameObject foundText = GameObject.Find("coin amount"); // Match your UI name
+            if (foundText != null) 
+            {
+                coinsText = foundText.GetComponent<TextMeshProUGUI>();
+            }
+        }
+
+        // 2. ONLY run the logic if we actually found the UI
+        if (coinsText != null && manager.isOfflineMode)
+        {
+            BotDifficulty botType = BotBrain.GetDifficulty();
+            coinsText.text = RemoteConfigManager.Instance.GetBetAmountVal((int)botType).ToString();
+        
+            // Ensure image is visible if text is found
+            if(coinsImage != null) coinsImage.enabled = true;
+        }
+        else if (coinsText != null)
+        {
+            // If we are online, hide them
+            if(coinsImage != null) coinsImage.enabled = false;
+            coinsText.enabled = false;
+        }
+    }
+    
     public void RequestLeaveLobby()
     {
         AudioManager.Instance.PlaySFX(SFXType.TapMenuButton);
