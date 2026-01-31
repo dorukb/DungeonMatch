@@ -1,5 +1,6 @@
 using Mirror;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace DorkyProductions
@@ -11,7 +12,8 @@ namespace DorkyProductions
         public Button easyButton;
         public Button mediumButton;
         public Button hardButton;
-
+        
+        
         private void Start()
         {
             // Reset button listeners
@@ -55,6 +57,12 @@ namespace DorkyProductions
             {
                 Debug.LogError("NetworkRoomManager not found in the scene!");
             }
+        }
+        
+        public void GoToMainMenu()
+        {
+            AudioManager.Instance.PlaySFX(SFXType.TapPlayButton);
+            SceneManager.LoadScene("MainMenuOffline");
         }
     }
 }
