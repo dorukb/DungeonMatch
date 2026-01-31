@@ -20,6 +20,7 @@ public class RemoteConfigManager : MonoBehaviour
 
     private const string STARTING_HEALTH_KEY = "starting_health";
     private const string STARTING_SHIELD_KEY = "starting_shield";
+    private const string STARTING_COINS_KEY = "starting_coins";
     private const string AVOID_MATCH_CHANCE_KEY = "avoid_match_chance";
     private const string MATCH_STRATEGY_KEY = "match_strategy";
     private const string REWARD_SHIELD_KEY = "reward_shield";
@@ -34,9 +35,11 @@ public class RemoteConfigManager : MonoBehaviour
 
     private static readonly int PLAYER_STARTING_HEALTH = 20;
     private static readonly int PLAYER_STARTING_SHIELD = 10;
+    private static readonly int PLAYER_STARTING_COINS = 50;
     
     private int startingHealth = PLAYER_STARTING_HEALTH;
     private int startingShield = PLAYER_STARTING_SHIELD;
+    private int startingCoins = PLAYER_STARTING_COINS;
     private float avoidMatchChance = 0.85f;
     private int matchStrategyIdx = 0;
     private int rewardShield = 3;
@@ -62,6 +65,7 @@ public class RemoteConfigManager : MonoBehaviour
             // Ensure these keys are either in your defaults or handled gracefully if they might be missing.
             startingHealth = (int)config.GetValue(STARTING_HEALTH_KEY).LongValue;
             startingShield = (int)config.GetValue(STARTING_SHIELD_KEY).LongValue;
+            startingCoins = (int)config.GetValue(STARTING_COINS_KEY).LongValue;
             matchStrategyIdx = (int)config.GetValue(MATCH_STRATEGY_KEY).LongValue;
             avoidMatchChance = (float)config.GetValue(AVOID_MATCH_CHANCE_KEY).DoubleValue;
         
@@ -98,6 +102,7 @@ public class RemoteConfigManager : MonoBehaviour
 
     public int GetStartingHealth() => startingHealth;
     public int GetStartingShield() => startingShield;
+    public int GetStartingCoins() => startingCoins;
     
     public int GetMatchStrategyIdx()
     {
@@ -137,9 +142,10 @@ public class RemoteConfigManager : MonoBehaviour
             { "shield_3", 3 }, { "shield_4", 4 }, { "shield_5", 6 },
             { "cross_3", 2.0f }, { "cross_4", 2.25f }, { "cross_5", 2.5f },
             { STARTING_SHIELD_KEY, 10 }, {STARTING_HEALTH_KEY, 20 },
+            { STARTING_COINS_KEY, 50 },
             { AVOID_MATCH_CHANCE_KEY, 0.85f }, {MATCH_STRATEGY_KEY, 0},
-            { REWARD_SHIELD_KEY, 5}, {STOLEN_HEALTH_KEY, 3},
-            { DEFAULT_BOT_KEY, 1}
+            { REWARD_SHIELD_KEY, 5 }, {STOLEN_HEALTH_KEY, 3 },
+            { DEFAULT_BOT_KEY, 1 }
         };
 
         

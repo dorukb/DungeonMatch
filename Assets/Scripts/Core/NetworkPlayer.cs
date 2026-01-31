@@ -18,7 +18,7 @@ namespace DorkyProductions
         private int health = 0;
         private int shield = 0;
         private float currentCrossMultiplier = 0f;
-        private int coin = 50;
+        private int coin = 0;
     
         [Serializable]
         public class PlayerData { public int coins; }
@@ -37,7 +37,6 @@ namespace DorkyProductions
             // When the player object is spawned on the server, register it
             health = RemoteConfigManager.Instance.GetStartingHealth();
             shield = RemoteConfigManager.Instance.GetStartingShield();
-            LoadCoinsLocal();
             Debug.Log($"OnStartServer for id :{netId}, health:{health}, shield:{shield}");
             GameMaster.Instance.RegisterPlayer(this);
         }
@@ -54,6 +53,11 @@ namespace DorkyProductions
             // TODO: Verify this is not a problem with Bot/AI Player.
             Debug.Log($"OnStartLocalPlayer for netId: {netId}");
             base.OnStartLocalPlayer();
+            
+            int savedCoins = PlayerIdentity.GetSavedCoins();
+            
+            CmdSyncCoinsToServer(savedCoins);
+            
             _humanPlayerInput = FindAnyObjectByType<HumanPlayerInput>();
             if (_humanPlayerInput == null)
             {
@@ -74,54 +78,32 @@ namespace DorkyProductions
 
             _chestSkillHelper = new ChestSkillHelper();
         }
-    
-        public void SetGuestID(string id)
+        
+        
+        [Command]
+        void CmdSyncCoinsToServer(int amount)
         {
-            this.guestID = id;
-            Debug.Log($"[NetworkPlayer] I now have my Guest ID: {id}");
-    
-            // Now you can load coins from your local file using this 'id' as the filename!
-            LoadCoinsLocal();
+            this.coin = amount;
         }
-        
-        [Server]
-        public void LoadCoinsLocal()
-        {
-            string path = Application.persistentDataPath + "/" + guestID + "_data.json";
-            if (System.IO.File.Exists(path))
-            {
-                string json = System.IO.File.ReadAllText(path);
-                PlayerData data = JsonUtility.FromJson<PlayerData>(json);
-                this.coin = data.coins;
-            }
-        }
-        
-        [Server]
-        public void SaveCoinsLocal()
-        {
-            // REMOVED: guestID = PlayerIdentity.GetGuestID(); 
-            // We use the guestID that was passed to us by the Room Manager
-            
-            if (string.IsNullOrEmpty(guestID)) 
-            {
-                Debug.LogWarning("Cannot save coins: guestID is null!");
-                return;
-            }
-        
-            string path = Application.persistentDataPath + "/" + guestID + "_data.json";
-            string json = JsonUtility.ToJson(new PlayerData { coins = this.coin });
-            System.IO.File.WriteAllText(path, json);
-            Debug.Log($"[Server] Saved {this.coin} coins to {path}");
-        }
-        
+
+        // 2. When coins are added, save them ONLY if this is the local player
         [Server]
         public void AddCoins(int amount)
         {
             coin += amount;
-            // Save every time coins are added so data isn't lost if the game crashes
-            SaveCoinsLocal();
+            // Tell the client to save this new total to their Registry/File
+            RpcSaveCoinsToDisk(coin);
         }
-        
+
+        [ClientRpc]
+        void RpcSaveCoinsToDisk(int total)
+        {
+            if (isLocalPlayer) 
+            {
+                PlayerIdentity.SaveCoins(total);
+                Debug.Log("Saved " + total + " coins to local device.");
+            }
+        }
         [Server]
         public int GetCoins()
         {
