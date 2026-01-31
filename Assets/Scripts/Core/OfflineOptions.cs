@@ -19,10 +19,13 @@ namespace DorkyProductions
         [Header("Visual Settings")]
         public Color normalColor = Color.white;
         public Color selectedColor = new Color32(238, 152, 12, 255);
+        
+        [Header("Coin Settings")]
+        [SerializeField] private Image coinsImage;
+        [SerializeField] private TextMeshProUGUI coinsText;
 
         private void Start()
         {
-            // Listeners modified to play SFX on ANY value change (on or off)
             easyToggle.onValueChanged.AddListener((isOn) => HandleToggleChange(BotDifficulty.Easy, isOn));
             mediumToggle.onValueChanged.AddListener((isOn) => HandleToggleChange(BotDifficulty.Medium, isOn));
             hardToggle.onValueChanged.AddListener((isOn) => HandleToggleChange(BotDifficulty.Hard, isOn));
@@ -30,16 +33,15 @@ namespace DorkyProductions
             hardToggle.interactable = false;
             startButton.onClick.AddListener(StartOfflineGame);
             
+            // Initialize everything
             UpdateToggleVisuals();
+            UpdateCoinDisplay(); 
         }
 
-        // New helper method to keep Start() clean
         private void HandleToggleChange(BotDifficulty difficulty, bool isOn)
         {
-            // Play sound for both selecting AND deselecting
             AudioManager.Instance.PlaySFX(SFXType.TapPlayButton);
 
-            // Only update the bot brain if we are turning the difficulty ON
             if (isOn)
             {
                 BotBrain.SetDifficulty(difficulty);
@@ -47,10 +49,27 @@ namespace DorkyProductions
             }
 
             UpdateToggleVisuals();
-            
-            // Clear focus so the UI doesn't stay "stuck" in a highlighted state
+            UpdateCoinDisplay(); // Update the coin text based on the new selection
+
             if (UnityEngine.EventSystems.EventSystem.current != null)
                 UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+        }
+
+        private void UpdateCoinDisplay()
+        {
+            if (coinsText == null) return;
+
+            // 1. Check which toggle is currently ON
+            // 2. Decide the value
+            int price = 0;
+
+            if (easyToggle.isOn) price = RemoteConfigManager.Instance.GetBetAmountVal((int) BotDifficulty.Easy);
+            else if (mediumToggle.isOn) price = RemoteConfigManager.Instance.GetBetAmountVal((int) BotDifficulty.Medium);
+            else if (hardToggle.isOn) price = RemoteConfigManager.Instance.GetBetAmountVal((int) BotDifficulty.Hard);
+            else price = 0; // If nothing is selected
+
+            // 3. Update the UI
+            coinsText.text = price.ToString();
         }
 
         private void UpdateToggleVisuals()
@@ -65,10 +84,7 @@ namespace DorkyProductions
             var text = toggle.GetComponentInChildren<TextMeshProUGUI>();
             if (text != null)
             {
-                // Only two colors: Selected or Normal
                 text.color = toggle.isOn ? selectedColor : normalColor;
-                
-                // Add boldness to the selected one for extra clarity
                 text.fontStyle = toggle.isOn ? FontStyles.Bold : FontStyles.Normal;
             }
         }
@@ -79,9 +95,14 @@ namespace DorkyProductions
             if (manager != null)
             {
                 AudioManager.Instance.PlaySFX(SFXType.TapPlayButton);
+                
                 manager.isOfflineMode = true;
                 manager.minPlayers = 1;
                 manager.StartHost();
+            }
+            else
+            {
+                Debug.LogError("NetworkRoomManager not found!");
             }
         }
 
