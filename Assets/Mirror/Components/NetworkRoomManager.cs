@@ -1,9 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
+using Mirror;
+using PlasticPipe.PlasticProtocol.Messages;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
+public struct GuestIDMessage : NetworkMessage
+{
+    public string guestID;
+}
 namespace Mirror
 {
     /// <summary>
@@ -253,6 +259,11 @@ namespace Mirror
 
             OnRoomServerDisconnect(conn);
             base.OnServerDisconnect(conn);
+            
+            if (connToGuestID.ContainsKey(conn.connectionId))
+            {
+                connToGuestID.Remove(conn.connectionId);
+            }
 
             // Restart the server if we're headless and no players are connected.
             // This will send server to offline scene, where auto-start will run.
@@ -398,6 +409,7 @@ namespace Mirror
             GameObject gmInstance = Instantiate(GameMasterPrefab);
             NetworkServer.Spawn(gmInstance);
             
+            NetworkServer.RegisterHandler<GuestIDMessage>(OnServerReceiveGuestID);            
             if (string.IsNullOrWhiteSpace(RoomScene))
             {
                 Debug.LogError("NetworkRoomManager RoomScene is empty. Set the RoomScene in the inspector for the NetworkRoomManager");
@@ -412,6 +424,21 @@ namespace Mirror
 
             OnRoomStartServer();
         }
+        //TODO: LOOK HERE
+        public readonly Dictionary<int, string> connToGuestID = new Dictionary<int, string>();
+
+        void OnServerReceiveGuestID(NetworkConnectionToClient conn, GuestIDMessage msg)
+        {
+            // Link the connection to the ID sent by the client
+            if (!connToGuestID.ContainsKey(conn.connectionId))
+            {
+                connToGuestID.Add(conn.connectionId, msg.guestID);
+                Debug.Log($"[Server] Connection {conn.connectionId} identified as Guest: {msg.guestID}");
+            }
+            
+        }
+        
+        
 
         /// <summary>
         /// This is invoked when a host is started.
@@ -467,6 +494,14 @@ namespace Mirror
         {
             OnRoomClientConnect();
             base.OnClientConnect();
+            // SystemInfo is built-into Unity, so Mirror can always see it
+            GuestIDMessage msg = new GuestIDMessage 
+            { 
+                guestID = SystemInfo.deviceUniqueIdentifier 
+            };
+
+            NetworkClient.Send(msg);// SystemInfo is built-into Unity, so Mirror can always see it
+            
         }
 
         /// <summary>
@@ -606,6 +641,13 @@ namespace Mirror
         /// <returns>False to not allow this player to replace the room player.</returns>
         public virtual bool OnRoomServerSceneLoadedForPlayer(NetworkConnectionToClient conn, GameObject roomPlayer, GameObject gamePlayer)
         {
+            if (connToGuestID.TryGetValue(conn.connectionId, out string gID))
+            {
+                // This "shouts" to any script on the player object: 
+                // "Run the function named SetGuestID and give it this string!"
+                gamePlayer.SendMessage("SetGuestID", gID, SendMessageOptions.DontRequireReceiver);
+            }
+            
             // If Offline Mode, immediately spawn the Bot
             if (isOfflineMode && numPlayers == 1)
             {

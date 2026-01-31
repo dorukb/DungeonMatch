@@ -1,6 +1,9 @@
 using System.Collections.Generic;
+using System.IO;
 using Epic.OnlineServices.Lobby;
+using EpicTransport;
 using Mirror;
+using TMPro;
 using UnityEngine;
 using Attribute = Epic.OnlineServices.Lobby.Attribute;
 using UnityEngine.UI;
@@ -10,6 +13,7 @@ namespace  DorkyProductions
 public class EntrySceneController : MonoBehaviour
 {
     [SerializeField] private Button joinButton;
+    [SerializeField] private TextMeshProUGUI coinText; // Add your UI Text here
     
     private EOSLobby _eosLobby;
     private NetworkRoomManager manager;
@@ -58,6 +62,50 @@ public class EntrySceneController : MonoBehaviour
             AudioManager.Instance.PlaySFX(SFXType.TapPlayButton); // Play sound first
             JoinMatch();                            // Then run logic
         });
+    }
+    
+    private void Start()
+    {
+        // Start a safer checking loop
+        StartCoroutine(WaitForSDKAndLoadCoins());
+    }
+
+    private System.Collections.IEnumerator WaitForSDKAndLoadCoins()
+    {
+        // 1. Specifically check the Epic SDK component status
+        // This is the component causing your previous crash
+        var eosSDK = FindAnyObjectByType<EpicTransport.EOSSDKComponent>();
+
+        // Keep waiting as long as the SDK isn't ready
+        while (eosSDK == null || !EOSSDKComponent.Initialized)
+        {
+            Debug.Log("[Lobby] Waiting for EOS SDK to initialize...");
+            yield return null; // Wait for the next frame and check again
+        }
+
+        // 2. Once the loop breaks, the SDK is 100% ready
+        Debug.Log("[Lobby] EOS SDK Ready. Loading Coins.");
+        RefreshCoinDisplay();
+    }
+
+    public void RefreshCoinDisplay()
+    {
+        // Use SystemInfo.deviceUniqueIdentifier (the "Guest ID")
+        string guestID = SystemInfo.deviceUniqueIdentifier;
+        string path = Application.persistentDataPath + "/" + guestID + "_data.json";
+
+        if (File.Exists(path))
+        {
+            string json = File.ReadAllText(path);
+            // Access the PlayerData class defined in your NetworkPlayer
+            NetworkPlayer.PlayerData data = JsonUtility.FromJson<NetworkPlayer.PlayerData>(json);
+            if (coinText != null) coinText.text = data.coins.ToString();
+        }
+        else
+        {
+            // First time playing or no data found
+            if (coinText != null) coinText.text = "50"; 
+        }
     }
 
     public void JoinMatch()

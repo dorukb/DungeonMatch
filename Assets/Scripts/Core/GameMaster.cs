@@ -135,10 +135,11 @@ public class GameMaster : NetworkBehaviour
     public void TriggerEndGame(NetworkPlayer winner, List<GameEventBase> eventBatch)
     {
         if (gameState == GameState.GameEnded) return;
-
         gameState = GameState.GameEnded;
         eventBatch.Add(EventPool.Get<GameEndedEvent>().Setup(winner.netId));
         Debug.Log($"[Server] Game over. Winner: {winner.netId}");
+        winner.AddCoins(3);
+        Debug.Log("your coin is" + winner.GetCoins());
     }
 
     [Server]
