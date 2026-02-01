@@ -9,7 +9,7 @@ namespace DorkyProductions
 {
     public enum BotDifficulty { Easy = 0, Medium = 1, Hard = 2 }
     
-    public class OfflineOptions : MonoBehaviour
+    public class OfflineGameLauncher : MonoBehaviour
     {
         [Header("UI References")]
         public Button startButton;

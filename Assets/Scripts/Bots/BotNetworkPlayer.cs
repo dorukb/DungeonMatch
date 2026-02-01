@@ -9,7 +9,7 @@ namespace DorkyProductions.AI
     // Attach this to your Player Prefab (or a variant of it).
     // This script only runs on the Server.
     [RequireComponent(typeof(NetworkPlayer))]
-    public class AINetworkPlayer : NetworkBehaviour
+    public class BotNetworkPlayer : NetworkBehaviour
     {
         [Header("Bot Settings")]
         [Tooltip("How long the client will see the 'Thinking' state before the move resolves.")]

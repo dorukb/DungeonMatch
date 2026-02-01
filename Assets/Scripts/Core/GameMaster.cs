@@ -145,7 +145,7 @@ public class GameMaster : NetworkBehaviour
             {
                 if (player.IsBot)
                 {
-                    var aiPlayer = player.GetComponent<AINetworkPlayer>();
+                    var aiPlayer = player.GetComponent<BotNetworkPlayer>();
                     if (aiPlayer == null)
                     {
                         Debug.LogError("Make sure the AI Prefab has AINetworkPlayer attached.");

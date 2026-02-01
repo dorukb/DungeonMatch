@@ -1,10 +1,8 @@
-using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace DorkyProductions
 {
-    using System.Collections.Generic;
-    using UnityEngine;
-    
     public interface IBotBrain
     {
         List<Vector2Int> FindSwap(GameBoard board);

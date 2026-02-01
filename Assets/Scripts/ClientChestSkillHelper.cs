@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace DorkyProductions.Skills
 {
-    public class ChestSkillHelper
+    public class ClientChestSkillHelper
     {
         //private readonly List<TileView> selectedTilesForPhantomMatch = new();
         //private readonly List<TileView> selectedTilesForPhaseShift = new();

@@ -55,7 +55,7 @@ public class EntrySceneController : MonoBehaviour
         }
         
         //Load coins
-        coinText.text = PlayerIdentity.GetSavedCoins().ToString();
+        coinText.text = PlayerLocalSave.GetSavedCoins().ToString();
         
         // Connect the Button click programmatically.
         //joinButton.onClick.AddListener(JoinMatch);

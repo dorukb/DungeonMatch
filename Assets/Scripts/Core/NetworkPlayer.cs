@@ -13,7 +13,7 @@ namespace DorkyProductions
     {
         private HumanPlayerInput _humanPlayerInput;
         private ClientEventHandler _clientEventHandler;
-        private ChestSkillHelper _chestSkillHelper;
+        private ClientChestSkillHelper _clientChestSkillHelper;
 
         private int health = 0;
         private int shield = 0;
@@ -28,7 +28,7 @@ namespace DorkyProductions
 
         private void Awake()
         {
-            var botBrain = GetComponent<AINetworkPlayer>();
+            var botBrain = GetComponent<BotNetworkPlayer>();
             IsBot = botBrain != null;
         }
 
@@ -54,7 +54,7 @@ namespace DorkyProductions
             Debug.Log($"OnStartLocalPlayer for netId: {netId}");
             base.OnStartLocalPlayer();
             
-            int savedCoins = PlayerIdentity.GetSavedCoins();
+            int savedCoins = PlayerLocalSave.GetSavedCoins();
             
             CmdSyncCoinsToServer(savedCoins);
             
@@ -76,7 +76,7 @@ namespace DorkyProductions
 
             _clientEventHandler.SetLocalPlayer(this);
 
-            _chestSkillHelper = new ChestSkillHelper();
+            _clientChestSkillHelper = new ClientChestSkillHelper();
         }
         
         
@@ -114,7 +114,7 @@ namespace DorkyProductions
         {
             if (isLocalPlayer) 
             {
-                PlayerIdentity.SaveCoins(total);
+                PlayerLocalSave.SaveCoins(total);
                 Debug.Log("Saved " + total + " coins to local device.");
             }
         }
@@ -443,27 +443,27 @@ namespace DorkyProductions
         public void OnTileSelectedForPhantom(TileView selectedTile)
         {
             // if this tile was already selected, unselect it.
-            bool shouldTriggerSkill = _chestSkillHelper.OnNewTileSelected(selectedTile, SkillType.PhantomMatch);
+            bool shouldTriggerSkill = _clientChestSkillHelper.OnNewTileSelected(selectedTile, SkillType.PhantomMatch);
             if (shouldTriggerSkill)
             {
                 _humanPlayerInput.ChangePhantomInputState(false);
                 UIMediator.OnPlayerChestEnded.Invoke();
-                AttemptPhantomSkillUse(_chestSkillHelper.GetSelectedTilePositions());
-                _chestSkillHelper.ClearSelectedTiles();
+                AttemptPhantomSkillUse(_clientChestSkillHelper.GetSelectedTilePositions());
+                _clientChestSkillHelper.ClearSelectedTiles();
             }
 
         }
 
         public void OnTileSelectedForPhaseShift(TileView selectedTile)
         {
-            bool shouldTriggerSkill = _chestSkillHelper.OnNewTileSelected(selectedTile, SkillType.PhaseShift);
+            bool shouldTriggerSkill = _clientChestSkillHelper.OnNewTileSelected(selectedTile, SkillType.PhaseShift);
             if (shouldTriggerSkill)
             {
                 _humanPlayerInput.ChangePhaseShiftInputState(false);
                 UIMediator.OnPlayerChestEnded.Invoke();
-                AttemptPhaseShiftSkillUse(_chestSkillHelper.GetSelectedTilePositions());
-                _chestSkillHelper.UnselectTiles();
-                _chestSkillHelper.ClearSelectedTiles();
+                AttemptPhaseShiftSkillUse(_clientChestSkillHelper.GetSelectedTilePositions());
+                _clientChestSkillHelper.UnselectTiles();
+                _clientChestSkillHelper.ClearSelectedTiles();
             }
             
         }
