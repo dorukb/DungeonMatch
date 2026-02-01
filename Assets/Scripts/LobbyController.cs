@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
 using Mirror;
+using TMPro;
 using UnityEngine;
 using Attribute = Epic.OnlineServices.Lobby.Attribute;
 using UnityEngine.UI;
@@ -11,10 +13,10 @@ namespace DorkyProductions
 public class LobbyController : MonoBehaviour
 {
     [SerializeField] private Button leaveLobbyButton;
+    [SerializeField] private TextMeshProUGUI statusText;
     
     private EOSLobby _eosLobby;
     private NetworkRoomManager manager;
-    // [SerializeField] private TextMeshProUGUI statusText;
     
     private List<LobbyDetails> _foundLobbies = new List<LobbyDetails>();
     private List<Attribute> _lobbyData = new List<Attribute>();
@@ -60,6 +62,11 @@ public class LobbyController : MonoBehaviour
         
         // Connect the Button click programmatically.
         leaveLobbyButton.onClick.AddListener(RequestLeaveLobby);
+
+        if (manager.gameStartConfig.joinCode.Length > 1)
+        {
+            statusText.text = "Your Invite Code: "+  manager.gameStartConfig.joinCode;
+        }
     }
     public void RequestLeaveLobby()
     {

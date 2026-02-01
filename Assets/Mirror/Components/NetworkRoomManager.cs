@@ -9,11 +9,13 @@ namespace Mirror
     {
         public bool isOfflineMode = false;
         public LobbyType lobbyType = 0;
+        public string joinCode = "";
 
-        public GameStartConfig(bool isOfflineMode, LobbyType lobbyType)
+        public GameStartConfig(bool isOfflineMode, LobbyType lobbyType, string joinCode = "")
         {
             this.isOfflineMode = isOfflineMode;
             this.lobbyType = lobbyType;
+            this.joinCode = joinCode;
         }
     }
 
