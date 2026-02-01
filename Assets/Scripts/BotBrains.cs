@@ -1,3 +1,5 @@
+using System;
+
 namespace DorkyProductions
 {
     using System.Collections.Generic;
@@ -6,49 +8,10 @@ namespace DorkyProductions
     public interface IBotBrain
     {
         List<Vector2Int> FindSwap(GameBoard board);
+        Vector2Int GetLightningSkillInput(GameBoard board);
+        List<Vector2Int> GetPhantomMatchSkillInput(GameBoard board);
     }
     
-    public enum BotDifficulty { Easy = 0, Medium = 1, Hard = 2 }
-
-    public static class BotBrain
-    {
-        private static BotDifficulty _difficulty = (BotDifficulty)RemoteConfigManager.Instance.GetDefaultBot();        
-        
-        //Brain Instances
-        private static readonly IBotBrain _easyBotBrain = new EasyBotBrain();
-        private static readonly IBotBrain _mediumBotBrain = new MediumBotBrain();
-        private static readonly IBotBrain _hardBotBrain = new HardBotBrain();
-
-        private static IBotBrain CurrentBrain
-        {
-            get
-            {
-                return _difficulty switch
-                {
-                    BotDifficulty.Medium => _mediumBotBrain,
-                    BotDifficulty.Hard   => _hardBotBrain,
-                    _                    => _easyBotBrain
-                };
-            }
-        }
-        
-        public static BotDifficulty GetDifficulty() => _difficulty;
-
-        public static void SetDifficulty(BotDifficulty difficultyLevel)
-        {
-            _difficulty = difficultyLevel;
-        }
-        
-        // --- PUBLIC API ---
-
-        public static List<Vector2Int> FindSwap(GameBoard board)
-        {
-            return CurrentBrain.FindSwap(board);
-        }
-        
-
-    }
-
     public abstract class BaseBotBrain : IBotBrain
     {
         protected List<Vector2Int> RandomSwap(Vector2Int posA, Vector2Int posB, GameBoard board)
@@ -63,7 +26,6 @@ namespace DorkyProductions
                 Vector2Int[] dirs = { Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left };
                 posB = posA + dirs[Random.Range(0, 4)];
 
-                // 3. Validation
                 if (board.IsValidSwap(posA, posB))
                 {
                     // This acts like a 'break' - it stops the loop and the method immediately
@@ -75,10 +37,46 @@ namespace DorkyProductions
             // If we tried 250 times and found nothing, return an empty list 
             // to prevent the game from freezing.
             Debug.LogWarning("Bot could not find any valid random moves!");
-            return new List<Vector2Int>();
+            return new List<Vector2Int> { Vector2Int.one , Vector2Int.right};
         }
 
         public abstract List<Vector2Int> FindSwap(GameBoard board);
-        
+
+        public virtual Vector2Int GetLightningSkillInput(GameBoard board)
+        {
+            // random tile.
+            int x = Random.Range(0,5);
+            int y = Random.Range(0,5);
+            return new Vector2Int(x, y);
+        }
+
+        public virtual List<Vector2Int> GetPhantomMatchSkillInput(GameBoard board)
+        {
+            // try to find 3 of the same tile type, based on your priorities.
+            bool foundMove = false;
+            List<Tile> priorityTiles = new List<Tile> { Tile.Cross, Tile.Chest, Tile.Attack, Tile.Heal, Tile.Shield };
+            
+            foreach (Tile keyTile in priorityTiles)
+            {            
+                List<Vector2Int> selectedPositions = new List<Vector2Int>();
+                for (int x = 0; x < GameBoard.BoardWidth; x++)
+                {
+                    for (int y = 0; y < GameBoard.BoardHeight; y++)
+                    {
+                        Vector2Int currentPos = new Vector2Int(x, y);
+                        var tile = board.GetTileAt(currentPos);
+                        if (tile.type == keyTile)
+                        {
+                            selectedPositions.Add(currentPos);
+                            if (selectedPositions.Count == 3)
+                            {
+                                return selectedPositions;
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
     }
 }

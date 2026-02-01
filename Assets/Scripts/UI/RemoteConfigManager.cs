@@ -109,7 +109,7 @@ public class RemoteConfigManager : MonoBehaviour
     public int GetShieldVal(int count) => shieldValues.ContainsKey(count) ? shieldValues[count] : 1;
     public float GetCrossVal(int count) => crossValues.ContainsKey(count) ? crossValues[count] : 2.0f;
     
-    public int GetBetAmountVal(int botType) => betAmounts.ContainsKey(botType) ? betAmounts[botType] : 100;
+    public int GetBetAmountVal(int lobbyType) => betAmounts.ContainsKey(lobbyType) ? betAmounts[lobbyType] : 100;
     
     public int GetStartingHealth() => startingHealth;
     public int GetStartingShield() => startingShield;

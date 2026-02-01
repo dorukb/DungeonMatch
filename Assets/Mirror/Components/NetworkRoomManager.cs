@@ -4,7 +4,25 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 namespace Mirror
-{
+{   
+    public class GameStartConfig
+    {
+        public bool isOfflineMode = false;
+        public LobbyType lobbyType = 0;
+
+        public GameStartConfig(bool isOfflineMode, LobbyType lobbyType)
+        {
+            this.isOfflineMode = isOfflineMode;
+            this.lobbyType = lobbyType;
+        }
+    }
+
+    public enum LobbyType
+    {
+        Beginner,
+        Intermediate,
+        Advanced,
+    }
     /// <summary>
     /// This is a specialized NetworkManager that includes a networked room.
     /// </summary>
@@ -74,7 +92,8 @@ namespace Mirror
 
         [SerializeField] private GameObject GameMasterPrefab;
         [SerializeField] public GameObject botPrefab;
-        public bool isOfflineMode = false;
+        
+        public GameStartConfig gameStartConfig;
         public bool allPlayersReady
         {
             get => _allPlayersReady;
@@ -607,7 +626,7 @@ namespace Mirror
         public virtual bool OnRoomServerSceneLoadedForPlayer(NetworkConnectionToClient conn, GameObject roomPlayer, GameObject gamePlayer)
         {
             // If Offline Mode, immediately spawn the Bot
-            if (isOfflineMode && numPlayers == 1)
+            if (gameStartConfig.isOfflineMode && numPlayers == 1)
             {
                 SpawnBot();
             }

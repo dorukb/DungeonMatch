@@ -1,3 +1,4 @@
+using System;
 using Mirror;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -6,6 +7,8 @@ using TMPro;
 
 namespace DorkyProductions
 {
+    public enum BotDifficulty { Easy = 0, Medium = 1, Hard = 2 }
+    
     public class OfflineOptions : MonoBehaviour
     {
         [Header("UI References")]
@@ -24,6 +27,7 @@ namespace DorkyProductions
         [SerializeField] private Image coinsImage;
         [SerializeField] private TextMeshProUGUI coinsText;
 
+        private BotDifficulty _botDifficulty = BotDifficulty.Medium;
         private void Start()
         {
             easyToggle.onValueChanged.AddListener((isOn) => HandleToggleChange(BotDifficulty.Easy, isOn));
@@ -36,6 +40,7 @@ namespace DorkyProductions
             // Initialize everything
             UpdateToggleVisuals();
             UpdateCoinDisplay(); 
+            _botDifficulty = (BotDifficulty)RemoteConfigManager.Instance.GetDefaultBot();     
         }
 
         private void HandleToggleChange(BotDifficulty difficulty, bool isOn)
@@ -44,7 +49,7 @@ namespace DorkyProductions
 
             if (isOn)
             {
-                BotBrain.SetDifficulty(difficulty);
+                // BotBrain.SetDifficulty(difficulty);
                 Debug.Log($"Difficulty set to: {difficulty}");
             }
 
@@ -63,9 +68,18 @@ namespace DorkyProductions
             // 2. Decide the value
             int price = 0;
 
-            if (easyToggle.isOn) price = RemoteConfigManager.Instance.GetBetAmountVal((int) BotDifficulty.Easy);
-            else if (mediumToggle.isOn) price = RemoteConfigManager.Instance.GetBetAmountVal((int) BotDifficulty.Medium);
-            else if (hardToggle.isOn) price = RemoteConfigManager.Instance.GetBetAmountVal((int) BotDifficulty.Hard);
+            if (easyToggle.isOn)
+            {
+                price = RemoteConfigManager.Instance.GetBetAmountVal((int) BotDifficulty.Easy);
+            }
+            else if (mediumToggle.isOn)
+            {
+                price = RemoteConfigManager.Instance.GetBetAmountVal((int) BotDifficulty.Medium);
+            }
+            else if (hardToggle.isOn)
+            {
+                price = RemoteConfigManager.Instance.GetBetAmountVal((int) BotDifficulty.Hard);
+            }
             else price = 0; // If nothing is selected
 
             // 3. Update the UI
@@ -89,6 +103,7 @@ namespace DorkyProductions
             }
         }
 
+        // Called by: Start button on Offline Scene.
         public void StartOfflineGame()
         {
             NetworkRoomManager manager = NetworkManager.singleton as NetworkRoomManager;
@@ -96,8 +111,8 @@ namespace DorkyProductions
             {
                 AudioManager.Instance.PlaySFX(SFXType.TapPlayButton);
                 
-                manager.isOfflineMode = true;
                 manager.minPlayers = 1;
+                manager.gameStartConfig = new GameStartConfig(true, MapDifficultyToLobbyType(_botDifficulty));
                 manager.StartHost();
             }
             else
@@ -110,6 +125,21 @@ namespace DorkyProductions
         {
             AudioManager.Instance.PlaySFX(SFXType.TapPlayButton);
             SceneManager.LoadScene("MainMenuOffline");
+        }
+
+        private LobbyType MapDifficultyToLobbyType(BotDifficulty difficulty)
+        {
+            switch (difficulty)
+            {
+                case BotDifficulty.Easy:
+                    return LobbyType.Beginner;
+                case BotDifficulty.Medium:
+                    return LobbyType.Intermediate;
+                case BotDifficulty.Hard:
+                    return LobbyType.Advanced;
+                default:
+                    return LobbyType.Beginner;
+            }
         }
     }
 }
