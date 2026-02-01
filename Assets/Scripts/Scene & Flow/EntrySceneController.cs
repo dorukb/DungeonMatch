@@ -169,7 +169,7 @@ public class EntrySceneController : MonoBehaviour
             return;
         }
 
-        manager.gameStartConfig.isOfflineMode = false;
+        manager.gameStartConfig = new GameStartConfig(isOfflineMode: false, LobbyType.Intermediate);
         manager.networkAddress = hostAddressAttribute.Data.Value.Value.AsUtf8;
         manager.StartClient();
         
