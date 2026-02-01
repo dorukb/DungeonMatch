@@ -63,7 +63,7 @@ public class LobbyController : MonoBehaviour
         // Connect the Button click programmatically.
         leaveLobbyButton.onClick.AddListener(RequestLeaveLobby);
 
-        if (manager.gameStartConfig.joinCode.Length > 1)
+        if (manager.gameStartConfig.joinCode.Length > 1 && statusText != null)
         {
             statusText.text = "Your Invite Code: "+  manager.gameStartConfig.joinCode;
         }
