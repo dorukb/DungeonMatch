@@ -91,9 +91,9 @@ namespace DorkyProductions.AI
             GameMaster.Instance.ProcessPlayerSwap(netIdentity, foundPos[0], foundPos[1], VisualThinkingDuration);
         }
         [Server]
-        private void PerformLightningSkill(GameBoard board)
+        private void PerformLightningSkill(GameBoard gameBoard)
         {
-            var targetTile = _botBrain.GetLightningSkillInput(board);
+            var targetTile = _botBrain.GetRandomTile();
             GameMaster.Instance.ProcessPlayerLightningSkillUse(netIdentity, targetTile, VisualThinkingDuration);
         }
 
@@ -108,12 +108,8 @@ namespace DorkyProductions.AI
         [Server]
         private void PerformPhaseShiftSkill(GameBoard board)
         {
-            int x = Random.Range(0,5);
-            int y = Random.Range(0,5);
-            // Execute with delay
-            Debug.LogWarning("Phase shift is NOT implemented, using Lightning instead.");
-            GameMaster.Instance.ProcessPlayerLightningSkillUse(netIdentity, new Vector2Int(x, y),
-                VisualThinkingDuration);
+            List<Vector2Int> targetTiles = _botBrain.GetPhaseShiftSkillInput(board);
+            GameMaster.Instance.ProcessPlayerPhaseShiftSkill(netIdentity, targetTiles, VisualThinkingDuration);
         }
         
         [Server]
@@ -133,19 +129,15 @@ namespace DorkyProductions.AI
         [Server]
         private void PerformArcaneSweepSkill(GameBoard board)
         {
-            int x = Random.Range(0,5);
-            int y = Random.Range(0,5);
-            Vector2Int tilePos = new Vector2Int(x, y);
-            GameMaster.Instance.ProcessPlayerSweepSkill(tilePos, netIdentity, VisualThinkingDuration);
+            var targetTile = _botBrain.GetRandomTile();
+            GameMaster.Instance.ProcessPlayerSweepSkill(targetTile, netIdentity, VisualThinkingDuration);
         }
         
         [Server]
         private void PerformArcaneCleaveSkill(GameBoard board)
         {
-            int x = Random.Range(0,5);
-            int y = Random.Range(0,5);
-            Vector2Int tilePos = new Vector2Int(x, y);
-            GameMaster.Instance.ProcessPlayerCleaveSkill(tilePos, netIdentity, VisualThinkingDuration);
+            var targetTile = _botBrain.GetRandomTile();
+            GameMaster.Instance.ProcessPlayerCleaveSkill(targetTile, netIdentity, VisualThinkingDuration);
         }
         
         [Server]

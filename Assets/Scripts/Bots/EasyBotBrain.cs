@@ -12,7 +12,7 @@ namespace DorkyProductions
             List<Vector2Int> foundPos;
             
             // Dumb random search for valid swap (Replace with AIHelper.GetBestMove)
-            foundPos = RandomSwap(posA, posB, board);
+            foundPos = RandomSwap(board);
 
             if (foundPos.Count == 2)
             {

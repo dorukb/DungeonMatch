@@ -56,7 +56,7 @@ namespace DorkyProductions
             {
                 //if no possible match then select a random swap.
                 Debug.Log("no possible match so swap randomly");
-                foundPos = RandomSwap(posA, posB, board);
+                foundPos = RandomSwap(board);
                 if (foundPos.Count == 2)
                 {
                     posA = foundPos[0];
