@@ -7,17 +7,17 @@ using TMPro;
 
 namespace DorkyProductions
 {
-    public enum BotDifficulty { Easy = 0, Medium = 1, Hard = 2 }
-    
+    public enum BotDifficulty { None = -1, Easy = 0, Medium = 1, Hard = 2 }
+
     public class OfflineGameLauncher : MonoBehaviour
     {
         [Header("UI References")]
         public Button startButton;
         
-        [Header("Difficulty Toggles")]
-        public Toggle easyToggle;
-        public Toggle mediumToggle;
-        public Toggle hardToggle;
+        [Header("Difficulty Buttons")]
+        public Button easyButton;
+        public Button mediumButton;
+        public Button hardButton;
 
         [Header("Visual Settings")]
         public Color normalColor = Color.white;
@@ -27,92 +27,88 @@ namespace DorkyProductions
         [SerializeField] private Image coinsImage;
         [SerializeField] private TextMeshProUGUI coinsText;
 
-        private BotDifficulty _botDifficulty = BotDifficulty.Medium;
+        // Default to None so they have to pick one to enable the start button
+        private BotDifficulty _selectedDifficulty = BotDifficulty.None;
+
         private void Start()
         {
-            easyToggle.onValueChanged.AddListener((isOn) => HandleToggleChange(BotDifficulty.Easy, isOn));
-            mediumToggle.onValueChanged.AddListener((isOn) => HandleToggleChange(BotDifficulty.Medium, isOn));
-            hardToggle.onValueChanged.AddListener((isOn) => HandleToggleChange(BotDifficulty.Hard, isOn));
+            // Set up button listeners
+            easyButton.onClick.AddListener(() => SelectDifficulty(BotDifficulty.Easy));
+            mediumButton.onClick.AddListener(() => SelectDifficulty(BotDifficulty.Medium));
+            hardButton.onClick.AddListener(() => SelectDifficulty(BotDifficulty.Hard));
 
-            hardToggle.interactable = false;
+            // Optional: Disable Hard button if it's still locked
+            hardButton.interactable = false; 
+
             startButton.onClick.AddListener(StartOfflineGame);
             
-            // Initialize everything
-            UpdateToggleVisuals();
-            UpdateCoinDisplay(); 
-            _botDifficulty = (BotDifficulty)RemoteConfigManager.Instance.GetDefaultBot();     
+            // Initial State: Start button is disabled until a difficulty is picked
+            startButton.interactable = false;
+            
+            UpdateUI();
         }
 
-        private void HandleToggleChange(BotDifficulty difficulty, bool isOn)
+        private void SelectDifficulty(BotDifficulty difficulty)
         {
             AudioManager.Instance.PlaySFX(SFXType.TapPlayButton);
+            
+            _selectedDifficulty = difficulty;
+            
+            // Enable start button now that a selection exists
+            startButton.interactable = true;
 
-            if (isOn)
-            {
-                // BotBrain.SetDifficulty(difficulty);
-                Debug.Log($"Difficulty set to: {difficulty}");
-            }
+            UpdateUI();
+        }
 
-            UpdateToggleVisuals();
-            UpdateCoinDisplay(); // Update the coin text based on the new selection
-
-            if (UnityEngine.EventSystems.EventSystem.current != null)
-                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+        private void UpdateUI()
+        {
+            UpdateVisuals();
+            UpdateCoinDisplay();
         }
 
         private void UpdateCoinDisplay()
         {
             if (coinsText == null) return;
 
-            // 1. Check which toggle is currently ON
-            // 2. Decide the value
-            int price = 0;
+            if (_selectedDifficulty == BotDifficulty.None)
+            {
+                coinsText.text = "0";
+                return;
+            }
 
-            if (easyToggle.isOn)
-            {
-                price = RemoteConfigManager.Instance.GetBetAmountVal((int) BotDifficulty.Easy);
-            }
-            else if (mediumToggle.isOn)
-            {
-                price = RemoteConfigManager.Instance.GetBetAmountVal((int) BotDifficulty.Medium);
-            }
-            else if (hardToggle.isOn)
-            {
-                price = RemoteConfigManager.Instance.GetBetAmountVal((int) BotDifficulty.Hard);
-            }
-            else price = 0; // If nothing is selected
-
-            // 3. Update the UI
+            int price = RemoteConfigManager.Instance.GetBetAmountVal((int)_selectedDifficulty);
             coinsText.text = price.ToString();
         }
 
-        private void UpdateToggleVisuals()
+        private void UpdateVisuals()
         {
-            SetToggleVisuals(easyToggle);
-            SetToggleVisuals(mediumToggle);
-            SetToggleVisuals(hardToggle);
+            SetButtonStyle(easyButton, _selectedDifficulty == BotDifficulty.Easy);
+            SetButtonStyle(mediumButton, _selectedDifficulty == BotDifficulty.Medium);
+            SetButtonStyle(hardButton, _selectedDifficulty == BotDifficulty.Hard);
         }
 
-        private void SetToggleVisuals(Toggle toggle)
+        private void SetButtonStyle(Button button, bool isSelected)
         {
-            var text = toggle.GetComponentInChildren<TextMeshProUGUI>();
+            var text = button.GetComponentInChildren<TextMeshProUGUI>();
             if (text != null)
             {
-                text.color = toggle.isOn ? selectedColor : normalColor;
-                text.fontStyle = toggle.isOn ? FontStyles.Bold : FontStyles.Normal;
+                text.color = isSelected ? selectedColor : normalColor;
+                text.fontStyle = isSelected ? FontStyles.Bold : FontStyles.Normal;
             }
         }
 
-        // Called by: Start button on Offline Scene.
         public void StartOfflineGame()
         {
+            if (_selectedDifficulty == BotDifficulty.None) return;
+
             NetworkRoomManager manager = NetworkManager.singleton as NetworkRoomManager;
             if (manager != null)
             {
                 AudioManager.Instance.PlaySFX(SFXType.TapPlayButton);
                 
                 manager.minPlayers = 1;
-                manager.gameStartConfig = new GameStartConfig(true, MapDifficultyToLobbyType(_botDifficulty));
+                // Use the tracked selection
+                manager.gameStartConfig = new GameStartConfig(true, MapDifficultyToLobbyType(_selectedDifficulty));
                 manager.StartHost();
             }
             else
@@ -131,14 +127,10 @@ namespace DorkyProductions
         {
             switch (difficulty)
             {
-                case BotDifficulty.Easy:
-                    return LobbyType.Beginner;
-                case BotDifficulty.Medium:
-                    return LobbyType.Intermediate;
-                case BotDifficulty.Hard:
-                    return LobbyType.Advanced;
-                default:
-                    return LobbyType.Beginner;
+                case BotDifficulty.Easy: return LobbyType.Beginner;
+                case BotDifficulty.Medium: return LobbyType.Intermediate;
+                case BotDifficulty.Hard: return LobbyType.Advanced;
+                default: return LobbyType.Beginner;
             }
         }
     }

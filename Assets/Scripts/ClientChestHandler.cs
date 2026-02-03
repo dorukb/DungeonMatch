@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using DG.Tweening;
 using DorkyProductions.UI;
 using UnityEngine;
@@ -18,6 +20,29 @@ public class ClientChestHandler : MonoBehaviour
 
     private NetworkPlayer _localPlayer;
     private SkillDefinitionSO _rewardedSkill;
+    
+    private Dictionary<SkillType, Action> _skillActions;
+
+    private void Start()
+    {
+        InitializeSkillMap();
+    }
+    private void InitializeSkillMap()
+    {
+        _skillActions = new Dictionary<SkillType, Action>
+        {
+            { SkillType.Lightning,    () => _localPlayer.ActivateLightningInput() },
+            { SkillType.PhantomMatch, () => _localPlayer.ActivatePhantomMatchInput() },
+            { SkillType.PhaseShift,   () => _localPlayer.ActivatePhaseShiftInput() },
+            { SkillType.ArcaneSweep,  () => _localPlayer.ActivateArcaneSweepInput() },
+            { SkillType.ArcaneCleave, () => _localPlayer.ActivateArcaneCleaveInput() },
+        
+            // Handle types that require the DOTween Sequence
+            { SkillType.StoneGuard,   () => CreateSkillSequence(_localPlayer.OnUseStoneGuard) },
+            { SkillType.SoulReaver,   () => CreateSkillSequence(_localPlayer.OnUseSoulReaver) }
+        };
+    }
+    
     public void SaveReceivedChest(int rewardedSkillID, NetworkPlayer localPlayer)
     {
         this._localPlayer = localPlayer;
@@ -38,64 +63,29 @@ public class ClientChestHandler : MonoBehaviour
         AudioManager.Instance.PlaySFX(SFXType.ChestOpen);
     }
 
+    
+
+    private void CreateSkillSequence(Action onCompleteAction)
+    {
+        Sequence s = DOTween.Sequence();
+        s.AppendInterval(1f); 
+        // s.Append(_someIcon.DOMove(target, 0.5f));
+        s.OnComplete(() => onCompleteAction?.Invoke());
+    }
+
     private void UseSkill()
     {
         chestUIController.gameObject.SetActive(false);
         UIMediator.OnPlayerChestOpened?.Invoke(_rewardedSkill.id);
 
-        // Enable specific input logic that allows the use of the Skill.
-        // NetworkPlayer triggers the command.
-        if (_rewardedSkill.skillType == SkillType.Lightning)
+        if (_skillActions.TryGetValue(_rewardedSkill.skillType, out Action skillLogic))
         {
-            _localPlayer.ActivateLightningInput();
+            skillLogic.Invoke();
         }
-        else if (_rewardedSkill.skillType == SkillType.PhantomMatch)
+        else
         {
-            _localPlayer.ActivatePhantomMatchInput();
+            Debug.LogWarning($"SkillType {_rewardedSkill.skillType} not implemented in map.");
         }
-        else if (_rewardedSkill.skillType == SkillType.PhaseShift)
-        {
-            _localPlayer.ActivatePhaseShiftInput();
-        }
-        else if (_rewardedSkill.skillType == SkillType.StoneGuard)
-        {
-            Sequence s = DOTween.Sequence();
-
-            // 1. Currently just a delay
-            s.AppendInterval(1f); 
-
-            // 2. This is where you'll eventually add: 
-            // s.Append(_someIcon.DOMove(target, 0.5f));
-
-            // 3. Call the logic after the delay/animation
-            s.OnComplete(() => {
-                _localPlayer.OnUseStoneGuard();
-            });
-        }
-        else if (_rewardedSkill.skillType == SkillType.SoulReaver)
-        {
-            Sequence s = DOTween.Sequence();
-
-            // 1. Currently just a delay
-            s.AppendInterval(1f); 
-
-            // 2. This is where you'll eventually add: 
-            // s.Append(_someIcon.DOMove(target, 0.5f));
-
-            // 3. Call the logic after the delay/animation
-            s.OnComplete(() => {
-                _localPlayer.OnUseSoulReaver();
-            });
-        }
-        else if (_rewardedSkill.skillType == SkillType.ArcaneSweep)
-        {
-            _localPlayer.ActivateArcaneSweepInput();
-        }
-        else if (_rewardedSkill.skillType == SkillType.ArcaneCleave)
-        {
-            _localPlayer.ActivateArcaneCleaveInput();
-        }
-        
     }
     
 }

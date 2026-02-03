@@ -69,8 +69,6 @@ namespace DorkyProductions.AI
             Debug.Log("Bot is Making a Move.");
             if (context.ChestsLeft > 0)
             {
-                // TODO: The selected skill should be decided by GameMaster, bot should just execute.
-                skillId = Random.Range(0, _skillMap.Count);
                 SkillType type = (SkillType)skillId;
                 if (_skillMap.TryGetValue(type, out Action<GameBoard> skill))
                 {
