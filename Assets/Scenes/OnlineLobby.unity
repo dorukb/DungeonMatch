@@ -553,8 +553,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Looking for opponents...
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0c2525579975a5c40ab5e5e2628b6170, type: 2}
+  m_sharedMaterial: {fileID: 6504464738899526460, guid: 0c2525579975a5c40ab5e5e2628b6170, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -662,6 +662,14 @@ PrefabInstance:
       propertyPath: m_text
       value: Cancel
       objectReference: {fileID: 0}
+    - target: {fileID: 8454324913953335492, guid: b7b2d8c370a349b43ba905157dde2645, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: 0c2525579975a5c40ab5e5e2628b6170, type: 2}
+    - target: {fileID: 8454324913953335492, guid: b7b2d8c370a349b43ba905157dde2645, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: 6504464738899526460, guid: 0c2525579975a5c40ab5e5e2628b6170, type: 2}
     - target: {fileID: 8454324913953335492, guid: b7b2d8c370a349b43ba905157dde2645, type: 3}
       propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
       value: 1801810542
