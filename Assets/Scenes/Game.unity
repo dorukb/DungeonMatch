@@ -1496,6 +1496,7 @@ GameObject:
   m_Component:
   - component: {fileID: 778560423}
   - component: {fileID: 778560424}
+  - component: {fileID: 778560425}
   m_Layer: 5
   m_Name: bet UI container
   m_TagString: Untagged
@@ -1519,11 +1520,11 @@ RectTransform:
   - {fileID: 714181288}
   m_Father: {fileID: 165091633}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -31, y: 1040}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: -0, y: -200}
   m_SizeDelta: {x: 100, y: 100}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &778560424
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1550,6 +1551,19 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &778560425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778560422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8979ee4909d34a38b59df72bf2860b36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.BetDisplayUI
+  betUIText: {fileID: 714181289}
 --- !u!1 &782415518
 GameObject:
   m_ObjectHideFlags: 0
@@ -3567,7 +3581,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5135115826543921028, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -160
+      value: -161
       objectReference: {fileID: 0}
     - target: {fileID: 5135115826543921028, guid: 7ea5bd232e9b49a4b987db7f4468ccdc, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -4307,9 +4321,9 @@ SceneRoots:
   - {fileID: 1605994704}
   - {fileID: 144706342}
   - {fileID: 464270985}
+  - {fileID: 165091633}
   - {fileID: 1766190146}
   - {fileID: 635130803}
   - {fileID: 1546281185}
   - {fileID: 133237266}
   - {fileID: 2316664792534079991}
-  - {fileID: 165091633}

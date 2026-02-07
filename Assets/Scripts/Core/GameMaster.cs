@@ -4,6 +4,7 @@ using Mirror;
 using System.Collections.Generic;
 using System.Linq;
 using DorkyProductions.AI;
+using DorkyProductions.UI;
 
 namespace  DorkyProductions
 {
@@ -120,7 +121,7 @@ public class GameMaster : NetworkBehaviour
         Debug.Log("Starting game...");
         gameState = GameState.Playing;
         _gameStartConfig = startConfig;
-
+        
         for (int i = 0; i < players.Count; i++)
         {
             if (!players[i].IsBot)
@@ -136,8 +137,8 @@ public class GameMaster : NetworkBehaviour
         _gameBoard = new GameBoard(tileDatabase);
         var boardState = _gameBoard.SetupInitialBoardWithNoMatches();
         
-        // TODO: Fix bet amount based on selected difficulty.
-        betAmount = RemoteConfigManager.Instance.GetBetAmountVal((int)0);
+        betAmount = RemoteConfigManager.Instance.GetBetAmountVal((int) _gameStartConfig.lobbyType);
+        UIMediator.OnBetAmountIsGot?.Invoke(betAmount);
 
         if (startConfig.isOfflineMode)
         {
