@@ -192,6 +192,66 @@ public class EOSLobby : MonoBehaviour {
     }
 
     /// <summary>
+    /// Finds a specific lobby by its unique Invite Code.
+    /// </summary>
+    /// <param name="inviteCode">The short string code entered by the player.</param>
+    public virtual void FindLobbyByInviteCode(string inviteCode)
+    {
+        //create search handle and list of lobby details
+        LobbySearch search = new LobbySearch();
+        var createLobbySearchOptions = new CreateLobbySearchOptions { MaxResults = 1 }; // We only expect 1 match
+        EOSSDKComponent.GetLobbyInterface().CreateLobbySearch(ref createLobbySearchOptions, out search);
+
+        // 2. Set the Filter: Search for the custom "JOIN_CODE" attribute
+        var codeParam = new AttributeData();
+        codeParam.Key = "JOIN_CODE"; // MUST match the key used by the Host
+        codeParam.Value = new AttributeDataValue { AsUtf8 = inviteCode };
+
+        var codeParamOptions = new LobbySearchSetParameterOptions();
+        codeParamOptions.Parameter = codeParam;
+        codeParamOptions.ComparisonOp = ComparisonOp.Equal; // Exact match only
+
+        search.SetParameter(ref codeParamOptions);
+        
+        // 3. Execute Search
+        var findOptions = new LobbySearchFindOptions();
+        findOptions.LocalUserId = EOSSDKComponent.LocalUserProductId;
+
+        search.Find(ref findOptions, null, (ref LobbySearchFindCallbackInfo callback) => {
+            if (callback.ResultCode != Result.Success) {
+                FindLobbiesFailed?.Invoke("Error finding lobby by code: " + callback.ResultCode);
+                return;
+            }
+
+            foundLobbies.Clear(); // Clear previous random search results
+
+            // 4. Process Result
+            var lobbySearchGetSearchResultCountOptions = new LobbySearchGetSearchResultCountOptions();
+            uint count = search.GetSearchResultCount(ref lobbySearchGetSearchResultCountOptions);
+
+            if (count == 0) {
+                FindLobbiesFailed?.Invoke("No lobby found with code: " + inviteCode);
+                return;
+            }
+
+            // Copy the single result
+            LobbyDetails lobbyInformation;
+            var options = new LobbySearchCopySearchResultByIndexOptions { LobbyIndex = 0 };
+            search.CopySearchResultByIndex(ref options, out lobbyInformation);
+
+            foundLobbies.Add(lobbyInformation);
+        
+            Debug.Log($"Found Lobby via code '{inviteCode}'!");
+        
+            // Invoke the same success event (or a specific one if you prefer)
+            FindLobbiesSucceeded?.Invoke(foundLobbies);
+        
+            // Don't forget to release the search handle!
+            search.Release(); 
+        });
+    }
+
+    /// <summary>
     /// Finds lobbies based on given parameters using Epic Online Services.
     /// <para>You can get the found lobbies by subscribing to the <see cref="FindLobbiesSucceeded"/> event which gives you a list of <see cref="LobbyDetails"/>.</para>
     /// <para>This process may throw errors. You can get errors by subscribing to the <see cref="FindLobbiesFailed"/> event.</para>
@@ -206,6 +266,17 @@ public class EOSLobby : MonoBehaviour {
         var createLobbySearchOptions = new CreateLobbySearchOptions { MaxResults = maxResults };
         EOSSDKComponent.GetLobbyInterface().CreateLobbySearch(ref createLobbySearchOptions, out search);
 
+        // NEW FILTER: Only show lobbies where ACCESS_LEVEL is "PUBLIC"
+        // ---------------------------------------------------------
+        var accessParam = new AttributeData();
+        accessParam.Key = "ACCESS_LEVEL"; // Must match the key used in CreatePublicLobbyWrapper
+        accessParam.Value = new AttributeDataValue { AsUtf8 = "PUBLIC" };
+
+        var accessOptions = new LobbySearchSetParameterOptions();
+        accessOptions.Parameter = accessParam;
+        accessOptions.ComparisonOp = ComparisonOp.Equal;
+    
+        search.SetParameter(ref accessOptions);
         
         var minMembersParam = new AttributeData();
         // Built-in EOS key for min. members check

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
@@ -12,17 +13,13 @@ namespace DorkyProductions
 public class LobbyController : MonoBehaviour
 {
     [SerializeField] private Button leaveLobbyButton;
-    [SerializeField] private  Image coinsImage;
-    [SerializeField] private  TextMeshProUGUI coinsText;
+    [SerializeField] private TextMeshProUGUI statusText;
     
     private EOSLobby _eosLobby;
     private NetworkRoomManager manager;
-    // [SerializeField] private TextMeshProUGUI statusText;
     
     private List<LobbyDetails> _foundLobbies = new List<LobbyDetails>();
     private List<Attribute> _lobbyData = new List<Attribute>();
-    
-    private static System.Random random = new System.Random();
 
     private void OnEnable() {
         //subscribe to events
@@ -65,43 +62,17 @@ public class LobbyController : MonoBehaviour
         
         // Connect the Button click programmatically.
         leaveLobbyButton.onClick.AddListener(RequestLeaveLobby);
-    }
 
-    private void Start()
-    {
-        // 1. If coinstext is null, try to find it in the current scene
-        if (coinsText == null)
+        if (manager.gameStartConfig.joinCode.Length > 1 && statusText != null)
         {
-            // Search by Name or by finding the component in the scene
-            GameObject foundText = GameObject.Find("coin amount"); // Match your UI name
-            if (foundText != null) 
-            {
-                coinsText = foundText.GetComponent<TextMeshProUGUI>();
-            }
-        }
-
-        // 2. ONLY run the logic if we actually found the UI
-        if (coinsText != null && manager.isOfflineMode)
-        {
-            BotDifficulty botType = BotBrain.GetDifficulty();
-            coinsText.text = RemoteConfigManager.Instance.GetBetAmountVal((int)botType).ToString();
-        
-            // Ensure image is visible if text is found
-            if(coinsImage != null) coinsImage.enabled = true;
-        }
-        else if (coinsText != null)
-        {
-            // If we are online, hide them
-            if(coinsImage != null) coinsImage.enabled = false;
-            coinsText.enabled = false;
+            statusText.text = "Your Invite Code: "+  manager.gameStartConfig.joinCode;
         }
     }
-    
     public void RequestLeaveLobby()
     {
         AudioManager.Instance.PlaySFX(SFXType.TapMenuButton);
         
-        if (manager.isOfflineMode)
+        if (manager.gameStartConfig.isOfflineMode)
         {
             manager.StopHost();
         }

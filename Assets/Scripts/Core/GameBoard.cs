@@ -123,18 +123,10 @@ public class GameBoard
         StabilizeBoard(eventBatch, matchesToProcess);
     }
 
-
-    // Removes the tile at TilePos. runs the usual procedure.
-    public void ProcessLightningEffect(Vector2Int tilePos, NetworkIdentity senderIdentity, List<GameEventBase> eventBatch)
+    private void HandleGlobalMatches(List<GameEventBase> eventBatch)
     {
-        // Remove tile without any Match effects.
-        TileState tileToRemove = boardState[GetIndex(tilePos)];
-        eventBatch.Add(EventPool.Get<TileRemovedEvent>().Setup(tileToRemove.uniqueID));
-        boardState[GetIndex(tilePos)] = TileState.Empty;
-        
         SimulateTileFall(eventBatch);
         var matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
-
         if (matchesToProcess.Count > 0)
         {
             StabilizeBoard(eventBatch, matchesToProcess);
@@ -146,7 +138,16 @@ public class GameBoard
             StabilizeBoard(eventBatch, matchesToProcess);
         }
     }
-    
+    // Removes the tile at TilePos. runs the usual procedure.
+    public void ProcessLightningEffect(Vector2Int tilePos, NetworkIdentity senderIdentity, List<GameEventBase> eventBatch)
+    {
+        // Remove tile without any Match effects.
+        TileState tileToRemove = boardState[GetIndex(tilePos)];
+        eventBatch.Add(EventPool.Get<TileRemovedEvent>().Setup(tileToRemove.uniqueID));
+        boardState[GetIndex(tilePos)] = TileState.Empty;
+        
+        HandleGlobalMatches(eventBatch);
+    }
     public void ProcessPhantomMatchEffect(List<Vector2Int> targetTiles, NetworkIdentity senderIdentity, List<GameEventBase> eventBatch)
     {
         TileState matchedTile = boardState[GetIndex(targetTiles[0])];
@@ -171,67 +172,26 @@ public class GameBoard
     
     public void ProcessPhaseShiftEffect(List<Vector2Int> targetTiles, NetworkIdentity sender, List<GameEventBase> eventBatch)
     {
+        // TODO: Possible crash. No validation!
+        if (targetTiles.Count < 2)
+            return;
         ProcessSwapMove(targetTiles[0], targetTiles[1], sender, eventBatch);
     }
     
-    public void ProcessArcaneSweepEffect(Vector2Int tilePos, NetworkIdentity sender, List<GameEventBase> eventBatch)
+    // arcane sweep isRow true.
+    public void ProcessLineRemovalEffect(Vector2Int tilePos, bool isRow, NetworkIdentity sender, List<GameEventBase> eventBatch)
     {
-        List<ushort> rowTiles = new List<ushort>();
-        rowTiles = GetTilesAtLine(true, tilePos);
-
-        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(rowTiles, false));
-        RemoveLineTiles(true, tilePos);
-
-        
-        SimulateTileFall(eventBatch);
-        var matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
-
-        if (matchesToProcess.Count > 0)
-        {
-            StabilizeBoard(eventBatch, matchesToProcess);
-        }
-        else
-        {
-            RefillBoard(eventBatch, true);
-            matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
-            StabilizeBoard(eventBatch, matchesToProcess);
-        }
-    }
-    
-    public void ProcessArcaneCleaveEffect(Vector2Int tilePos, NetworkIdentity sender, List<GameEventBase> eventBatch)
-    {
-        List<ushort> colTiles = new List<ushort>();
-        colTiles = GetTilesAtLine(false, tilePos);
-        
-        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(colTiles, false));
+        var tiles = GetTilesAtLine(false, tilePos);
+        eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(tiles, false));
         RemoveLineTiles(false, tilePos);
         
-        SimulateTileFall(eventBatch);
-        var matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
-
-        if (matchesToProcess.Count > 0)
-        {
-            StabilizeBoard(eventBatch, matchesToProcess);
-        }
-        else
-        {
-            RefillBoard(eventBatch, true);
-            matchesToProcess = MatchAlgorithm.FindAllMatchesOnBoardAlternative(this);
-            StabilizeBoard(eventBatch, matchesToProcess);
-        }
+        HandleGlobalMatches(eventBatch);
     }
     private void StabilizeBoard(List<GameEventBase> eventBatch, List<MatchResult> matchesToProcess)
     {
         // This 'master' loop handles all chain reactions (cascades AND refills).
-        // StabilizeBoard procedure
         while (matchesToProcess.Count > 0)
         { 
-            // Debug.Log("[Server] Matches on board:");
-            // foreach (var res in matchesToProcess)
-            // {
-            //     Debug.Log(res.Debug());
-            // }
-        
             ApplyMatchEffects(matchesToProcess, eventBatch);
             RemoveMatchedTiles(matchesToProcess);
             SimulateTileFall(eventBatch);

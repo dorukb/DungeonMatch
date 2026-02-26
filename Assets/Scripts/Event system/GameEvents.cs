@@ -12,22 +12,25 @@ namespace DorkyProductions
         public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.GameStarted;
         public List<TileState> boardState = new List<TileState>();
-
-        public GameStartedEvent Setup(List<TileState> state)
+        public int betRewardAmount;
+        public GameStartedEvent Setup(List<TileState> state, int betAmount)
         {
             boardState.Clear();
             boardState.AddRange(state);
+            betRewardAmount = betAmount;
             return this;
         }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
         public override void Serialize(NetworkWriter writer)
         {
             writer.Write(boardState);
+            writer.Write(betRewardAmount);
         }
 
         public override void Deserialize(NetworkReader reader)
         {
             boardState.AddRange(reader.Read<List<TileState>>());
+            betRewardAmount = reader.Read<int>();
         }
         public override void Reset() => boardState.Clear();
     }

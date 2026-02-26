@@ -4,6 +4,7 @@ using Mirror;
 using System.Collections.Generic;
 using System.Linq;
 using DorkyProductions.AI;
+using DorkyProductions.UI;
 
 namespace  DorkyProductions
 {
@@ -31,11 +32,13 @@ public class GameMaster : NetworkBehaviour
     
     private List<NetworkPlayer> players = new List<NetworkPlayer>();
     private int activePlayerIndex = 0;
-    private int bet_amount;
+    private int betAmount;
     
     private GameBoard _gameBoard; 
     private ClientEventHandler _clientEventHandler;
     public Context Context { get; private set; }
+
+    private GameStartConfig _gameStartConfig;
     
     // --- Server-Side Events (For Bots/AI) ---
     // Bots subscribe to these to know when to act, since they don't receive ClientRPCs
@@ -43,6 +46,7 @@ public class GameMaster : NetworkBehaviour
     
     // param: <rewardId>
     public event Action<Context, int> OnServerChestMatched;
+    public event Action<Context, GameBoard> OnServerSwapDenied;
     
     void Awake()
     {
@@ -83,7 +87,15 @@ public class GameMaster : NetworkBehaviour
         // Check if we have enough players to start
         if (players.Count == requiredPlayers)
         {
-            StartGame();
+            NetworkRoomManager netMan = NetworkManager.singleton as NetworkRoomManager;
+            if (netMan != null)
+            {
+                StartGame(netMan.gameStartConfig);
+            }
+            else
+            {
+                Debug.LogError("NetworkRoomManager has not been found my the GameMaster on GameStart.");
+            }
         }
     }
 
@@ -102,13 +114,14 @@ public class GameMaster : NetworkBehaviour
     }
     
     [Server]
-    private void StartGame()
+    private void StartGame(GameStartConfig startConfig)
     {
         if (gameState != GameState.WaitingForPlayers) return;
 
         Debug.Log("Starting game...");
         gameState = GameState.Playing;
-
+        _gameStartConfig = startConfig;
+        
         for (int i = 0; i < players.Count; i++)
         {
             if (!players[i].IsBot)
@@ -124,18 +137,31 @@ public class GameMaster : NetworkBehaviour
         _gameBoard = new GameBoard(tileDatabase);
         var boardState = _gameBoard.SetupInitialBoardWithNoMatches();
         
-        //TODO: this logic would change if all real players.
-        bool hasBot = players.Any(player => player.IsBot);
-        if(hasBot)
+        betAmount = RemoteConfigManager.Instance.GetBetAmountVal((int) _gameStartConfig.lobbyType);
+        UIMediator.OnBetAmountIsGot?.Invoke(betAmount);
+
+        if (startConfig.isOfflineMode)
         {
-            BotDifficulty currentBot = BotBrain.GetDifficulty();
-            bet_amount = RemoteConfigManager.Instance.GetBetAmountVal((int)currentBot);
+            foreach (var player in players)
+            {
+                if (player.IsBot)
+                {
+                    var aiPlayer = player.GetComponent<BotNetworkPlayer>();
+                    if (aiPlayer == null)
+                    {
+                        Debug.LogError("Make sure the AI Prefab has AINetworkPlayer attached.");
+                    }
+                    else
+                    {
+                        aiPlayer.InitializeBotBrain(startConfig.lobbyType);
+                    }
+                }
+            }
         }
         
-        eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState));
+        eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState, betAmount));
         eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
-        // TileDistribution.LogBoardDensity();
-        // Send to clients
+
         SendEventBatch(eventBatch);
         
         // Notify Server-side entities (Bots) that the turn has started
@@ -150,10 +176,45 @@ public class GameMaster : NetworkBehaviour
         eventBatch.Add(EventPool.Get<GameEndedEvent>().Setup(winner.netId));
         Debug.Log($"[Server] Game over. Winner: {winner.netId}");
         //TODO: substract bet_amount from loser
-        winner.AddCoins(bet_amount);
-        loser.LoseCoins(bet_amount);
+        winner.AddCoins(betAmount);
+        loser.LoseCoins(betAmount);
     }
+    // This is the main "transaction" method called by a Player via [Command].
+    // It processes the move and generates all resulting events.
+    [Server]
+    public void ProcessPlayerSwap(NetworkIdentity sender, Vector2Int posA, Vector2Int posB, float artificialDelay = 0f)
+    {
+        List<GameEventBase> eventBatch = new List<GameEventBase>();
+        bool canMakeMove = ValidateUserTurn(sender);
+        bool isValidMove = canMakeMove && _gameBoard.IsValidSwap(posA, posB, true);
+        if (isValidMove)
+        {
+            if (artificialDelay > 0.1f)
+            {
+                eventBatch.Add(EventPool.Get<AIDelayEvent>().Setup(artificialDelay));
+            }
+            // Core algorithm.
+            _gameBoard.ProcessSwapMove(posA, posB, sender, eventBatch);
 
+            EndTurnAndStartNext(eventBatch);
+            SendEventBatch(eventBatch);
+            
+            // Notify Bot (Same player goes again)
+            OnServerTurnStarted?.Invoke(Context, _gameBoard);
+        }
+        else
+        {
+            Debug.LogWarning($"Player {sender.netId} tried to move out of turn or the swap was not valid.");
+            eventBatch.Add(EventPool.Get<SwapDeniedEvent>().Setup(Context.ActivePlayerNetId));
+            
+            // Note: we do NOT end the turn here, just let the player make another move.
+            SendEventBatch(eventBatch);
+            
+            // Notify Bot (so it can try another move);
+            OnServerSwapDenied?.Invoke(Context, _gameBoard);
+        }
+    }
+    
     [Server]
     public void ProcessPlayerLightningSkillUse(NetworkIdentity sender, Vector2Int tilePos, float artificialDelay = 0f)
     {
@@ -336,7 +397,7 @@ public class GameMaster : NetworkBehaviour
             {
                 eventBatch.Add(EventPool.Get<AIDelayEvent>().Setup(artificialDelay));
             }
-            _gameBoard.ProcessArcaneSweepEffect(tilePos, sender, eventBatch);
+            _gameBoard.ProcessLineRemovalEffect(tilePos, true, sender, eventBatch);
         }
         else
         {
@@ -367,7 +428,7 @@ public class GameMaster : NetworkBehaviour
             {
                 eventBatch.Add(EventPool.Get<AIDelayEvent>().Setup(artificialDelay));
             }
-            _gameBoard.ProcessArcaneCleaveEffect(tilePos, sender, eventBatch);
+            _gameBoard.ProcessLineRemovalEffect(tilePos, false, sender, eventBatch);
         }
         else
         {
@@ -379,40 +440,6 @@ public class GameMaster : NetworkBehaviour
         // Notify Bot (Same player goes again)
         OnServerTurnStarted?.Invoke(Context, _gameBoard);  
     }
-    
-    // This is the main "transaction" method called by a Player via [Command].
-    // It processes the move and generates all resulting events.
-    [Server]
-    public void ProcessPlayerSwap(NetworkIdentity sender, Vector2Int posA, Vector2Int posB, float artificialDelay = 0f)
-    {
-        List<GameEventBase> eventBatch = new List<GameEventBase>();
-        bool canMakeMove = ValidateUserTurn(sender);
-        bool isValidMove = canMakeMove && _gameBoard.IsValidSwap(posA, posB, true);
-        if (isValidMove)
-        {
-            if (artificialDelay > 0.1f)
-            {
-                eventBatch.Add(EventPool.Get<AIDelayEvent>().Setup(artificialDelay));
-            }
-            // Core algorithm.
-            _gameBoard.ProcessSwapMove(posA, posB, sender, eventBatch);
-
-            EndTurnAndStartNext(eventBatch);
-            SendEventBatch(eventBatch);
-            
-            // Notify Bot (Same player goes again)
-            OnServerTurnStarted?.Invoke(Context, _gameBoard);
-        }
-        else
-        {
-            Debug.LogWarning($"Player {sender.netId} tried to move out of turn or the swap was not valid.");
-            eventBatch.Add(EventPool.Get<SwapDeniedEvent>().Setup(Context.ActivePlayerNetId));
-            
-            // Note: we do NOT end the turn here, just let the player make another move.
-            SendEventBatch(eventBatch);
-        }
-    }
-
     
     // This assumes a 2-player game.
     [Server]
