@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DorkyProductions.SkillDefinitionSO
   skillType: 4
   skillName: Soul Reaver
-  description: Steal 3 health from opponent.
+  description: Steals health from opponent.
   callToAction: Souls have been stolen from the opponent!
   id: 4
   icon: {fileID: 21300000, guid: 79847e363d1304481a4b1db01adb2654, type: 3}

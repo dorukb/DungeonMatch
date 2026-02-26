@@ -59,7 +59,7 @@ public class ClientChestHandler : MonoBehaviour
         chestUIController.useButton.onClick.RemoveAllListeners();
         chestUIController.useButton.onClick.AddListener(UseSkill);
         
-        chestUIController.Setup(_rewardedSkill.skillName, _rewardedSkill.icon);
+        chestUIController.Setup(_rewardedSkill.skillName, _rewardedSkill.icon, _rewardedSkill.description);
         AudioManager.Instance.PlaySFX(SFXType.ChestOpen);
     }
 

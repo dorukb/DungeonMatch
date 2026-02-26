@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DorkyProductions.SkillDefinitionSO
   skillType: 5
   skillName: Arcane Sweep
-  description: 'Choose a row, remove all 5 cards. '
-  callToAction: Choose a row to destroy.
+  description: Clears the selected row.
+  callToAction: Choose a row to clear.
   id: 5
   icon: {fileID: 7901622571200134146, guid: ef455619032bbc445beac417c4c14608, type: 3}
