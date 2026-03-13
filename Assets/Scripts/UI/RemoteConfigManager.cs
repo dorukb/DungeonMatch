@@ -29,6 +29,7 @@ public class RemoteConfigManager : MonoBehaviour
     private const string REWARD_SHIELD_KEY = "reward_shield";
     private const string STOLEN_HEALTH_KEY = "stolen_health";
     private const string DEFAULT_BOT_KEY = "default_bot";
+    private const string BANNER_AD_UNIT_ID = "banner_ad_unit_id";
     
     // Fast local lookups
     private Dictionary<int, int> attackValues = new Dictionary<int, int>();
@@ -49,6 +50,7 @@ public class RemoteConfigManager : MonoBehaviour
     private int rewardShield = 3;
     private int stolenHealth = 3;
     private int defaultBot = 1;
+    private string bannerAdUnitId = "ca-app-pub-3940256099942544/6300978111";
     
     private void Awake()
     {
@@ -80,6 +82,8 @@ public class RemoteConfigManager : MonoBehaviour
             stolenHealth = (int)config.GetValue(STOLEN_HEALTH_KEY).LongValue;
 
             defaultBot = (int)config.GetValue(DEFAULT_BOT_KEY).LongValue;
+            
+            bannerAdUnitId = config.GetValue(BANNER_AD_UNIT_ID).StringValue;
             
             Debug.Log("Config updated. Match strategy: " + matchStrategyIdx);
             for (int i = 3; i <= 5; i++)
@@ -123,6 +127,7 @@ public class RemoteConfigManager : MonoBehaviour
     public int GetRewardShield() => rewardShield;
     public int GetStolenHealth() => stolenHealth;
     public int GetDefaultBot() => defaultBot;
+    public string GetBannerAdUnitId() => bannerAdUnitId;
     
     private void InitializeFirebase()
     {
@@ -157,7 +162,8 @@ public class RemoteConfigManager : MonoBehaviour
             { STARTING_COINS_KEY, 50 },
             { AVOID_MATCH_CHANCE_KEY, 0.85f }, {MATCH_STRATEGY_KEY, 0},
             { REWARD_SHIELD_KEY, 5 }, {STOLEN_HEALTH_KEY, 3 },
-            { DEFAULT_BOT_KEY, 1 }
+            { DEFAULT_BOT_KEY, 1 },
+            { BANNER_AD_UNIT_ID, "ca-app-pub-3940256099942544/6300978111"}
         };
 
         
