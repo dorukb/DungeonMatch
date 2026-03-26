@@ -4204,19 +4204,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3501844719429661536, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3501844719429661536, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3501844719429661536, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 453.12
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3501844719429661536, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -100
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3502775809856570357, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_fontAsset
@@ -4232,19 +4232,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5960093047130827481, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5960093047130827481, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5960093047130827481, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 164.06
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5960093047130827481, guid: 5351449c558d9ff499e999ab2561999e, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -17.75
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

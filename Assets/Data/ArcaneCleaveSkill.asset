@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DorkyProductions.SkillDefinitionSO
   skillType: 6
   skillName: Arcane  Cleave
-  description: 'Choose a column, remove all 5 cards. '
-  callToAction: Choose a column to destroy.
+  description: Clears the selected column.
+  callToAction: Choose a column to clear.
   id: 6
   icon: {fileID: 4590660386899438849, guid: 401ff8db54a76ee4a9d647efac0be0ac, type: 3}

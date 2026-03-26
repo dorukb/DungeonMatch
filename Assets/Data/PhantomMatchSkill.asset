@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DorkyProductions.ChestRewardDefinitionSO
   skillType: 1
   skillName: Phantom Match
-  description: Remove three cards of the same type to create a match. Adjacency is
-    not required.
+  description: Matches three cards of the same type. Adjacency is not required.
   callToAction: Select any 3 tiles of same type to match
   id: 1
   icon: {fileID: 21300000, guid: 44ff86f1784cb4532a889361098e9214, type: 3}
