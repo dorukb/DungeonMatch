@@ -373,7 +373,7 @@ public class GameBoard
     private void ApplyChestEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, GameMaster gm)
     {
         // TODO: Use a distribution controlled via ScriptableObject here for the various chest effects & their drop rates.
-        //chestSkillIdx = 4;
+        int chestSkillIdx = Random.Range(0,7);
         
         eventBatch.Add(EventPool.Get<ChestMatchedEvent>().Setup(activePlayer.netId, chestSkillIdx));
         gm.NotifyBotChestMatched(chestSkillIdx);
