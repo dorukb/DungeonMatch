@@ -81,11 +81,27 @@ namespace DorkyProductions.AI
             }
         }
 
-
+        
+        
         [Server]
         private void MakeSwap(Context context, GameBoard board)
         {
+            // 1. Exit if the game is already over
+            if (GameMaster.Instance.gameState == GameState.GameEnded) 
+            {
+                Debug.Log("Bot attempt to swap blocked: Game is Over.");
+                return;
+            }
+        
             List<Vector2Int> foundPos = new List<Vector2Int>(_botBrain.FindSwap(board));
+            
+            // 2. Safety check: Brain might not find a move on a locked board
+            if (foundPos == null || foundPos.Count < 2) 
+            {
+                Debug.LogWarning("Bot brain found no valid swaps.");
+                return;
+            }
+        
             GameMaster.Instance.ProcessPlayerSwap(netIdentity, foundPos[0], foundPos[1], VisualThinkingDuration);
         }
         [Server]

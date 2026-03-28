@@ -21,7 +21,7 @@ public enum GameState
 public class GameMaster : NetworkBehaviour
 {
     public static GameMaster Instance { get; private set; }
-    private GameState gameState = GameState.WaitingForPlayers;
+    public GameState gameState = GameState.WaitingForPlayers;
 
     [Header("Game Settings")]
     [Tooltip("The number of players required to start a game")]

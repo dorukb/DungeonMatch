@@ -181,9 +181,9 @@ public class GameBoard
     // arcane sweep isRow true.
     public void ProcessLineRemovalEffect(Vector2Int tilePos, bool isRow, NetworkIdentity sender, List<GameEventBase> eventBatch)
     {
-        var tiles = GetTilesAtLine(false, tilePos);
+        var tiles = GetTilesAtLine(isRow, tilePos);
         eventBatch.Add(EventPool.Get<MatchedTilesEvent>().Setup(tiles, false));
-        RemoveLineTiles(false, tilePos);
+        RemoveLineTiles(isRow, tilePos);
         
         HandleGlobalMatches(eventBatch);
     }
@@ -373,7 +373,6 @@ public class GameBoard
     private void ApplyChestEffect(List<GameEventBase> eventBatch, NetworkPlayer activePlayer, MatchResult match, GameMaster gm)
     {
         // TODO: Use a distribution controlled via ScriptableObject here for the various chest effects & their drop rates.
-        int chestSkillIdx = Random.Range(0, 7);
         //chestSkillIdx = 4;
         
         eventBatch.Add(EventPool.Get<ChestMatchedEvent>().Setup(activePlayer.netId, chestSkillIdx));
