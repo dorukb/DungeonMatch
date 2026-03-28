@@ -137,6 +137,13 @@ public class RemoteConfigManager : MonoBehaviour
             var dependencyStatus = task.Result;
             if (dependencyStatus == DependencyStatus.Available)
             {
+                // --- ADD THESE TWO LINES ---
+                // 1. Explicitly enable collection
+                Firebase.Crashlytics.Crashlytics.IsCrashlyticsCollectionEnabled = true;
+            
+                // 2. Set a custom log so you know Firebase initialized correctly
+                Firebase.Crashlytics.Crashlytics.Log("App Started and Firebase Ready");
+                // ---------------------------
                 // Firebase is ready
                 InitializeRemoteConfig();
             }

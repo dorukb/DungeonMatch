@@ -1,6 +1,19 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // Updated versions for better Unity 6 compatibility
+        classpath 'com.google.gms:google-services:4.4.0' 
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'
+    }
+}
 apply plugin: 'com.android.library'
 apply from: '../shared/keepUnitySymbols.gradle'
 **APPLY_PLUGINS**
+apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.firebase.crashlytics'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -23,6 +36,8 @@ dependencies {
     implementation 'com.google.firebase:firebase-common:22.0.1' // Assets/Firebase/Editor/AppDependencies.xml:13
     implementation 'com.google.firebase:firebase-config:23.0.1' // Assets/Firebase/Editor/RemoteConfigDependencies.xml:13
     implementation 'com.google.firebase:firebase-config-unity:13.6.0' // Assets/Firebase/Editor/RemoteConfigDependencies.xml:20
+    implementation 'com.google.firebase:firebase-crashlytics-ndk:20.0.3' // Assets/Firebase/Editor/CrashlyticsDependencies.xml:13
+    implementation 'com.google.firebase:firebase-crashlytics-unity:13.6.0' // Assets/Firebase/Editor/CrashlyticsDependencies.xml:20
 // Android Resolver Dependencies End
 **DEPS**
 }
@@ -51,6 +66,15 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
+    }
+
+    buildTypes {
+        release {
+            // This ensures symbols are uploaded for your release builds
+            /*firebaseCrashlytics {
+                nativeSymbolUploadEnabled true
+            }*/
+        }
     }
 
     defaultConfig {
