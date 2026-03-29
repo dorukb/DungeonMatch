@@ -12,11 +12,6 @@ public class PlayerPortraitUI : MonoBehaviour
     private TextMeshProUGUI playerNameText;
     [SerializeField]
     private Image playerHealthBar;
-    [SerializeField] 
-    private TextMeshProUGUI winnerText; 
-    [SerializeField] 
-    private GameObject winnerGlow; // Optional: A shiny background
-    
     [SerializeField]
     private TextMeshProUGUI playerHealthText;
     [SerializeField]
@@ -107,30 +102,6 @@ public class PlayerPortraitUI : MonoBehaviour
         if (player != displayForPlayer) return;
         
         chestDisplay.SetActive(hasChest);
-    }
-    
-    public void SetupForEndGame(string name, bool isWinner)
-    {
-        // Disable gameplay-only UI
-        playerHealthBar.transform.parent.gameObject.SetActive(false); // Assuming bars are in a parent container
-        playerShieldBar.transform.parent.gameObject.SetActive(false);
-        crossDisplay.SetActive(false);
-        chestDisplay.SetActive(false);
-
-        // Set the Name
-        playerNameText.text = name;
-
-        // Handle Winner Visuals
-        winnerText.gameObject.SetActive(isWinner);
-        if (winnerGlow != null) winnerGlow.SetActive(isWinner);
-
-        // Add some "Juice" if they won
-        if (isWinner)
-        {
-            // Simple DOTween pulse for the winner text
-            winnerText.transform.DOScale(1.1f, 0.5f).SetLoops(-1, LoopType.Yoyo);
-            transform.DOPunchScale(new Vector3(0.1f, 0.1f, 0), 0.5f, 5, 1);
-        }
     }
     
 }

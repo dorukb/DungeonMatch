@@ -7,23 +7,14 @@ namespace UI
 {
     public class ResultDisplayUI : MonoBehaviour
     {
-        [SerializeField] private GameObject resultDisplayObject;
         [SerializeField] private RectTransform resultDisplayParent;
         [SerializeField] private TextMeshProUGUI resultText;
         [SerializeField] private float offScreenOffset = 1200f;
         
-        private void Awake()
-        {
-            resultDisplayObject.gameObject.SetActive(false);
-        }
         public void PlayResultAnimation(bool isWin, float duration, Action onComplete)
         {
-            // Set text and color based on the bool and Inspector settings
-            resultText.text = isWin ? "YOU WIN!" : "OPPONENT WINS :((";
-            
-            resultDisplayObject.gameObject.SetActive(true);
+            resultText.text = isWin ? "YOU WIN!" : "OPPONENT WINS";
 
-            // Animation Logic
             resultDisplayParent.anchoredPosition = new Vector2(-offScreenOffset, 0);
             float segment = duration / 4f;
 

@@ -184,7 +184,7 @@ namespace DorkyProductions
             {
                 AudioManager.Instance.PlaySFX(SFXType.LoseScreen);
             }
-            UIMediator.OnGameEnded?.Invoke(winner);
+            UIMediator.OnGameEnded?.Invoke(winner, e.betAmount);
             return null;
         }
 

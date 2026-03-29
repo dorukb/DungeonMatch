@@ -40,20 +40,31 @@ namespace DorkyProductions
         public override SyncType SyncType => SyncType.Blocking;
         public override EventType EventType => EventType.GameEnded;
         public uint winnerID;
-
-        public GameEndedEvent Setup(uint id) { winnerID = id; return this; }
+        public int betAmount;
+        public GameEndedEvent Setup(uint id, int betAmount) 
+        { 
+            winnerID = id;
+            this.betAmount = betAmount; 
+            return this; 
+        }
         public override Tween Accept(IGameEventHandler handler) => handler.Handle(this);
         public override void Serialize(NetworkWriter writer)
         {
             writer.Write(winnerID);
+            writer.Write(betAmount);
         }
 
         public override void Deserialize(NetworkReader reader)
         {
             winnerID = reader.Read<uint>();
+            betAmount = reader.Read<int>();
         }
 
-        public override void Reset() => winnerID = 0;
+        public override void Reset()
+        {
+            winnerID = 0;
+            betAmount = 0;
+        }
     }
 
     public class MatchedTilesEvent : GameEventBase

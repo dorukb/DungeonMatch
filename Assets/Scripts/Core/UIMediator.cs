@@ -31,8 +31,8 @@ public class UIMediator : MonoBehaviour
     //params: <>
     public static Action OnPlayerChestEnded;
     
-    // params: <WinnerPlayer>
-    public static Action<PlayerType> OnGameEnded;
+    // params: <WinnerPlayer, betAmount>
+    public static Action<PlayerType, int> OnGameEnded;
     
     // params: <Player>
     public static Action OnGameStarted;

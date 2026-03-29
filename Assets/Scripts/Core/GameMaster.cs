@@ -173,7 +173,7 @@ public class GameMaster : NetworkBehaviour
     {
         if (gameState == GameState.GameEnded) return;
         gameState = GameState.GameEnded;
-        eventBatch.Add(EventPool.Get<GameEndedEvent>().Setup(winner.netId));
+        eventBatch.Add(EventPool.Get<GameEndedEvent>().Setup(winner.netId, this.betAmount));
         Debug.Log($"[Server] Game over. Winner: {winner.netId}");
         //TODO: substract bet_amount from loser
         winner.AddCoins(betAmount);

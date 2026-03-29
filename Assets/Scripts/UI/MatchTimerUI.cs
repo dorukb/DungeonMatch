@@ -36,7 +36,7 @@ public class MatchTimerUI : MonoBehaviour
         UpdateDisplay(0);
     }
 
-    private void StopTimer(PlayerType winner)
+    private void StopTimer(PlayerType winner, int betAmount)
     {
         _isRunning = false;
     }
