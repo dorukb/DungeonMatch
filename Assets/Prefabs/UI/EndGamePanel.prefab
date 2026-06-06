@@ -98,7 +98,7 @@ MonoBehaviour:
   opponentWinText: {fileID: 8645521514898842244}
   coinDisplay: {fileID: 1769677804670797156}
   rewardCoinAmount: {fileID: 7240870084276781179}
-  backToMenuButton: {fileID: 2711436422050998564}
+  backToMenuButton: {fileID: 6844650504697075490}
   punchScale: 1.1
 --- !u!1 &587254608616831534
 GameObject:
