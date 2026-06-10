@@ -8,7 +8,8 @@ namespace DorkyProductions
 
         public bool IsCurrentTurnExtra = false;
         // maybe even the rewards themselves.
-
+        public bool isTutorial = false;
+        
         public void Reset()
         {
             ActivePlayerNetId = uint.MaxValue;
@@ -17,12 +18,13 @@ namespace DorkyProductions
             IsCurrentTurnExtra = false;
         }
 
-        public void Setup(uint activePlayerNetId, int extraTurnsLeft, int chestsLeft, bool isCurrentTurnExtra)
+        public void Setup(uint activePlayerNetId, int extraTurnsLeft, int chestsLeft, bool isCurrentTurnExtra, bool isTutorial)
         {
             this.ActivePlayerNetId = activePlayerNetId;
             this.ExtraTurnsLeft = extraTurnsLeft;
             this.ChestsLeft = chestsLeft;
             this.IsCurrentTurnExtra = isCurrentTurnExtra;
+            this.isTutorial = isTutorial;
         }
     }
 }

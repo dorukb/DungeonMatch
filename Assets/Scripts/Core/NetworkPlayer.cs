@@ -221,6 +221,12 @@ namespace DorkyProductions
             _humanPlayerInput.DisableSwapControls();
         }
 
+        [Client]
+        public void EnableTutorialControls()
+        {
+            Debug.Log("activating tutorial controls for human player.");
+            _humanPlayerInput.EnableTutorialControls();
+        }
         // This is called by the local PlayerInput script.
         [Client]
         public void RequestSwap(Vector2Int posA, Vector2Int posB)
@@ -505,6 +511,5 @@ namespace DorkyProductions
             AttemptCleaveSkillUse(targetTilePos);
             _humanPlayerInput.ChangeCleaveInputState(false);
         }
-        
     }
 }

@@ -7,7 +7,7 @@ namespace DorkyProductions
     {
         public override List<Vector2Int> FindSwap(GameBoard board)
         {
-            throw new System.NotImplementedException();
+            return null;
         }
     }
 }

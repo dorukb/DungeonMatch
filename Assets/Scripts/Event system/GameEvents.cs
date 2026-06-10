@@ -13,6 +13,7 @@ namespace DorkyProductions
         public override EventType EventType => EventType.GameStarted;
         public List<TileState> boardState = new List<TileState>();
         public int betRewardAmount;
+        
         public GameStartedEvent Setup(List<TileState> state, int betAmount)
         {
             boardState.Clear();
@@ -32,7 +33,10 @@ namespace DorkyProductions
             boardState.AddRange(reader.Read<List<TileState>>());
             betRewardAmount = reader.Read<int>();
         }
-        public override void Reset() => boardState.Clear();
+        public override void Reset()
+        {
+            boardState.Clear();
+        }
     }
 
     public class GameEndedEvent : GameEventBase

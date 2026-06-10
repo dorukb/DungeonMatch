@@ -130,15 +130,25 @@ public class GameMaster : NetworkBehaviour
             }
         }
         // activePlayerIndex = 0;
-        Context.Setup(players[activePlayerIndex].netId, 0, 0, false);
+        Context.Setup(players[activePlayerIndex].netId, 0, 0, false, startConfig.isTutorialMode);
         
         List<GameEventBase> eventBatch = new List<GameEventBase>();
         
         _gameBoard = new GameBoard(tileDatabase);
-        var boardState = _gameBoard.SetupInitialBoardWithNoMatches();
+        var boardState = new List<TileState>();
+        if (startConfig.isTutorialMode)
+        {
+            //TODO Game Board should setup differently for tutorial.
+            // boardState = _gameBoard.SetupBoardForTutorial();
+            boardState = _gameBoard.SetupInitialBoardWithNoMatches();
+        }
+        else
+        {
+            boardState = _gameBoard.SetupInitialBoardWithNoMatches();
+        }
         
         betAmount = RemoteConfigManager.Instance.GetBetAmountVal((int) _gameStartConfig.lobbyType);
-        UIMediator.OnBetAmountIsGot?.Invoke(betAmount);
+        UIMediator.OnReceivedBetAmount?.Invoke(betAmount);
 
         if (startConfig.isOfflineMode)
         {
@@ -153,12 +163,16 @@ public class GameMaster : NetworkBehaviour
                     }
                     else
                     {
-                        aiPlayer.InitializeBotBrain(startConfig.lobbyType);
+                        // TODO: AI player must check the tutorial flag and setup itself accordingly.
+                        aiPlayer.InitializeBotBrain(startConfig);
                     }
                 }
             }
         }
         
+        // Clients handle Tutorial setup via GameStartedEvent's newly added isTutorialMode flag.
+        // Human player actives tutorial mode input.
+        // Game Scene (we are in it) needs to enable/disable certain objects (tutorial blocking mask etc.)
         eventBatch.Add(EventPool.Get<GameStartedEvent>().Setup(boardState, betAmount));
         eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
 
@@ -503,7 +517,7 @@ public class GameMaster : NetworkBehaviour
             
             activePlayerIndex = (activePlayerIndex + 1) % players.Count;
             var newActivePlayer = players[activePlayerIndex];
-            Context.Setup(newActivePlayer.netId, 0, 0, false);
+            Context.Setup(newActivePlayer.netId, 0, 0, false, _gameStartConfig.isTutorialMode);
         }
         eventBatch.Add(EventPool.Get<TurnStartedEvent>().Setup(Context));
     }

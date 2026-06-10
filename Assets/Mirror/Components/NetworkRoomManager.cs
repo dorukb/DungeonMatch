@@ -8,14 +8,16 @@ namespace Mirror
     public class GameStartConfig
     {
         public bool isOfflineMode = false;
+        public bool isTutorialMode = false;
         public LobbyType lobbyType = 0;
         public string joinCode = "";
 
-        public GameStartConfig(bool isOfflineMode, LobbyType lobbyType, string joinCode = "")
+        public GameStartConfig(bool isOfflineMode, bool isTutorialMode, LobbyType lobbyType, string joinCode = "")
         {
             this.isOfflineMode = isOfflineMode;
             this.lobbyType = lobbyType;
             this.joinCode = joinCode;
+            this.isTutorialMode = isTutorialMode;
         }
     }
 

@@ -108,7 +108,7 @@ namespace DorkyProductions
                 
                 manager.minPlayers = 1;
                 // Use the tracked selection
-                manager.gameStartConfig = new GameStartConfig(true, MapDifficultyToLobbyType(_selectedDifficulty));
+                manager.gameStartConfig = new GameStartConfig(true, false, MapDifficultyToLobbyType(_selectedDifficulty));
                 manager.StartHost();
             }
             else

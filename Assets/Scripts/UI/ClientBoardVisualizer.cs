@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using CodeWriter.UIExtensions;
 using DG.Tweening;
 using UnityEngine.Serialization;
 
@@ -167,6 +168,18 @@ public class ClientBoardVisualizer : MonoBehaviour
         {
             Debug.LogError($"AnimateFall failed, tile ${tileId} not found");
             return null;
+        }
+    }
+
+    public void MakeTileInteractiveWithinTutorial(ushort tileId)
+    {
+        if (_visualTiles.TryGetValue(tileId, out TileView tileView))
+        {
+            tileView.HighlightForTutorial();
+        }
+        else
+        {
+            Debug.LogError($"MakeTileInteractiveWithinTutorial failed, tile ${tileId} not found");
         }
     }
     // We'll use this for matches

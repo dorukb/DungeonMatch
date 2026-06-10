@@ -20,6 +20,9 @@ namespace DorkyProductions
         [SerializeField]
         private MatchEffectsController _effectsController;
         
+        [SerializeField]
+        private TutorialController _tutorialController;
+        
         // private List<GameEvent> gameHistory = new List<GameEvent>();
         private Queue<GameEventBase> eventQueue = new Queue<GameEventBase>();
         private bool isProcessingEvents = false;
@@ -162,7 +165,6 @@ namespace DorkyProductions
         {
             Debug.Log("Game started, setup the local board");
             
-            // TODO: Consider moving Audio related stuff to its own class, triggered by the already-existing events.
             AudioManager.Instance.PlayMusic(MusicType.Gameplay);
             UIMediator.OnGameStarted?.Invoke();
             return _visualizer.InitBoard(e.boardState);
@@ -333,6 +335,22 @@ namespace DorkyProductions
         }
         public Tween Handle(TurnStartedEvent e)
         {
+            if (e.context.isTutorial)
+            {
+                // Should lead to input blocking, triggering the TutorialController, and the subsequent UI changes.
+                
+                // _localPlayer is NOT set yet, if OnLocalPlayerStart() is NOT called at this point, which can happen.
+                // _localPlayer.EnableTutorialControls();
+                // Let's directly disable the player input controller, works because we only have *1* human player.
+                // var humanPlayerInput = FindAnyObjectByType<HumanPlayerInput>();
+                // if (humanPlayerInput)
+                // {
+                //     humanPlayerInput.EnableTutorialControls();
+                // }
+                _localPlayer.EnableTutorialControls();
+                _tutorialController.StartTutorial(_visualizer);
+            }
+            
             if (_localPlayer == null)
             {
                 Debug.LogError($"LocalPlayer is null.");

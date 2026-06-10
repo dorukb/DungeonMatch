@@ -130,7 +130,7 @@ public class EntrySceneController : MonoBehaviour
         _pendingLobbyCreationRequest = false;
         _lobbyData = attributes;
 
-        var gameConfig = new GameStartConfig(isOfflineMode: false, lobbyType: LobbyType.Beginner, "");
+        var gameConfig = new GameStartConfig(isOfflineMode: false, isTutorialMode: false, lobbyType: LobbyType.Beginner, "");
         var codeAttr = attributes.Find(x => x.Data.HasValue && x.Data.Value.Key == KEY_JOIN_CODE);
 
         // 2. Check if we found it (and if the value isn't null/empty)
@@ -169,7 +169,7 @@ public class EntrySceneController : MonoBehaviour
             return;
         }
 
-        manager.gameStartConfig = new GameStartConfig(isOfflineMode: false, LobbyType.Intermediate);
+        manager.gameStartConfig = new GameStartConfig(isOfflineMode: false, false, LobbyType.Intermediate);
         manager.networkAddress = hostAddressAttribute.Data.Value.Value.AsUtf8;
         manager.StartClient();
         

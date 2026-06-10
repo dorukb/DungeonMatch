@@ -23,83 +23,91 @@ public class GameBoard
     private List<TileDefinitionSO> _validCandidates = new List<TileDefinitionSO>();
     
     private TileDatabase _tileDatabase;
-    public GameBoard(TileDatabase tileDatabase)
+    public GameBoard(TileDatabase tileDatabase) 
     {
         _tileDatabase = tileDatabase;
     }
+
     
    public List<TileState> SetupInitialBoardWithNoMatches()
-    {
+   {
         boardState.Clear();
         if (boardState.Capacity < BoardWidth * BoardHeight)
-            boardState.Capacity = BoardWidth * BoardHeight;
+        boardState.Capacity = BoardWidth * BoardHeight;
 
         var masterList = _tileDatabase.allTileDefinitions;
 
         for (int i = 0; i < BoardWidth * BoardHeight; i++)
         {
-            int x = i % BoardWidth;
-            int y = i / BoardWidth;
+        int x = i % BoardWidth;
+        int y = i / BoardWidth;
 
-            // ---------------------------------------------------------
-            // 1. DETERMINE CONSTRAINTS
-            // ---------------------------------------------------------
-            Tile forbiddenType1 = Tile.Unknown;
-            Tile forbiddenType2 = Tile.Unknown;
+        // ---------------------------------------------------------
+        // 1. DETERMINE CONSTRAINTS
+        // ---------------------------------------------------------
+        Tile forbiddenType1 = Tile.Unknown;
+        Tile forbiddenType2 = Tile.Unknown;
 
-            // Check Left (Needs 2 tiles to the left)
-            if (x >= 2)
+        // Check Left (Needs 2 tiles to the left)
+        if (x >= 2)
+        {
+            Tile left1 = GetTileSafe(x - 1, y).type;
+            Tile left2 = GetTileSafe(x - 2, y).type;
+
+            // Only forbid if they are valid types and they match
+            if (left1 != Tile.Unknown && left1 == left2)
             {
-                Tile left1 = GetTileSafe(x - 1, y).type;
-                Tile left2 = GetTileSafe(x - 2, y).type;
-
-                // Only forbid if they are valid types and they match
-                if (left1 != Tile.Unknown && left1 == left2)
-                {
-                    forbiddenType1 = left1;
-                }
+                forbiddenType1 = left1;
             }
+        }
 
-            // Check Down (Needs 2 tiles below)
-            if (y >= 2)
+        // Check Down (Needs 2 tiles below)
+        if (y >= 2)
+        {
+            Tile down1 = GetTileSafe(x, y - 1).type;
+            Tile down2 = GetTileSafe(x, y - 2).type;
+
+            if (down1 != Tile.Unknown && down1 == down2)
             {
-                Tile down1 = GetTileSafe(x, y - 1).type;
-                Tile down2 = GetTileSafe(x, y - 2).type;
-
-                if (down1 != Tile.Unknown && down1 == down2)
-                {
-                    forbiddenType2 = down1;
-                }
+                forbiddenType2 = down1;
             }
+        }
 
-            _validCandidates.Clear();
+        _validCandidates.Clear();
 
-            for (int k = 0; k < masterList.Count; k++)
-            {
-                var def = masterList[k];
-                
-                if (def.type == Tile.Unknown) continue;
-                if (def.type == forbiddenType1 || def.type == forbiddenType2) continue;
+        for (int k = 0; k < masterList.Count; k++)
+        {
+            var def = masterList[k];
+            
+            if (def.type == Tile.Unknown) continue;
+            if (def.type == forbiddenType1 || def.type == forbiddenType2) continue;
 
-                _validCandidates.Add(def);
-            }
+            _validCandidates.Add(def);
+        }
 
-            TileDefinitionSO selectedDef;
+        TileDefinitionSO selectedDef;
 
-            if (_validCandidates.Count > 0)
-            {
-                selectedDef = _tileDatabase.GetWeightedRandomDefinition(_validCandidates);
-            }
-            else
-            {
-                // FALLBACK: Rules were too strict
-                selectedDef = _tileDatabase.GetRandomDefinition(); // Uses master list internally
-            }
-            boardState.Add(GenerateNewTile(selectedDef));
+        if (_validCandidates.Count > 0)
+        {
+            selectedDef = _tileDatabase.GetWeightedRandomDefinition(_validCandidates);
+        }
+        else
+        {
+            // FALLBACK: Rules were too strict
+            selectedDef = _tileDatabase.GetRandomDefinition(); // Uses master list internally
+        }
+        boardState.Add(GenerateNewTile(selectedDef));
         }
 
         return boardState;
-}
+    }
+
+
+    public List<TileState> SetupBoardForTutorial()
+    {
+        //TODO: Actually implement this function.
+        return boardState;
+    }
     public void ProcessSwapMove(Vector2Int posA, Vector2Int posB, NetworkIdentity performingPlayer, List<GameEventBase> eventBatch)
     {
         // Perform the swap ---

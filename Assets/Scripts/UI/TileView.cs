@@ -1,3 +1,4 @@
+using CodeWriter.UIExtensions;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -41,6 +42,25 @@ public class TileView : MonoBehaviour
     public void SetSelected(bool isSelected)
     {
         _selectedFrame.gameObject.SetActive(isSelected);
+    }
+
+    public void HighlightForTutorial()
+    {
+        var tutorialObj = _image.gameObject.AddComponent<TutorialObject>();
+        if (tutorialObj.Graphic != null)
+        {
+            Debug.Log(gameObject.name + " is now a tutorial object.");
+            tutorialObj.Graphic.SetMaterialDirty();;
+        }
+    }
+
+    public void StopHighlightForTutorial()
+    {
+        var tutorialObject = _image.gameObject.GetComponent<TutorialObject>();
+        if (tutorialObject != null)
+        {
+            Destroy(tutorialObject);
+        }
     }
 }
 }

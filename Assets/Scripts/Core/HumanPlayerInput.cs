@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
+using CodeWriter.UIExtensions;
 using Unity.VisualScripting;
 
 namespace DorkyProductions
@@ -25,7 +26,7 @@ public class HumanPlayerInput : MonoBehaviour
     private bool _isPhaseShiftInputActive = false;
     private bool _isArcaneSweepInputActive = false;
     private bool _isArcaneCleaveInputActive = false;
-
+    private bool _isTutorialInputActive = true;
     private float _dpi;
 
     private void Awake()
@@ -250,11 +251,34 @@ public class HumanPlayerInput : MonoBehaviour
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(pointerData, results);
 
+        if (results.Count == 0) return null;
+
+
         foreach (var result in results)
         {
             var tile = result.gameObject.GetComponent<TileView>();
+
+            if (tile != null && _isTutorialInputActive)
+            {
+                var tutObj = tile.gameObject.GetComponentInChildren<TutorialObject>();
+                if (tutObj != null)
+                {
+                    Debug.Log("Hit tutorial object: " + tile.gameObject.name);
+                    return tile;
+                }
+                else tile = null;
+            }
             if (tile != null) return tile;
         }
+        // var tutorialMask = results[0].gameObject.GetComponent<TutorialMask>();
+        // if (tutorialMask != null)
+        // {
+        //     // allow tutorial mask to "consume" the hit event, blocking everything else.
+        //     Debug.Log("Hit tutorial mask.");
+        //     return null;
+        // }
+        //
+       
         return null;
     }
 
@@ -266,6 +290,8 @@ public class HumanPlayerInput : MonoBehaviour
         ResetInputState();
     }
     public void EnableControls() => _canSwap = true;
+    public void EnableTutorialControls() => _isTutorialInputActive = true;
+    public void DisableTutorialControls() => _isTutorialInputActive = false;
     public void SetPlayer(NetworkPlayer p) => LocalPlayerController = p;
     public void ActivateLightningInput() => _isLightningInputActive = true;
     public void DisableLightningInput() => _isLightningInputActive = false;

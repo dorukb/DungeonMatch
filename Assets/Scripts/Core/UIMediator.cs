@@ -38,7 +38,7 @@ public class UIMediator : MonoBehaviour
     public static Action OnGameStarted;
     
     //params: <betAmount>
-    public static Action<int> OnBetAmountIsGot;
+    public static Action<int> OnReceivedBetAmount;
 }
 
 }

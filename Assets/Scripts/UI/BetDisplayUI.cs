@@ -13,12 +13,12 @@ namespace UI
 
         private void OnEnable()
         {
-            UIMediator.OnBetAmountIsGot += UpdateBetUIText;
+            UIMediator.OnReceivedBetAmount += UpdateBetUIText;
         }
 
         private void OnDisable()
         {
-            UIMediator.OnBetAmountIsGot -= UpdateBetUIText;
+            UIMediator.OnReceivedBetAmount -= UpdateBetUIText;
         }
         
         private void UpdateBetUIText(int bet)

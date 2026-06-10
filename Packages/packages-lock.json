@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.codewriter.tutorial-mask": {
+      "version": "https://github.com/codewriter-packages/TutorialMaskForUGUI.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "7ec58f0d24b04e291553b1fc5e3e32d40ca543ef"
+    },
     "com.unity.2d.animation": {
       "version": "12.0.2",
       "depth": 1,

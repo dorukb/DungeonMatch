@@ -17,6 +17,8 @@ namespace DorkyProductions.AI
         public int skillId = -1;
         private Dictionary<SkillType, Action<GameBoard>> _skillMap;
         private IBotBrain _botBrain;
+
+        private bool isTutorialMode = false;
         public override void OnStartServer()
         {
             if (GameMaster.Instance != null)
@@ -40,10 +42,16 @@ namespace DorkyProductions.AI
         }
 
         [Server]
-        public void InitializeBotBrain(LobbyType lobbyType)
+        public void InitializeBotBrain(GameStartConfig startConfig)
         {
+            isTutorialMode = startConfig.isTutorialMode;
+            if (isTutorialMode)
+            {   
+                _botBrain = new TutorialBotBrain();
+                return;
+            }
             // The Factory Method.
-            switch (lobbyType)
+            switch (startConfig.lobbyType)
             {
                 case LobbyType.Beginner:
                     _botBrain = new EasyBotBrain();
@@ -52,7 +60,7 @@ namespace DorkyProductions.AI
                     _botBrain = new MediumBotBrain();
                     break;
                 case LobbyType.Advanced:
-                    _botBrain = new HardBotBrain();
+                    _botBrain = new MediumBotBrain();
                     break;
                 default:
                     _botBrain = new MediumBotBrain();
@@ -63,6 +71,12 @@ namespace DorkyProductions.AI
         [Server]
         private void MakeMove(Context context, GameBoard board)
         {
+            if (isTutorialMode)
+            {
+                Debug.Log("Bot takes a turn in tutorial mode?");
+                return;
+            }
+            
             // If it's not my turn, ignore
             if (netId != context.ActivePlayerNetId) return;
 
@@ -85,7 +99,13 @@ namespace DorkyProductions.AI
         
         [Server]
         private void MakeSwap(Context context, GameBoard board)
-        {
+        {           
+            if (isTutorialMode)
+            {
+                Debug.Log("TUTORIAL MODE Bot is supposed to make a swap?");
+                return;
+            }
+
             // 1. Exit if the game is already over
             if (GameMaster.Instance.gameState == GameState.GameEnded) 
             {
