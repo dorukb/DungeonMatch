@@ -21,7 +21,7 @@ namespace EpicTransport {
         public static Server CreateServer(EosTransport transport, int maxConnections) {
             Server s = new Server(transport, maxConnections);
 
-            s.OnConnected += (id) => transport.OnServerConnected.Invoke(id);
+            s.OnConnected += (id) => transport.OnServerConnectedWithAddress.Invoke(id, transport.ServerGetClientAddress(id));
             s.OnDisconnected += (id) => transport.OnServerDisconnected.Invoke(id);
             s.OnReceivedData += (id, data, channel) => transport.OnServerDataReceived.Invoke(id, new ArraySegment<byte>(data), channel);
             s.OnReceivedError += (id, exception) => transport.OnServerError.Invoke(id, Mirror.TransportError.InvalidReceive, exception.Message);
