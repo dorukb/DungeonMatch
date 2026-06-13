@@ -1,17 +1,23 @@
+using DorkyProductions;
 using UnityEngine;
 using Mirror;
 public class TutorialLauncher : MonoBehaviour
 {
-    //TODO: Remove this, and check PlayerPrefs/save file to decide whether to launch tutorial or not.
-    public bool forceTutorial = true;
-
     private void Start()
     {
-        if (forceTutorial)
+        if (PlayerLocalSave.HasCompletedTutorial())
+        {
+            Debug.Log("Tutorial already completed, skipping tutorial launch.");
+            return;
+        }
+        else
         {
             // Check whether we need a delay for any setup purposes in the MainMenu scene, might be the case.
             // lets be safe for now with a short delay.
-            Invoke("StartGameForTutorial", 0.25f);
+            /*todo: sometimes eos not completed. find a way to check it 
+            also there can be other thing uncompleted.
+            find a way to check all before tutorial starts.*/
+            Invoke("StartGameForTutorial", 5.0f);
         }
     }
 
@@ -29,5 +35,6 @@ public class TutorialLauncher : MonoBehaviour
             Debug.LogError("NetworkRoomManager not found!");
         }
     }
+  
 
 }

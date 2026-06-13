@@ -264,6 +264,7 @@ public class HumanPlayerInput : MonoBehaviour
                 if (tutObj != null)
                 {
                     Debug.Log("Hit tutorial object: " + tile.gameObject.name);
+                    TutorialController.CompleteCurrentStep();
                     return tile;
                 }
                 else tile = null;

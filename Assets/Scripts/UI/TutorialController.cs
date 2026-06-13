@@ -8,7 +8,7 @@ public class TutorialController : MonoBehaviour
 
     private bool isStarted = false;
     // This flag acts as our "traffic light" for the Coroutine
-    private bool isWaitingForPlayerAction = false;
+    private static bool isWaitingForPlayerAction = false;
     public void StartTutorial(ClientBoardVisualizer _visualizer)
     {
         if (isStarted) return;
@@ -38,11 +38,19 @@ public class TutorialController : MonoBehaviour
         // --- TUTORIAL COMPLETE ---
         tutorialCanvas.SetActive(false);
         Debug.Log("Tutorial Finished!");
+        
+        FinishTutorial();
+
     }
 
     // You will call this method from whatever script handles the actual clicking
-    public void CompleteCurrentStep()
+    public static void CompleteCurrentStep()
     {
         isWaitingForPlayerAction = false;
+    }
+    
+    private void FinishTutorial()
+    {
+        PlayerLocalSave.SetTutorialCompleted();
     }
 }
