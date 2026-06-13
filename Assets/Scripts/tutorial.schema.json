@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TutorialDataSchema",
+  "type": "object",
+  "properties": {
+    "tutorial_steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/step"
+      }
+    }
+  },
+  "required": ["tutorial_steps"],
+  "definitions": {
+    "coordinate": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "integer" }
+    },
+    "step": {
+      "type": "object",
+      "required": ["step_id", "name", "board_state", "turn_sequence"],
+      "properties": {
+        "step_id": { "type": "integer" },
+        "name": { "type": "string" },
+        "board_state": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": { "type": "string", "minLength": 1, "maxLength": 1 }
+          }
+        },
+        "turn_sequence": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/turn" }
+        }
+      }
+    },
+    "turn": {
+      "type": "object",
+      "required": ["actor", "type"],
+      "properties": {
+        "actor": { "enum": ["player", "ai", "system"] },
+        "type": { "enum": ["match", "swap", "message"] },
+        "instruction": { "type": "string" },
+        "text": { "type": "string" },
+        "start": { "$ref": "#/definitions/coordinate" },
+        "target": { "$ref": "#/definitions/coordinate" },
+        "match_type": { "type": "string" },
+        "num_tiles": { "type": "integer" },
+        "refill": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

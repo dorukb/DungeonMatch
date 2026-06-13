@@ -1,0 +1,227 @@
+{
+  "tutorial_steps": [
+    {
+      "step_id": 1,
+      "name": "Basic Attack",
+      "board_state": [
+        ["S", "X", "C", "A", "A"],
+        ["H", "A", "X", "H", "S"],
+        ["H", "H", "A", "X", "A"],
+        ["A", "C", "S", "A", "H"],
+        ["H", "A", "S", "S", "H"]
+      ],
+      "turn_sequence": [
+        {
+          "actor": "player",
+          "type": "match",
+          "instruction": "Match these tiles to attack!",
+          "start": [3, 1],
+          "target": [3, 2],
+          "match_type": "attack",
+          "num_tiles": 3,
+          "refill": ["A", "S", "H"]
+        },
+        {
+          "actor": "ai",
+          "type": "match",
+          "instruction": "Watch out! The AI plays by the same rules.",
+          "start": [2, 4],
+          "target": [2, 3],
+          "match_type": "attack",
+          "num_tiles": 4,
+          "refill": ["X", "A", "S"]
+        }
+      ]
+    },
+    {
+      "step_id": 2,
+      "name": "5-Tile Match",
+      "board_state": [
+        ["A", "H", "H", "S", "S"],
+        ["X", "C", "A", "C", "X"],
+        ["A", "A", "X", "A", "A"],
+        ["H", "S", "H", "C", "X"],
+        ["C", "S", "A", "H", "S"]
+      ],
+      "turn_sequence": [
+        {
+          "actor": "player",
+          "type": "match",
+          "instruction": "Match 5 tiles for a massive attack and an Extra Turn!",
+          "start": [2, 2],
+          "target": [2, 3],
+          "match_type": "attack",
+          "num_tiles": 5,
+          "refill": ["C", "A", "X", "A", "H"]
+        },
+        {
+          "actor": "system",
+          "type": "message",
+          "text": "You earned an Extra Turn! Use this to reposition tiles."
+        },
+        {
+          "actor": "player",
+          "type": "swap",
+          "instruction": "You have an Extra Turn. Try a random swap to set up your next move!",
+          "start": [1, 3],
+          "target": [1, 4]
+        },
+        {
+          "actor": "ai",
+          "type": "swap",
+          "instruction": "The AI is repositioning...",
+          "start": [4, 2],
+          "target": [4, 3]
+        }
+      ]
+    },
+    {
+      "step_id": 3,
+      "name": "Shield Mechanic",
+      "board_state": [
+        ["C", "X", "C", "S", "X"],
+        ["H", "S", "S", "A", "H"],
+        ["C", "S", "A", "X", "C"],
+        ["A", "H", "A", "C", "H"],
+        ["A", "C", "S", "S", "A"]
+      ],
+      "turn_sequence": [
+        {
+          "actor": "player",
+          "type": "match",
+          "instruction": "Match these tiles to gain some shield!",
+          "start": [3, 4],
+          "target": [3, 3],
+          "match_type": "shield",
+          "num_tiles": 3,
+          "refill": ["A", "S", "S"]
+        },
+        {
+          "actor": "ai",
+          "type": "match",
+          "instruction": "The AI is attacking! Watch your shields!",
+          "start": [2, 3],
+          "target": [3, 3],
+          "match_type": "attack",
+          "num_tiles": 3,
+          "refill": ["A", "C", "X"]
+        }
+      ]
+    },
+    {
+      "step_id": 4,
+      "name": "Potion Mechaincs",
+      "board_state": [
+        ["A", "X", "C", "X", "A"],
+        ["H", "S", "S", "A", "H"],
+        ["C", "S", "A", "H", "X"],
+        ["A", "H", "H", "S", "H"],
+        ["A", "A", "S", "X", "X"]
+      ],
+      "turn_sequence": [
+        {
+          "actor": "player",
+          "type": "match",
+          "instruction": "Match these tiles to create a Potion!",
+          "start": [3, 1],
+          "target": [3, 2],
+          "match_type": "potion",
+          "num_tiles": 4,
+          "refill": ["H", "H", "C", "S"]
+        },
+        {
+          "actor": "system",
+          "type": "message",
+          "text": "You created a Potion! Use it to heal or boost your next attack."
+        },
+        {
+          "actor": "ai",
+          "type": "match",
+          "instruction": "The AI is creating a Potion!",
+          "start": [0, 3],
+          "target": [0, 4],
+          "match_type": "potion",
+          "num_tiles": 3,
+          "refill": ["S", "A", "H"]
+        }
+      ]
+    },
+    {
+      "step_id": 5,
+      "name": "Cross & Multiplier Mechanics",
+      "board_state": [
+        ["H", "C", "X", "C", "A"],
+        ["H", "H", "A", "S", "X"],
+        ["S", "X", "C", "X", "C"],
+        ["S", "A", "X", "S", "A"],
+        ["C", "A", "H", "C", "H"]
+      ],
+      "turn_sequence": [
+        {
+          "actor": "player",
+          "type": "match",
+          "instruction": "Match these tiles to create a Cross!",
+          "start": [2, 1],
+          "target": [2, 2],
+          "match_type": "cross",
+          "num_tiles": 3,
+          "refill": ["S", "S", "A"]
+        },
+        {
+          "actor": "system",
+          "type": "message",
+          "text": "You earned an Extra Turn! Use this to reposition tiles."
+        },
+        {
+          "actor": "player",
+          "type": "match",
+          "instruction": "Time for a stronger attack!",
+          "start": [1, 2], 
+          "target": [2, 2],
+          "match_type": "attack",
+          "num_tiles": 3,
+          "refill": ["H", "A", "H"]
+        },
+        {
+          "actor": "ai",
+          "type": "match",
+          "instruction": "The AI is creating a Potion to Heal!",
+          "start": [0, 2],
+          "target": [1, 2],
+          "match_type": "potion",
+          "num_tiles": 3,
+          "refill": ["x", "A", "C"]
+        }
+      ]
+    },
+    {
+      "step_id": 6,
+      "name": "Chest Mechanics",
+      "board_state": [
+        ["S", "H", "A", "H", "X"],
+        ["X", "C", "S", "C", "H"],
+        ["S", "A", "C", "X", "S"],
+        ["S", "C", "X", "C", "A"],
+        ["A", "X", "S", "H", "H"]
+      ],
+      "turn_sequence": [
+        {
+          "actor": "player",
+          "type": "match",
+          "instruction": "Match these tiles to open the Chest!",
+          "start": [2, 2],
+          "target": [2, 3],
+          "match_type": "chest",
+          "num_tiles": 3,
+          "refill": ["A", "S", "A"]
+        },
+        {
+          "actor": "system",
+          "type": "message",
+          "text": "You opened the Chest! You found a tool to boost your board!"
+        }
+        
+      ]
+    }
+  ]
+}
